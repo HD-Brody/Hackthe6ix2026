@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createSTTClient, type STTClient } from "@/voice/sttClient";
 import { createTTSClient, type TTSClient } from "@/voice/ttsClient";
 import { consumeTurnStream } from "@/lib/sse";
+import { shouldPlayThinkingNoise, pickThinkingNoise } from "@/voice/latencyMask";
 
 export default function TestVoiceLoopPage() {
   const [topic, setTopic] = useState("TCP congestion control");
@@ -14,41 +15,79 @@ export default function TestVoiceLoopPage() {
     | "Listening (Speak into Mic)..."
     | "You said: [processing]"
     | "Thinking..."
+    | "Thinking... (thinking sound played)"
     | "AI is speaking..."
-    | "Interrupted"
     | "Done"
     | "Error"
   >("Idle");
-  
+
   const [transcript, setTranscript] = useState("");
   const [aiText, setAiText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [liveTimer, setLiveTimer] = useState<number | null>(null);
 
-  // Refs for tracking active objects and timestamps
+  // STT/TTS client refs
   const sttRef = useRef<STTClient | null>(null);
   const ttsRef = useRef<TTSClient | null>(null);
+
+  // State machine flags — used inside event callbacks, so must be refs not state
   const isSpeakingRef = useRef<boolean>(false);
   const isThinkingRef = useRef<boolean>(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  
-  // Latency timer references
-  const tSpeechFinishedRef = useRef<number | null>(null);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Session ID ref — mirrors state so callbacks always have the current value
+  const sessionIdRef = useRef<string | null>(null);
+
+  // Abort controller for the fetch/SSE stream
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Latency stopwatch
+  const tSpeechFinishedRef = useRef<number | null>(null);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Thinking noise —————————————————————————————————————————————————————————————
+  // We use the "PROBE" filler clip (confused-hmm.mp3) for the thinking sound as requested.
+  const thinkingNoiseRef = useRef<HTMLAudioElement | null>(null);
+  const thinkingNoiseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const realAudioStartedRef = useRef<boolean>(false);
+
+  // Keep sessionId accessible inside stable callbacks without re-registering them
+  useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
+
+  // ── Stable helper: stop any playing thinking-noise clip ────────────────────
+  const stopThinkingNoise = useCallback(() => {
+    if (thinkingNoiseRef.current) {
+      thinkingNoiseRef.current.pause();
+      thinkingNoiseRef.current.src = "";
+      thinkingNoiseRef.current = null;
+    }
+    if (thinkingNoiseTimeoutRef.current) {
+      clearTimeout(thinkingNoiseTimeoutRef.current);
+      thinkingNoiseTimeoutRef.current = null;
+    }
+  }, []);
+
+  // ── Forward-ref for startListeningInternal ────────────────────────────────
+  const startListeningInternalRef = useRef<
+    ((stt: STTClient, tts: TTSClient, sid?: string) => void) | null
+  >(null);
+
+  // ── Client initialization ─────────────────────────────────────────────────
   useEffect(() => {
-    // Initialize clients on mount
     const stt = createSTTClient();
     const tts = createTTSClient();
 
-    // Register TTS Callbacks
     tts.onPlaybackStart(() => {
       isSpeakingRef.current = true;
       isThinkingRef.current = false;
+      realAudioStartedRef.current = true;
+
+      // Cancel any pending/playing thinking-noise — real audio has arrived
+      stopThinkingNoise();
+
       setStatus("AI is speaking...");
 
-      // Stop the latency stopwatch timer and log final duration
+      // Finalize latency measurement
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
@@ -56,11 +95,19 @@ export default function TestVoiceLoopPage() {
       if (tSpeechFinishedRef.current) {
         setLatencyMs(Date.now() - tSpeechFinishedRef.current);
       }
+
+      // NOTE: Interruption has been disabled to prevent the AI from interrupting itself.
+      // We no longer restart the microphone here during playback.
     });
 
     tts.onPlaybackEnd(() => {
       isSpeakingRef.current = false;
+      stt.stop(); // Ensure mic is stopped
       setStatus("Done");
+      // Auto-restart for the next turn (short pause to feel natural)
+      setTimeout(() => {
+        startListeningInternalRef.current?.(stt, tts);
+      }, 800);
     });
 
     sttRef.current = stt;
@@ -70,112 +117,22 @@ export default function TestVoiceLoopPage() {
       stt.stop();
       tts.stop();
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      stopThinkingNoise();
     };
-  }, []);
+  }, [stopThinkingNoise]);
 
-  // Initialize Session
-  const initSession = async () => {
-    setError(null);
-    setStatus("Creating Session...");
-    try {
-      const res = await fetch("/api/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Failed to create session: ${res.statusText}`);
-      }
-
-      const data = await res.json() as { session_id: string };
-      setSessionId(data.session_id);
-      return data.session_id;
-    } catch (err: any) {
-      setStatus("Error");
-      setError(err.message ?? String(err));
-      return null;
-    }
-  };
-
-  // Start Listening loop
-  const startListening = async () => {
-    let currentSessionId = sessionId;
-    if (!currentSessionId) {
-      currentSessionId = await initSession();
-      if (!currentSessionId) return;
-    }
-
-    if (!sttRef.current || !ttsRef.current) return;
-
-    setError(null);
-    setTranscript("");
-    setAiText("");
-    setLatencyMs(null);
-    setLiveTimer(null);
-
-    // Register STT callbacks
-    sttRef.current.onPartial((partialText) => {
-      setTranscript(partialText);
-      setStatus("You said: [processing]");
-
-      // --- Interruption detection ---
-      // If the user starts speaking while AI is speaking OR while waiting for backend,
-      // trigger immediate stop/reset
-      if (isSpeakingRef.current || isThinkingRef.current) {
-        handleInterruption();
-      }
-    });
-
-    sttRef.current.onFinal((finalText) => {
-      if (!finalText) return;
-      setTranscript(finalText);
-      
-      // Stop the microphone temporarily during the backend call
-      sttRef.current?.stop();
-
-      // Trigger the backend request
-      submitTurn(currentSessionId!, finalText);
-    });
-
-    sttRef.current.onError((errStr) => {
-      setStatus("Error");
-      setError(errStr);
-    });
-
-    setStatus("Listening (Speak into Mic)...");
-    sttRef.current.start([]);
-  };
-
-  // Process Interruption
-  const handleInterruption = () => {
-    // 1. Halt TTS playback
-    ttsRef.current?.stop();
-    isSpeakingRef.current = false;
-    isThinkingRef.current = false;
-
-    // 2. Abort active backend HTTP/SSE calls
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-
-    // 3. Reset timers
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
-
-    setStatus("Interrupted");
-  };
-
-  // Submit transcript to Backend Turn Route
-  const submitTurn = async (sId: string, text: string) => {
-    if (!ttsRef.current) return;
+  // ── submitTurn ────────────────────────────────────────────────────────────
+  const submitTurn = useCallback(async (
+    sId: string,
+    text: string,
+    stt: STTClient,
+    tts: TTSClient,
+  ) => {
     setStatus("Thinking...");
     isThinkingRef.current = true;
+    realAudioStartedRef.current = false;
 
-    // Start latency stopwatch timer
+    // Start latency stopwatch
     tSpeechFinishedRef.current = Date.now();
     setLiveTimer(0);
     timerIntervalRef.current = setInterval(() => {
@@ -184,7 +141,27 @@ export default function TestVoiceLoopPage() {
       }
     }, 50);
 
-    // Setup fetch abort controller
+    // ── THINKING NOISE — single timeout at the 1500ms threshold ──────────────
+    // Plays the "PROBE" clip (confused-hmm.mp3) as the thinking noise.
+    const thinkingNoiseClipUrl = pickThinkingNoise("PROBE");
+    thinkingNoiseTimeoutRef.current = setTimeout(() => {
+      thinkingNoiseTimeoutRef.current = null;
+      if (!realAudioStartedRef.current) {
+        const elapsed = tSpeechFinishedRef.current
+          ? Date.now() - tSpeechFinishedRef.current
+          : 0;
+        if (shouldPlayThinkingNoise(elapsed)) {
+          const clip = new Audio(thinkingNoiseClipUrl);
+          thinkingNoiseRef.current = clip;
+          clip.play().catch((err) => {
+            console.warn("[test-voice-loop] Thinking noise autoplay blocked:", err.message);
+          });
+          setStatus("Thinking... (thinking sound played)");
+        }
+      }
+    }, 1500); // matches DEFAULT_THRESHOLD_MS in latencyMask.ts
+
+    // Abort controller for this fetch/SSE
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
@@ -200,7 +177,6 @@ export default function TestVoiceLoopPage() {
         throw new Error(`Turn request failed: ${response.statusText}`);
       }
 
-      // Generator yielding tokens as they arrive from SSE
       async function* yieldTokens() {
         try {
           for await (const event of consumeTurnStream(response)) {
@@ -213,24 +189,15 @@ export default function TestVoiceLoopPage() {
             }
           }
         } catch (err: any) {
-          if (err.name !== "AbortError") {
-            throw err;
-          }
+          if (err.name !== "AbortError") throw err;
         }
       }
 
-      // Feed tokens to client-side speaker client
-      await ttsRef.current.speak(yieldTokens());
-
-      // Restart listening for the next turn automatically once playback completes
-      if (!isSpeakingRef.current && status !== "Interrupted") {
-        setTimeout(() => {
-          startListening();
-        }, 1500);
-      }
+      // Blocks until all audio has finished playing.
+      await tts.speak(yieldTokens());
     } catch (err: any) {
       if (err.name === "AbortError") {
-        console.log("[test-voice-loop] Fetch aborted due to interruption.");
+        console.log("[test-voice-loop] Fetch aborted.");
       } else {
         console.error("[test-voice-loop] submitTurn error:", err);
         setStatus("Error");
@@ -240,11 +207,95 @@ export default function TestVoiceLoopPage() {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
       }
+      stopThinkingNoise();
     } finally {
+      isThinkingRef.current = false;
       abortControllerRef.current = null;
+    }
+  }, [stopThinkingNoise]);
+
+  // ── startListeningInternal ────────────────────────────────────────────────
+  const startListeningInternal = useCallback((
+    stt: STTClient,
+    tts: TTSClient,
+    sid?: string,
+  ) => {
+    const currentSessionId = sid ?? sessionIdRef.current;
+    if (!currentSessionId) return;
+
+    setError(null);
+
+    stt.onPartial((partialText) => {
+      setTranscript(partialText);
+      setStatus("You said: [processing]");
+    });
+
+    stt.onFinal((finalText) => {
+      if (!finalText) return;
+      setTranscript(finalText);
+
+      // Stop mic while we wait for backend + TTS
+      stt.stop();
+
+      submitTurn(currentSessionId, finalText, stt, tts);
+    });
+
+    stt.onError((errStr) => {
+      // Suppress "aborted" / "stopped" — those come from our own stt.stop() calls
+      if (errStr.includes("stopped") || errStr.includes("aborted")) return;
+      setStatus("Error");
+      setError(errStr);
+    });
+
+    setStatus("Listening (Speak into Mic)...");
+    stt.start([]);
+  }, [submitTurn]);
+
+  // Keep the ref in sync so the useEffect closure always calls the latest version
+  useEffect(() => {
+    startListeningInternalRef.current = startListeningInternal;
+  }, [startListeningInternal]);
+
+  // ── initSession ───────────────────────────────────────────────────────────
+  const initSession = async () => {
+    setError(null);
+    setStatus("Creating Session...");
+    try {
+      const res = await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic }),
+      });
+      if (!res.ok) throw new Error(`Failed to create session: ${res.statusText}`);
+      const data = await res.json() as { session_id: string };
+      setSessionId(data.session_id);
+      sessionIdRef.current = data.session_id;
+      return data.session_id;
+    } catch (err: any) {
+      setStatus("Error");
+      setError(err.message ?? String(err));
+      return null;
     }
   };
 
+  // ── Public button handler ─────────────────────────────────────────────────
+  const startListening = async () => {
+    let currentSessionId = sessionIdRef.current;
+    if (!currentSessionId) {
+      currentSessionId = await initSession();
+      if (!currentSessionId) return;
+    }
+    if (!sttRef.current || !ttsRef.current) return;
+
+    setTranscript("");
+    setAiText("");
+    setLatencyMs(null);
+    setLiveTimer(null);
+
+    startListeningInternal(sttRef.current, ttsRef.current, currentSessionId);
+  };
+
+  // ── Stop all ──────────────────────────────────────────────────────────────
   const handleStopAll = () => {
     sttRef.current?.stop();
     ttsRef.current?.stop();
@@ -252,13 +303,21 @@ export default function TestVoiceLoopPage() {
     isThinkingRef.current = false;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
+    stopThinkingNoise();
     setStatus("Idle");
   };
+
+  const statusColor =
+    status.startsWith("Listening") ? "#7aa2f7" :
+    status === "AI is speaking..." ? "#9ece6a" :
+    status === "Thinking..." ? "#e0af68" :
+    status.startsWith("Thinking... (thinking") ? "#bb9af3" : "#bb9af3";
 
   return (
     <div style={{
@@ -316,7 +375,7 @@ export default function TestVoiceLoopPage() {
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            disabled={status !== "Idle" && status !== "Done" && status !== "Interrupted"}
+            disabled={status !== "Idle" && status !== "Done"}
             style={{
               width: "100%",
               backgroundColor: "#1a1b26",
@@ -325,17 +384,14 @@ export default function TestVoiceLoopPage() {
               borderRadius: "8px",
               padding: "12px",
               fontSize: "15px",
-              outline: "none"
+              outline: "none",
+              boxSizing: "border-box",
             }}
           />
         </div>
 
         {/* Actions */}
-        <div style={{
-          display: "flex",
-          gap: "12px",
-          marginBottom: "32px"
-        }}>
+        <div style={{ display: "flex", gap: "12px", marginBottom: "32px" }}>
           <button
             onClick={startListening}
             style={{
@@ -371,7 +427,7 @@ export default function TestVoiceLoopPage() {
           </button>
         </div>
 
-        {/* Stopwatch & Latency diagnostics */}
+        {/* Stopwatch & Latency */}
         {(liveTimer !== null || latencyMs !== null) && (
           <div style={{
             backgroundColor: "rgba(224, 175, 104, 0.08)",
@@ -387,19 +443,15 @@ export default function TestVoiceLoopPage() {
               ⏱️ Latency (STT End → AI Speech Start):
             </span>
             <span style={{ fontSize: "16px", fontWeight: 700, fontFamily: "monospace", color: "#e0af68" }}>
-              {latencyMs !== null ? `${(latencyMs / 1000).toFixed(2)}s (Final)` : `${((liveTimer ?? 0) / 1000).toFixed(2)}s`}
+              {latencyMs !== null
+                ? `${(latencyMs / 1000).toFixed(2)}s (Final)`
+                : `${((liveTimer ?? 0) / 1000).toFixed(2)}s`}
             </span>
           </div>
         )}
 
-        {/* Live Conversation Transcript Display */}
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-          marginBottom: "32px"
-        }}>
-          {/* User speech */}
+        {/* Transcript panels */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px" }}>
           <div style={{
             backgroundColor: "#16161e",
             borderRadius: "10px",
@@ -409,17 +461,11 @@ export default function TestVoiceLoopPage() {
             <span style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#565f89", textTransform: "uppercase", marginBottom: "8px" }}>
               Your Speech (Microphone)
             </span>
-            <p style={{
-              fontSize: "15px",
-              margin: 0,
-              color: transcript ? "#c0caf5" : "#565f89",
-              fontStyle: transcript ? "normal" : "italic"
-            }}>
+            <p style={{ fontSize: "15px", margin: 0, color: transcript ? "#c0caf5" : "#565f89", fontStyle: transcript ? "normal" : "italic" }}>
               {transcript || "Waiting for you to speak..."}
             </p>
           </div>
 
-          {/* Sam's reply */}
           <div style={{
             backgroundColor: "#16161e",
             borderRadius: "10px",
@@ -429,41 +475,42 @@ export default function TestVoiceLoopPage() {
             <span style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#565f89", textTransform: "uppercase", marginBottom: "8px" }}>
               AI Student Reply (Speaker)
             </span>
-            <p style={{
-              fontSize: "15px",
-              margin: 0,
-              color: aiText ? "#9ece6a" : "#565f89",
-              fontStyle: aiText ? "normal" : "italic"
-            }}>
+            <p style={{ fontSize: "15px", margin: 0, color: aiText ? "#9ece6a" : "#565f89", fontStyle: aiText ? "normal" : "italic" }}>
               {aiText || "Waiting for AI response..."}
             </p>
           </div>
         </div>
 
-        {/* System Diagnostics Status */}
+        {/* Status panel */}
         <div style={{
           backgroundColor: "#16161e",
           borderRadius: "8px",
           padding: "16px",
           border: "1px solid rgba(255, 255, 255, 0.05)"
         }}>
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: "14px", color: "#565f89" }}>System Status:</span>
-            <strong style={{
-              fontSize: "14px",
-              color:
-                status.startsWith("Listening") ? "#7aa2f7" :
-                status === "AI is speaking..." ? "#9ece6a" :
-                status === "Interrupted" ? "#f7768e" :
-                status === "Thinking..." ? "#e0af68" : "#bb9af3"
-            }}>
+            <strong style={{ fontSize: "14px", color: statusColor }}>
               {status}
             </strong>
           </div>
+
+          {status === "Thinking... (thinking sound played)" && (
+            <div style={{
+              marginTop: "10px",
+              paddingTop: "10px",
+              borderTop: "1px solid rgba(187, 154, 243, 0.15)",
+              fontSize: "12px",
+              color: "#bb9af3",
+              opacity: 0.8,
+            }}>
+              🎵 Latency mask triggered (&gt;1500ms silence) — playing filler clip:
+              <br />
+              <span style={{ opacity: 0.8, fontWeight: "bold" }}>
+                confused-hmm.mp3 (&quot;hmm?&quot; thinking sound)
+              </span>
+            </div>
+          )}
 
           {error && (
             <div style={{
