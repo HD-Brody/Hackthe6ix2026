@@ -79,6 +79,17 @@ export async function applyVerdict(
   return { ...session, graph, policy };
 }
 
+export async function updatePolicy(
+  sessionId: string,
+  policy: PolicyState
+): Promise<void> {
+  const res = await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $set: { policy } }
+  );
+  if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
+}
+
 /** Pure graph mutation — exported for unit tests. */
 export function applyVerdictToGraph(
   graph: ConceptGraph,
