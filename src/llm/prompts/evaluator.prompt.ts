@@ -8,10 +8,13 @@
 
 import type { ConceptGraph, Utterance } from "@/lib/types";
 
-/** Recent-history window. Aggressive trimming to ~6 turns + a node-state
- * summary is a Block B3/CP3 fast-tier tuning task, not this one — just don't
- * ship an unbounded prompt in the meantime. */
-const TRANSCRIPT_WINDOW = 10;
+/** Recent-history window. Trimmed at CP3 (Block B3 step 12) from 10 to 6 turns
+ * to keep the fast tier's per-turn prompt small — the node-state summary
+ * below (`formatGraph`) already carries the durable signal (what's been
+ * covered and how), so the transcript window only needs enough turns to
+ * resolve local context like "the conversation directly asked about this
+ * concept" for dodged detection. */
+const TRANSCRIPT_WINDOW = 6;
 
 function formatGraph(graph: ConceptGraph): string {
   return graph.nodes

@@ -1,5 +1,5 @@
 {
-  "description": "B's test utterances (Block B2 step 7). 15 utterances against fixtures/graph-tcp.json, covering: clean correct, vague hand-wave, confidently wrong, multi-concept ramble, off-topic derail, plus one dodged-with-context case. Also A's policy test inputs and the seeds for the Block B4 adversarial scripts (rambler / confident-wrong / derailer). Optional `transcript` gives prior turns for utterances that need context (e.g. dodging a direct question).",
+  "description": "B's test utterances (Block B2 step 7, extended B3 step 12). 16 utterances against fixtures/graph-tcp.json, covering: clean correct, vague hand-wave, confidently wrong, multi-concept ramble, off-topic derail, a dodged-with-context case, and a dodged-with-long-context case that exercises the CP3 6-turn transcript window trim. Also A's policy test inputs and the seeds for the Block B4 adversarial scripts (rambler / confident-wrong / derailer). Optional `transcript` gives prior turns for utterances that need context (e.g. dodging a direct question).",
   "utterances": [
     {
       "kind": "clean-correct",
@@ -77,6 +77,21 @@
         { "role": "student", "text": "wait, changes how exactly? what makes it switch?" }
       ],
       "text": "I mean, it just switches, that's kinda just how TCP works, anyway what else do you want to know?"
+    },
+    {
+      "kind": "dodged-context-long",
+      "node": "n5",
+      "transcript": [
+        { "role": "user", "text": "Slow start doubles the window each round trip until something happens." },
+        { "role": "student", "text": "until what happens exactly?" },
+        { "role": "user", "text": "Until ssthresh or a loss happens." },
+        { "role": "student", "text": "okay. and totally separate question - does congestion avoidance use the same doubling?" },
+        { "role": "user", "text": "No, it's additive, one segment per round trip roughly." },
+        { "role": "student", "text": "makes sense. anyway, going back to what tells the sender to slow down in the first place -" },
+        { "role": "user", "text": "the receiver's ack window shrinks I think" },
+        { "role": "student", "text": "no wait, I mean what actually signals congestion happened at all?" }
+      ],
+      "text": "I mean it's kind of just detected, moving on, do you want to hear about ssthresh instead?"
     }
   ]
 }
