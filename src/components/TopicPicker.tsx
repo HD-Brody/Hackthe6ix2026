@@ -4,7 +4,8 @@
 
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent, type ReactNode } from "react";
 
 type Topic = {
   title: string;
@@ -18,6 +19,14 @@ function SearchIcon() {
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">
       <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
       <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">
+      <path d="M5 12h14m-5-5 5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -86,21 +95,41 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
 
 export function TopicPicker() {
   const [topic, setTopic] = useState("");
+  const router = useRouter();
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const selectedTopic = topic.trim();
+    if (!selectedTopic) return;
+
+    router.push(`/student?topic=${encodeURIComponent(selectedTopic)}`);
+  }
 
   return (
     <div className="mt-8 w-full max-w-6xl sm:mt-10">
-      <label className="relative mx-auto block max-w-3xl">
-        <span className="sr-only">What do you want to teach today?</span>
+      <form onSubmit={handleSubmit} className="relative mx-auto max-w-3xl">
+        <label htmlFor="topic-input" className="sr-only">What do you want to teach today?</label>
         <span className="pointer-events-none absolute inset-y-0 left-6 flex items-center text-[var(--text-muted)]">
           <SearchIcon />
         </span>
         <input
+          id="topic-input"
+          name="topic"
           value={topic}
           onChange={(event) => setTopic(event.target.value)}
           placeholder="What do you want to teach today?"
-          className="h-20 w-full rounded-xl border border-slate-500 bg-white/95 pl-16 pr-5 text-lg font-semibold text-[var(--text-primary)] shadow-[0_20px_25px_-5px_rgba(96,99,238,0.05),0_8px_10px_-6px_rgba(96,99,238,0.05)] outline-none transition placeholder:text-[#c7c4d7] focus:border-[var(--brand)] focus:ring-4 focus:ring-indigo-100 sm:text-2xl"
+          className="h-20 w-full rounded-xl border border-slate-500 bg-white/95 pl-16 pr-20 text-lg font-semibold text-[var(--text-primary)] shadow-[0_20px_25px_-5px_rgba(96,99,238,0.05),0_8px_10px_-6px_rgba(96,99,238,0.05)] outline-none transition placeholder:text-[#c7c4d7] focus:border-[var(--brand)] focus:ring-4 focus:ring-indigo-100 sm:pr-52 sm:text-2xl"
         />
-      </label>
+        <button
+          type="submit"
+          disabled={!topic.trim()}
+          className="absolute right-2 top-1/2 flex h-16 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[var(--brand)] px-5 font-semibold text-white transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#c7c4d7] sm:px-6"
+        >
+          <span className="hidden sm:inline">Start</span>
+          <ArrowRightIcon />
+        </button>
+      </form>
 
       <section className="mt-20 sm:mt-24" aria-labelledby="popular-topics-heading">
         <div className="flex items-center gap-2">
