@@ -1,0 +1,223 @@
+{
+  "topic": "TCP congestion control",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Congestion Control Purpose",
+      "truth": "TCP congestion control aims to prevent network collapse by regulating the rate at which senders inject data into the network, thereby avoiding router buffer overflows and packet loss.",
+      "difficulty": 1,
+      "prereqs": [],
+      "probes": [
+        "ask-why",
+        "ask-example"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n2",
+      "name": "Congestion Window (cwnd)",
+      "truth": "The congestion window (cwnd) is a sender-side limit on the amount of unacknowledged data that can be outstanding at any time, dynamically adjusted by TCP congestion control algorithms.",
+      "difficulty": 1,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n3",
+      "name": "Slow Start Algorithm",
+      "truth": "During slow start, TCP increases the congestion window by roughly one maximum segment size (MSS) for every acknowledgment (ACK) received, effectively doubling the cwnd each round-trip time (RTT).",
+      "difficulty": 2,
+      "prereqs": [
+        "n2"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n4",
+      "name": "Slow Start Threshold (ssthresh)",
+      "truth": "The slow start threshold (ssthresh) is a dynamically set limit that determines when TCP transitions from the slow start phase to the congestion avoidance phase.",
+      "difficulty": 2,
+      "prereqs": [
+        "n3"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n5",
+      "name": "Congestion Avoidance Algorithm",
+      "truth": "In congestion avoidance, TCP increases the congestion window by one MSS per RTT, achieved by incrementing cwnd by (MSS * MSS) / cwnd for each received ACK.",
+      "difficulty": 2,
+      "prereqs": [
+        "n3",
+        "n4"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n6",
+      "name": "Packet Loss Detection via Triple Duplicate ACKs",
+      "truth": "A TCP sender detects packet loss when it receives three duplicate acknowledgments for the same segment, indicating that the segment immediately following the acknowledged one has been lost.",
+      "difficulty": 2,
+      "prereqs": [
+        "n2"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n7",
+      "name": "Packet Loss Detection via Retransmission Timeout (RTO)",
+      "truth": "A TCP sender detects packet loss when its retransmission timer expires before an acknowledgment for a transmitted segment is received, indicating a severe network congestion event.",
+      "difficulty": 2,
+      "prereqs": [
+        "n2"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n8",
+      "name": "RTO Reaction (General)",
+      "truth": "When a retransmission timeout (RTO) occurs, TCP generally responds by setting the slow start threshold (ssthresh) to half of the current congestion window (cwnd), reducing cwnd to one maximum segment size (MSS), and restarting slow start.",
+      "difficulty": 2,
+      "prereqs": [
+        "n4",
+        "n7"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n9",
+      "name": "Fast Retransmit Mechanism",
+      "truth": "Fast Retransmit allows a TCP sender to retransmit a suspected lost segment immediately upon receiving three duplicate ACKs, without waiting for the RTO to expire.",
+      "difficulty": 2,
+      "prereqs": [
+        "n6"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n10",
+      "name": "Fast Recovery Mechanism (Reno)",
+      "truth": "After Fast Retransmit, TCP Reno enters Fast Recovery, setting ssthresh to half of cwnd, setting cwnd to ssthresh plus three MSS, and reducing cwnd by one MSS for each new duplicate ACK until a new ACK arrives.",
+      "difficulty": 3,
+      "prereqs": [
+        "n5",
+        "n9"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n11",
+      "name": "TCP Tahoe's Full Loss Reaction",
+      "truth": "TCP Tahoe reacts to any packet loss event, whether detected by triple duplicate ACKs or an RTO, by immediately setting ssthresh to half of the current cwnd and resetting cwnd to 1 MSS, then re-entering slow start.",
+      "difficulty": 2,
+      "prereqs": [
+        "n8",
+        "n9"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n12",
+      "name": "AIMD Principle",
+      "truth": "Additive Increase Multiplicative Decrease (AIMD) is a core principle where TCP increases its congestion window linearly during congestion avoidance and decreases it multiplicatively (typically by half) upon detecting congestion.",
+      "difficulty": 2,
+      "prereqs": [
+        "n5",
+        "n8"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n13",
+      "name": "Selective Acknowledgment (SACK)",
+      "truth": "Selective Acknowledgment (SACK) allows a TCP receiver to inform the sender about all segments that have been successfully received, not just the cumulative acknowledgment point, enabling more efficient retransmissions of multiple lost segments.",
+      "difficulty": 3,
+      "prereqs": [
+        "n6"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n14",
+      "name": "ECN (Explicit Congestion Notification)",
+      "truth": "Explicit Congestion Notification (ECN) allows network routers to signal impending congestion to TCP endpoints by marking packets instead of dropping them, enabling senders to reduce their sending rate proactively.",
+      "difficulty": 3,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    }
+  ]
+}

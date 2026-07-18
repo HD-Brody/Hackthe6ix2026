@@ -1,0 +1,229 @@
+{
+  "topic": "inflation",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Definition of Inflation",
+      "truth": "Inflation is the rate at which the general level of prices for goods and services is rising, and subsequently, purchasing power is falling.",
+      "difficulty": 1,
+      "prereqs": [],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n2",
+      "name": "Consumer Price Index (CPI)",
+      "truth": "The Consumer Price Index (CPI) measures inflation by tracking the average change over time in the prices paid by urban consumers for a market basket of consumer goods and services.",
+      "difficulty": 1,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n3",
+      "name": "Real vs. Nominal Values",
+      "truth": "Nominal values refer to unadjusted monetary amounts, while real values are adjusted for inflation to reflect true purchasing power.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1",
+        "n2"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n4",
+      "name": "Demand-Pull Inflation",
+      "truth": "Demand-pull inflation occurs when aggregate demand in an economy outpaces aggregate supply, leading to upward pressure on prices.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n5",
+      "name": "Cost-Push Inflation",
+      "truth": "Cost-push inflation results from an increase in the cost of production inputs, such as wages or raw materials, which forces businesses to raise prices.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n6",
+      "name": "Quantity Theory of Money",
+      "truth": "The Quantity Theory of Money states that in the long run, the general price level is directly proportional to the amount of money in circulation, assuming velocity and real output are constant.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1",
+        "n4"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n7",
+      "name": "Role of Inflation Expectations",
+      "truth": "Inflation expectations are beliefs about future inflation rates, which can become self-fulfilling as they influence wage demands, pricing decisions, and interest rates.",
+      "difficulty": 3,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n8",
+      "name": "Phillips Curve",
+      "truth": "The Phillips Curve suggests an inverse relationship between the rate of unemployment and the rate of inflation in the short run, implying policymakers face a trade-off.",
+      "difficulty": 3,
+      "prereqs": [
+        "n1",
+        "n4",
+        "n7"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n9",
+      "name": "Disinflation vs. Deflation",
+      "truth": "Disinflation is a slowdown in the rate of inflation, meaning prices are still rising but at a slower pace, whereas deflation is a sustained decrease in the general price level.",
+      "difficulty": 1,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n10",
+      "name": "Monetary Policy Tools for Inflation",
+      "truth": "Central banks use tools such as adjusting interest rates, quantitative tightening, and reserve requirements to manage the money supply and influence inflation.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1",
+        "n6"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n11",
+      "name": "Fiscal Policy and Inflation",
+      "truth": "Fiscal policy, involving government spending and taxation, can influence inflation by directly affecting aggregate demand in the economy.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1",
+        "n4"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n12",
+      "name": "Hyperinflation",
+      "truth": "Hyperinflation is an extremely rapid and out-of-control rate of inflation, often defined as monthly inflation exceeding 50%, leading to the rapid erosion of currency value.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1",
+        "n6"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n13",
+      "name": "Seigniorage",
+      "truth": "Seigniorage is the profit made by a government by issuing currency, specifically the difference between the face value of money and the cost to produce it, which can finance spending but contribute to inflation if money supply grows too fast.",
+      "difficulty": 3,
+      "prereqs": [
+        "n1",
+        "n6",
+        "n12"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n14",
+      "name": "Inflation Premium",
+      "truth": "The inflation premium is the additional return investors demand for holding a bond or investment to compensate for the expected loss of purchasing power due to inflation over the investment period.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1",
+        "n3",
+        "n7"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    }
+  ]
+}
