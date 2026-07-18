@@ -92,6 +92,51 @@
         { "role": "student", "text": "no wait, I mean what actually signals congestion happened at all?" }
       ],
       "text": "I mean it's kind of just detected, moving on, do you want to hear about ssthresh instead?"
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n13",
+      "text": "With SACK, the receiver tells the sender about every segment that actually arrived, not just the cumulative ack point, so the sender can retransmit only the holes instead of everything after the first loss."
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n14",
+      "text": "ECN lets routers mark packets when they're getting congested instead of dropping them, and the endpoints see that mark and cut their rate before a loss happens."
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n4",
+      "text": "ssthresh is the slow-start threshold — once the congestion window reaches it, TCP leaves slow start and grows much more carefully in congestion avoidance."
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n5",
+      "text": "Congestion is detected either by a retransmission timeout or by getting three duplicate ACKs; either one means the network is overloaded and the sender should cut back."
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n7",
+      "text": "After a timeout loss, TCP Tahoe drops the window back and restarts slow start from one segment, rebuilding carefully."
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n9",
+      "text": "Fast recovery cuts the window in half after triple-duplicate-ACK loss but keeps sending from the new window instead of falling all the way back into slow start."
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n1",
+      "text": "The whole point of congestion control is to keep senders from injecting so much data that router buffers overflow and the network collapses."
+    },
+    {
+      "kind": "vague-handwave",
+      "node": "n13",
+      "text": "SACK is like... telling the other side which bits you got, somehow, so they don't resend everything."
+    },
+    {
+      "kind": "vague-handwave",
+      "node": "n14",
+      "text": "ECN is when the network kind of warns you before packets actually die I think."
     }
   ]
 }

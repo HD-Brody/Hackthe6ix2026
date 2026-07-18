@@ -14,6 +14,7 @@
     "drill:real": "tsx --env-file=.env.local scripts/cp2-integration.ts --seam-only",
     "drill:ab": "tsx --env-file=.env.local scripts/cp2-integration.ts --ab-only",
     "drill:adversarial": "tsx --env-file=.env.local scripts/adversarial-sessions.ts",
+    "drill:wrapup": "tsx --env-file=.env.local scripts/wrapup-session.ts",
     "crash-drill": "tsx --env-file=.env.local scripts/crash-drill.ts",
     "prod-sse-drill": "tsx scripts/prod-sse-drill.ts",
     "seed-demo": "tsx scripts/seed-demo.ts"
