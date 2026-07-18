@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "eval": "tsx --env-file=.env.local src/llm/harness/eval-harness.ts",
+    "cp2:integration": "tsx --env-file=.env.local scripts/cp2-integration.ts",
     "seed-demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {

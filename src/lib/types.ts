@@ -86,6 +86,12 @@ export interface Utterance {
   eval?: Verdict;
 }
 
+/** Turn-policy counters — persisted on the session so they survive restarts. */
+export interface PolicyState {
+  probeCounts: Record<string, number>;
+  deepened: Record<string, boolean>;
+}
+
 export interface Session {
   _id: string;
   user_id: string;
@@ -94,6 +100,12 @@ export interface Session {
   graph: ConceptGraph;
   utterances: Utterance[];
   gap_map?: GapMap;
+  /** Turn-policy state (probe counts, deepened flags). Optional — added post-CP0. */
+  policy?: PolicyState;
+  /** Mongo test-and-set lock — one turn stream at a time (serverless-safe). */
+  turn_in_progress?: boolean;
+  /** When the turn lock was acquired; stale after ~60s. */
+  turn_lock_at?: number;
   started_at: number;
   ended_at?: number;
   /** Per-stage timing (A, Block A3) — D's CP4 latency report reads from this. */
@@ -112,5 +124,13 @@ export interface TurnTiming {
 
 export type TurnSSEEvent =
   | { event: "token"; data: { text: string } }
-  | { event: "done"; data: { verdict: Verdict; session_status: SessionStatus } }
+  | {
+      event: "done";
+      data: {
+        verdict: Verdict;
+        session_status: SessionStatus;
+        /** Policy output for this turn (optional — added post-CP0 for debugging/C). */
+        directive?: Directive;
+      };
+    }
   | { event: "error"; data: { message: string; fallback_line: string } };

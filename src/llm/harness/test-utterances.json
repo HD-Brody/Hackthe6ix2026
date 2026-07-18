@@ -1,9 +1,29 @@
 {
-  "description": "B's test utterances (Block B2 step 7). 10–15 covering: clean correct, vague hand-wave, confidently wrong, multi-concept ramble, off-topic derail. Also A's policy test inputs and the seeds for the Block B4 adversarial scripts (rambler / confident-wrong / derailer).",
+  "description": "B's test utterances (Block B2 step 7). Covering: clean correct, vague hand-wave, confidently wrong, multi-concept ramble, off-topic derail. Used by scripts/cp2-integration.ts for A↔B pairing.",
   "utterances": [
     {
       "kind": "clean-correct",
-      "text": "TODO(B): replace with real test utterances against the TCP fixture graph"
+      "text": "During slow start, the congestion window doubles every round trip time until the sender hits ssthresh or detects packet loss."
+    },
+    {
+      "kind": "vague-hand-wave",
+      "text": "It like... speeds up until it doesn't, you know, when things get congested or whatever."
+    },
+    {
+      "kind": "confidently-wrong",
+      "text": "ssthresh is where packets die and the connection closes forever."
+    },
+    {
+      "kind": "multi-concept",
+      "text": "Slow start doubles the window, then congestion avoidance adds one MSS per RTT, and AIMD keeps everything fair between flows."
+    },
+    {
+      "kind": "derail",
+      "text": "Anyway, did you see the game last night? Totally unrelated but wow."
+    },
+    {
+      "kind": "clean-correct",
+      "text": "Three duplicate ACKs trigger fast retransmit before the retransmission timeout fires."
     }
   ]
 }
