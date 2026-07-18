@@ -100,6 +100,20 @@ function toGapMapNodes(nodes: ConceptNode[]): GapMap["nodes"] {
   return nodes.map((n) => ({ id: n.id, name: n.name, state: n.state }));
 }
 
+/** Flat / generic one-liners that fail the projector bar — skip these. */
+const FLAT_ONE_LINER =
+  /\b(pretty well|some gaps|needs more depth|struggle with others|overall solid|a few vague|did well but)\b/i;
+
+/**
+ * Prefer the first candidate that isn't a known-flat template. Falls back to
+ * candidates[0] so we never return empty when the model only produced flats.
+ */
+export function pickOneLiner(candidates: string[]): string {
+  const cleaned = candidates.map((c) => c.trim()).filter(Boolean);
+  if (cleaned.length === 0) return "";
+  return cleaned.find((c) => !FLAT_ONE_LINER.test(c)) ?? cleaned[0];
+}
+
 export async function generateGapMap(
   graph: ConceptGraph,
   quotes: VagueMoment[],
@@ -116,6 +130,6 @@ export async function generateGapMap(
     dodged_questions: dodged,
     vaguest_moments: pickVaguestMoments(quotes, raw.vaguest_moments),
     reteach_order: sanitizeReteachOrder(graph, raw.reteach_order),
-    one_liner: raw.one_liner_candidates[0] ?? "",
+    one_liner: pickOneLiner(raw.one_liner_candidates),
   };
 }

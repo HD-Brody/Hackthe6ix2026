@@ -127,15 +127,27 @@ describe("turnPolicy", () => {
     ).toEqual({ type: "PROBE", node_id: "n1" });
   });
 
-  it("empty verdicts falls back to recommended_directive", () => {
+  it("empty verdicts (derail) ignore recommended PROBE → ADVANCE", () => {
     const derail: Verdict = {
       nodes_touched: [],
       verdicts: [],
       recommended_directive: { type: "PROBE", node_id: "n5" },
     };
     expect(turnPolicy(graph, derail, emptyPolicy)).toEqual({
-      type: "PROBE",
-      node_id: "n5",
+      type: "ADVANCE",
+      node_id: "n1",
+    });
+  });
+
+  it("dodge-only verdicts → ADVANCE past the dodge (no probe loop)", () => {
+    const dodge: Verdict = {
+      nodes_touched: ["n3"],
+      verdicts: [{ node_id: "n3", verdict: "dodged" }],
+      recommended_directive: { type: "PROBE", node_id: "n3" },
+    };
+    expect(turnPolicy(graph, dodge, emptyPolicy)).toEqual({
+      type: "ADVANCE",
+      node_id: "n1",
     });
   });
 
@@ -149,7 +161,7 @@ describe("turnPolicy", () => {
     expect(directive).toEqual({ type: "ADVANCE", node_id: "n1" });
   });
 
-  it("wrong verdict probes like vague (twice max)", () => {
+  it("wrong verdict probes like vague (twice max), then ADVANCE past the disaster", () => {
     const wrong: Verdict = {
       nodes_touched: ["n3"],
       verdicts: [{ node_id: "n3", verdict: "wrong", quote: "totally backwards" }],

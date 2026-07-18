@@ -1,0 +1,22 @@
+{
+  "description": "Full-graph teaching session aimed at WRAP_UP. One solid (or intentional vague/wrong) turn per major node so nextAdvanceTarget goes null and policy wraps.",
+  "topic": "TCP congestion control",
+  "turns": [
+    "Congestion control exists so senders don't flood the network until router buffers overflow and everything collapses.",
+    "The congestion window is a sender-side limit on how much unacknowledged data can be in flight, and it moves up or down based on ACKs and loss.",
+    "In slow start the window grows by about one MSS per ACK, which roughly doubles it every round-trip time.",
+    "ssthresh is the slow-start threshold — once cwnd hits it, TCP leaves slow start and grows much more carefully.",
+    "Congestion avoidance increases the window by roughly one MSS per RTT instead of doubling.",
+    "Loss is the congestion signal: either a retransmission timeout or three duplicate ACKs.",
+    "Three duplicate ACKs trigger fast retransmit — the sender resends that segment immediately without waiting for the RTO.",
+    "After a timeout, TCP Tahoe collapses the window and restarts slow start from one segment.",
+    "Fast recovery halves the window after triple-dup-ACK loss but keeps sending from the new window instead of falling all the way back to slow start.",
+    "Reno uses fast retransmit plus fast recovery so a triple-dup-ACK loss is less brutal than a timeout.",
+    "A retransmission timeout means the sender got no timely ACK, so it treats that as severe congestion and backs off hard.",
+    "AIMD means additive increase when things are fine and multiplicative decrease — usually halving — when congestion is detected.",
+    "With SACK the receiver reports every segment that arrived, not just the cumulative ack point, so the sender retransmits only the holes.",
+    "ECN lets routers mark packets when they're getting congested instead of dropping them, and endpoints cut their rate before a loss happens.",
+    "So overall: grow carefully, cut hard on loss, use dup-ACKs and timers to notice trouble, and SACK/ECN make recovery smarter when the path supports them.",
+    "I think that covers it — anything still confusing, or are we good?"
+  ]
+}

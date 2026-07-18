@@ -7,7 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createSession } from "@/server/db/sessions";
+import {
+  createSession,
+  MAX_SESSIONS_PER_USER,
+  SessionCapError,
+} from "@/server/db/sessions";
 import { resolveGraph } from "@/server/orchestrator/resolveGraph";
 import { transition } from "@/server/orchestrator/stateMachine";
 
@@ -25,7 +29,25 @@ export async function POST(req: NextRequest) {
   }
 
   const graph = await resolveGraph(topic);
-  const session = await createSession("dev", topic, graph);
+
+  let session;
+  try {
+    session = await createSession("dev", topic, graph);
+  } catch (err) {
+    if (err instanceof SessionCapError) {
+      return NextResponse.json(
+        {
+          error: err.code,
+          message: err.message,
+          limit: MAX_SESSIONS_PER_USER,
+          current: err.count,
+        },
+        { status: 429 }
+      );
+    }
+    throw err;
+  }
+
   await transition(session._id, "created", "teaching");
 
   return NextResponse.json({ session_id: session._id, graph: session.graph });
