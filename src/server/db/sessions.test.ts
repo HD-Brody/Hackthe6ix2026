@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   applyVerdictToGraph,
   buildTurnLockAcquireFilter,
+  countUserTurns,
   hasOrphanedUserTurn,
+  isTurnCapReached,
+  MAX_TURNS_PER_SESSION,
   TURN_LOCK_STALE_MS,
 } from "./sessions";
 import type { ConceptGraph, Utterance, Verdict } from "@/lib/types";
@@ -127,5 +130,26 @@ describe("buildTurnLockAcquireFilter", () => {
   it("does not add orphan steal branch when transcript is complete", () => {
     const filter = buildTurnLockAcquireFilter(sessionId, now, false);
     expect(filter.$or.filter((c) => c.turn_in_progress === true)).toHaveLength(0);
+  });
+});
+
+describe("turn cap", () => {
+  it("allows up to MAX_TURNS_PER_SESSION user turns", () => {
+    const utterances = Array.from({ length: MAX_TURNS_PER_SESSION - 1 }, (_, i) => ({
+      role: "user" as const,
+      text: `turn ${i}`,
+      ts: i,
+    }));
+    expect(countUserTurns(utterances)).toBe(MAX_TURNS_PER_SESSION - 1);
+    expect(isTurnCapReached(utterances)).toBe(false);
+  });
+
+  it("rejects when user turn count reaches cap", () => {
+    const utterances = Array.from({ length: MAX_TURNS_PER_SESSION }, (_, i) => ({
+      role: "user" as const,
+      text: `turn ${i}`,
+      ts: i,
+    }));
+    expect(isTurnCapReached(utterances)).toBe(true);
   });
 });

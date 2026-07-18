@@ -14,7 +14,9 @@ import {
   acquireTurnLock,
   appendUtterance,
   getSession,
+  isTurnCapReached,
   releaseTurnLock,
+  TURN_CAP_MESSAGE,
 } from "@/server/db/sessions";
 import { createTurnStream, SSE_HEADERS } from "@/server/orchestrator/runTurn";
 
@@ -48,6 +50,13 @@ export async function POST(
   }
   if (session.status === "ended") {
     return NextResponse.json({ error: "session ended" }, { status: 400 });
+  }
+
+  if (isTurnCapReached(session.utterances)) {
+    return NextResponse.json(
+      { error: "turn_cap_reached", message: TURN_CAP_MESSAGE },
+      { status: 400 }
+    );
   }
 
   if (!(await acquireTurnLock(id))) {

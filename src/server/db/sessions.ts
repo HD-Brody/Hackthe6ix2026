@@ -178,6 +178,22 @@ export async function setPendingDirective(
   if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
 }
 
+/** Max user turns per session — quota insurance (A4). Env-tunable for drills. */
+export const MAX_TURNS_PER_SESSION = Number(
+  process.env.MAX_TURNS_PER_SESSION ?? "40"
+);
+
+export const TURN_CAP_MESSAGE =
+  "I think my brain is full — can we wrap up?";
+
+export function countUserTurns(utterances: Utterance[]): number {
+  return utterances.filter((u) => u.role === "user").length;
+}
+
+export function isTurnCapReached(utterances: Utterance[]): boolean {
+  return countUserTurns(utterances) >= MAX_TURNS_PER_SESSION;
+}
+
 export async function setGapMap(
   sessionId: string,
   gapMap: GapMap
