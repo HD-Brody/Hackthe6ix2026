@@ -15,11 +15,43 @@ async function sessions() {
   return (await getDb()).collection<Session>("sessions");
 }
 
+/** Max sessions per user_id — quota insurance (A4). Env-tunable. */
+export const MAX_SESSIONS_PER_USER = Number(
+  process.env.MAX_SESSIONS_PER_USER ?? "10"
+);
+
+export const SESSION_CAP_MESSAGE =
+  "You've taught me enough for now — take a break, then come back.";
+
+export function isSessionCapReached(sessionCount: number): boolean {
+  return sessionCount >= MAX_SESSIONS_PER_USER;
+}
+
+export async function countSessionsForUser(userId: string): Promise<number> {
+  return (await sessions()).countDocuments({ user_id: userId });
+}
+
+export class SessionCapError extends Error {
+  readonly code = "session_cap_reached" as const;
+  constructor(
+    public readonly userId: string,
+    public readonly count: number
+  ) {
+    super(SESSION_CAP_MESSAGE);
+    this.name = "SessionCapError";
+  }
+}
+
 export async function createSession(
   userId: string,
   topic: string,
   graph: ConceptGraph
 ): Promise<Session> {
+  const count = await countSessionsForUser(userId);
+  if (isSessionCapReached(count)) {
+    throw new SessionCapError(userId, count);
+  }
+
   const session: Session = {
     _id: randomUUID(),
     user_id: userId,

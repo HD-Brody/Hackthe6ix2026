@@ -4,7 +4,9 @@ import {
   buildTurnLockAcquireFilter,
   countUserTurns,
   hasOrphanedUserTurn,
+  isSessionCapReached,
   isTurnCapReached,
+  MAX_SESSIONS_PER_USER,
   MAX_TURNS_PER_SESSION,
   TURN_LOCK_STALE_MS,
 } from "./sessions";
@@ -151,5 +153,13 @@ describe("turn cap", () => {
       ts: i,
     }));
     expect(isTurnCapReached(utterances)).toBe(true);
+  });
+});
+
+describe("session cap", () => {
+  it("rejects when session count reaches MAX_SESSIONS_PER_USER", () => {
+    expect(isSessionCapReached(MAX_SESSIONS_PER_USER - 1)).toBe(false);
+    expect(isSessionCapReached(MAX_SESSIONS_PER_USER)).toBe(true);
+    expect(isSessionCapReached(MAX_SESSIONS_PER_USER + 1)).toBe(true);
   });
 });
