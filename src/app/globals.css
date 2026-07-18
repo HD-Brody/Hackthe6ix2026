@@ -3,10 +3,50 @@
 /* Owner: C. Node-state colors are the gap map's visual language — define
    once here, use everywhere (classroom indicators + gap map grid). */
 :root {
+  --brand: #6063ee;
+  --brand-strong: #2f2ebe;
+  --brand-soft: #e1e0ff;
+  --page-background: #f7f9fb;
+  --surface-muted: #f2f4f6;
+  --text-primary: #191c1e;
+  --text-secondary: #464554;
+  --text-muted: #6b7280;
+  --card-border: rgba(199, 196, 215, 0.3);
   --state-solid: #22c55e;
   --state-vague: #eab308;
   --state-wrong: #ef4444;
   --state-dodged: #a855f7;
   --state-touched: #38bdf8;
   --state-unvisited: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--page-background);
+}
+
+body {
+  margin: 0;
+  color: var(--text-primary);
+  background: var(--page-background);
+  font-family: var(--font-inter), sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.font-heading {
+  font-family: var(--font-plus-jakarta), sans-serif;
+}
+
+.home-background {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(96, 99, 238, 0.09), transparent 28rem),
+    radial-gradient(circle at 0% 100%, rgba(129, 39, 207, 0.055), transparent 30rem),
+    var(--page-background);
 }
