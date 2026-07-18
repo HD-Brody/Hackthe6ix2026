@@ -245,6 +245,21 @@ async function main(): Promise<void> {
   session = await getSession(session_id);
   log("✓", `replay check: ${session.utterances.length} utterances, status=${session.status}, gap_map=${!!session.gap_map}`);
 
+  const timings = session.timings ?? [];
+  if (timings.length === 0) {
+    log("✗", "no turn timings persisted on session");
+    failures++;
+  } else {
+    log("✓", `${timings.length} turn timing(s) persisted`);
+    for (const t of timings) {
+      log(
+        "→",
+        `turn ${t.turn}: eval=${t.eval_ms}ms policy=${t.policy_ms}ms ` +
+          `persona_first_token=${t.persona_first_token_ms}ms total=${t.total_ms}ms mode=${t.mode}`
+      );
+    }
+  }
+
   if (!wrapUpSeen) {
     log("⚠️", "WRAP_UP / wrapping not seen — may need more turns for full graph coverage");
   }

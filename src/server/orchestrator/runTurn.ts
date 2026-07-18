@@ -9,6 +9,7 @@ import {
   appendUtterance,
   applyVerdict,
   getSession,
+  pushTurnTiming,
   releaseTurnLock,
   updatePolicy,
 } from "@/server/db/sessions";
@@ -20,6 +21,7 @@ import type {
   Directive,
   PolicyState,
   TurnSSEEvent,
+  TurnTiming,
   Utterance,
   Verdict,
 } from "@/lib/types";
@@ -77,6 +79,52 @@ function applyDirectiveToPolicy(
 
 function policyChanged(before: PolicyState, after: PolicyState): boolean {
   return JSON.stringify(before) !== JSON.stringify(after);
+}
+
+function turnMode(): TurnTiming["mode"] {
+  return process.env.PARALLEL_EVAL === "true" ? "parallel" : "sequential";
+}
+
+function userTurnNumber(utterances: Utterance[]): number {
+  return utterances.filter((u) => u.role === "user").length;
+}
+
+function buildTurnTiming(params: {
+  turn: number;
+  t0: number;
+  tEvalStart: number;
+  tEvalEnd: number;
+  tPolicyDone: number;
+  tPersonaFirst?: number;
+  tPersonaLast?: number;
+}): TurnTiming {
+  const {
+    turn,
+    t0,
+    tEvalStart,
+    tEvalEnd,
+    tPolicyDone,
+    tPersonaFirst,
+    tPersonaLast,
+  } = params;
+
+  return {
+    turn,
+    eval_ms: tEvalEnd - tEvalStart,
+    policy_ms: tPolicyDone - tEvalEnd,
+    persona_first_token_ms:
+      tPersonaFirst !== undefined ? tPersonaFirst - tPolicyDone : undefined,
+    total_ms: (tPersonaLast ?? Date.now()) - t0,
+    mode: turnMode(),
+  };
+}
+
+function logTurnTiming(timing: TurnTiming): void {
+  console.log(
+    `[turn ${timing.turn}] eval=${timing.eval_ms}ms policy=${timing.policy_ms}ms ` +
+      `persona_first_token=${timing.persona_first_token_ms}ms total=${timing.total_ms}ms ` +
+      `mode=${timing.mode}`
+  );
 }
 
 async function streamTextAsTokens(
@@ -167,13 +215,16 @@ export function createEchoTurnStream(sessionId: string): ReadableStream<Uint8Arr
 /** Real loop — evaluate → policy → persona. Sequential v1 (A3 adds parallel eval). */
 export function createRealTurnStream(sessionId: string): ReadableStream<Uint8Array> {
   return createSseStream(sessionId, async (send) => {
+    const t0 = Date.now();
     const session = await getSession(sessionId);
     if (!session) throw new Error("session not found");
 
     const transcript = session.utterances;
     const userText = lastUserText(transcript);
+    const turn = userTurnNumber(transcript);
 
     let verdict: Verdict;
+    const tEvalStart = Date.now();
     try {
       verdict = await retryOnce(() =>
         evaluate(session.graph, transcript, userText)
@@ -187,6 +238,7 @@ export function createRealTurnStream(sessionId: string): ReadableStream<Uint8Arr
       });
       return;
     }
+    const tEvalEnd = Date.now();
 
     let policy = session.policy ?? emptyPolicy();
     const afterVerdict = await applyVerdict(sessionId, verdict, policy);
@@ -201,26 +253,45 @@ export function createRealTurnStream(sessionId: string): ReadableStream<Uint8Arr
     if (directive.type === "WRAP_UP" && session.status === "teaching") {
       await transition(sessionId, "teaching", "wrapping");
     }
+    const tPolicyDone = Date.now();
 
     let studentLine = "";
+    let tPersonaFirst: number | undefined;
+    let tPersonaLast: number | undefined;
     try {
       studentLine = await retryOnce(async () => {
         let text = "";
         for await (const token of personaReply(transcript, directive)) {
+          if (tPersonaFirst === undefined) tPersonaFirst = Date.now();
           text += token;
           send({ event: "token", data: { text: token } });
         }
+        tPersonaLast = Date.now();
         return text;
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : "persona failed";
       studentLine = FALLBACK_LINE;
+      tPersonaFirst = Date.now();
       await streamTextAsTokens(FALLBACK_LINE, send);
+      tPersonaLast = Date.now();
       send({
         event: "error",
         data: { message, fallback_line: FALLBACK_LINE },
       });
     }
+
+    const timing = buildTurnTiming({
+      turn,
+      t0,
+      tEvalStart,
+      tEvalEnd,
+      tPolicyDone,
+      tPersonaFirst,
+      tPersonaLast,
+    });
+    logTurnTiming(timing);
+    await pushTurnTiming(sessionId, timing);
 
     await appendUtterance(sessionId, {
       role: "student",
@@ -236,6 +307,7 @@ export function createRealTurnStream(sessionId: string): ReadableStream<Uint8Arr
         verdict,
         session_status: updated?.status ?? "teaching",
         directive,
+        timing,
       },
     });
   });

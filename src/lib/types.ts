@@ -117,7 +117,12 @@ export interface TurnTiming {
   stt_end_to_first_token_ms?: number;
   first_token_to_first_audio_ms?: number;
   eval_ms?: number;
+  policy_ms?: number;
+  /** Time from policy done to persona's first streamed token. */
   persona_first_token_ms?: number;
+  /** Request received to persona stream complete (server-side). */
+  total_ms?: number;
+  mode?: "sequential" | "parallel";
 }
 
 // ── SSE events (contracts/api.md) ───────────────────────────────
@@ -131,6 +136,8 @@ export type TurnSSEEvent =
         session_status: SessionStatus;
         /** Policy output for this turn (optional — added post-CP0 for debugging/C). */
         directive?: Directive;
+        /** Per-stage timing (optional — added post-CP0 for D's latency work). */
+        timing?: TurnTiming;
       };
     }
   | { event: "error"; data: { message: string; fallback_line: string } };

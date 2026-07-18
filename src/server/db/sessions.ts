@@ -7,6 +7,7 @@ import type {
   ConceptGraph,
   PolicyState,
   GapMap,
+  TurnTiming,
 } from "@/lib/types";
 
 async function sessions() {
@@ -131,6 +132,17 @@ export async function releaseTurnLock(sessionId: string): Promise<void> {
     { _id: sessionId },
     { $set: { turn_in_progress: false }, $unset: { turn_lock_at: "" } }
   );
+}
+
+export async function pushTurnTiming(
+  sessionId: string,
+  timing: TurnTiming
+): Promise<void> {
+  const res = await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $push: { timings: timing } }
+  );
+  if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
 }
 
 export async function setGapMap(
