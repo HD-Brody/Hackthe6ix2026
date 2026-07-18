@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import type { StudentProfile } from "@/lib/studentProfiles";
 
@@ -20,7 +21,7 @@ function DashboardIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-[18px]"><rect x="3.5" y="3.5" width="6.5" height="6.5" stroke="currentColor" strokeWidth="1.7"/><rect x="14" y="3.5" width="6.5" height="6.5" stroke="currentColor" strokeWidth="1.7"/><rect x="3.5" y="14" width="6.5" height="6.5" stroke="currentColor" strokeWidth="1.7"/><rect x="14" y="14" width="6.5" height="6.5" stroke="currentColor" strokeWidth="1.7"/></svg>;
 }
 
-export function SessionFeedback({ profile }: { profile: StudentProfile }) {
+export function SessionFeedback({ profile, sessionId }: { profile: StudentProfile; sessionId: string }) {
   const [rating, setRating] = useState(0);
 
   return (
@@ -56,8 +57,8 @@ export function SessionFeedback({ profile }: { profile: StudentProfile }) {
         <textarea id="session-feedback" rows={2} placeholder="How can I improve my teaching?" className="mt-2 min-h-20 w-full resize-y rounded-xl border-0 bg-[#f2f4f6] px-4 py-3 text-sm outline-none placeholder:text-[#6b7280] focus-visible:ring-2 focus-visible:ring-[var(--brand)]" />
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
-          <button type="button" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4648d4] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><MapIcon /> View Understanding Map</button>
-          <button type="button" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c7c4d7] bg-[#f2f4f6] px-4 py-3 text-sm font-semibold text-[#4648d4] transition hover:bg-[#e8e9ee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><DashboardIcon /> Return to Dashboard</button>
+          <Link href={`/session/${encodeURIComponent(sessionId)}/report?student=${profile.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4648d4] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><MapIcon /> View Understanding Map</Link>
+          <Link href="/" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c7c4d7] bg-[#f2f4f6] px-4 py-3 text-sm font-semibold text-[#4648d4] transition hover:bg-[#e8e9ee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><DashboardIcon /> Return to Main</Link>
         </div>
       </section>
     </main>

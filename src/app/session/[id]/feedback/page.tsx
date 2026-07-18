@@ -4,17 +4,20 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { getStudentProfile } from "@/lib/studentProfiles";
 
 export default async function FeedbackPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ id: string }>;
   searchParams: Promise<{ student?: string }>;
 }) {
+  const { id } = await params;
   const { student } = await searchParams;
   const profile = getStudentProfile(student);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f8fafc] text-[var(--text-primary)]">
-      <SiteHeader activeItem="classroom" />
-      <SessionFeedback profile={profile} />
+      <SiteHeader activeItem="classroom" sessionId={id} student={profile.id} />
+      <SessionFeedback profile={profile} sessionId={id} />
       <SiteFooter />
     </div>
   );

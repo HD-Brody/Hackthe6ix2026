@@ -22,49 +22,58 @@ function ProfileAvatar() {
 }
 
 type SiteHeaderProps = {
-  activeItem?: "dashboard" | "classroom" | "analytics";
+  activeItem?: "classroom" | "analytics";
+  sessionId?: string;
+  student?: "sam" | "elena";
 };
 
 const navigationItems = [
-  { id: "dashboard", label: "Dashboard" },
-  { id: "classroom", label: "Classroom" },
-  { id: "analytics", label: "Analytics" },
+  { id: "classroom", label: "Classroom", fallbackHref: "/student" },
+  { id: "analytics", label: "Analytics", fallbackHref: "/session/demo/report" },
 ] as const;
 
-export function SiteHeader({ activeItem }: SiteHeaderProps) {
+export function SiteHeader({ activeItem, sessionId, student = "sam" }: SiteHeaderProps) {
   return (
     <header className="relative z-10 h-16 border-b border-indigo-50 bg-white shadow-[0_4px_10px_rgba(99,102,241,0.05)]">
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
-        <Link
-          href="/"
-          aria-label="Professor Me home"
-          className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
-        >
-          <Image
-            src="/logo.svg"
-            alt="Professor Me"
-            width={191}
-            height={32}
-            priority
-            className="h-7 w-auto sm:h-8"
-          />
-        </Link>
+        <div className="flex items-center gap-8 lg:gap-10">
+          <Link
+            href="/"
+            aria-label="Professor Me home"
+            className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
+          >
+            <Image
+              src="/logo.svg"
+              alt="Professor Me"
+              width={191}
+              height={32}
+              priority
+              className="h-7 w-auto sm:h-8"
+            />
+          </Link>
 
-        <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-sm text-[var(--text-secondary)] md:flex lg:text-base">
-          {navigationItems.map((item) => {
-            const active = activeItem === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                aria-current={active ? "page" : undefined}
-                className={`rounded-sm border-b-2 px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${active ? "border-[#4648d4] font-bold text-[#4648d4]" : "border-transparent"}`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
+          <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-sm text-[var(--text-secondary)] md:flex lg:text-base">
+            {navigationItems.map((item) => {
+              const active = activeItem === item.id;
+              const studentQuery = `?student=${student}`;
+              const href = sessionId && item.id === "classroom"
+                ? `/session/${encodeURIComponent(sessionId)}${studentQuery}`
+                : sessionId && item.id === "analytics"
+                  ? `/session/${encodeURIComponent(sessionId)}/report${studentQuery}`
+                  : item.fallbackHref;
+              return (
+                <Link
+                  key={item.id}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-sm border-b-2 px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${active ? "border-[#4648d4] font-bold text-[#4648d4]" : "border-transparent"}`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
         <div className="flex items-center gap-1 text-[var(--text-secondary)]">
           <button type="button" aria-label="Notifications" className="rounded-full p-2 transition hover:bg-indigo-50 hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><BellIcon /></button>

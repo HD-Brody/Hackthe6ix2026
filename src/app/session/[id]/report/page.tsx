@@ -35,10 +35,20 @@ function ShareIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-4"><circle cx="18" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" strokeWidth="1.7"/><path d="m8.3 10.9 7.4-4.5M8.3 13.1l7.4 4.5" stroke="currentColor" strokeWidth="1.7"/></svg>;
 }
 
-export default function ReportPage() {
+export default async function ReportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ student?: string }>;
+}) {
+  const { id } = await params;
+  const { student } = await searchParams;
+  const selectedStudent = student === "elena" ? "elena" : "sam";
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f9f9fc] text-[var(--text-primary)]">
-      <SiteHeader activeItem="analytics" />
+      <SiteHeader activeItem="analytics" sessionId={id} student={selectedStudent} />
       <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
         <section className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -89,7 +99,7 @@ export default function ReportPage() {
 
         <section className="mt-10">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#7776df]">Conversation Review</p>
-          <h2 className="mt-1 font-heading text-2xl font-extrabold">Moments Sam got confused</h2>
+          <h2 className="mt-1 font-heading text-2xl font-extrabold">Moments {selectedStudent === "elena" ? "Elena" : "Sam"} got confused</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {moments.map((moment) => <article key={moment.time} className={`flex min-h-52 flex-col rounded-xl border border-[#e0dfeb] border-l-4 bg-white p-5 shadow-sm ${moment.color}`}><time className="text-xs font-bold text-[#7776df]">{moment.time}</time><blockquote className="my-4 flex-1 text-sm italic leading-6 text-[var(--text-secondary)]">“{moment.text}”</blockquote><p className="text-[10px] font-extrabold tracking-[0.14em] text-[#858393]">{moment.label}</p></article>)}
           </div>

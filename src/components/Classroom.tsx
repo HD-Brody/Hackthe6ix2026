@@ -6,6 +6,7 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import Link from "next/link";
 import type { Utterance } from "@/lib/types";
 import { studentProfiles, type StudentId } from "@/lib/studentProfiles";
 import { MicButton } from "@/components/MicButton";
@@ -217,15 +218,15 @@ export function Classroom({
         <section className="flex min-h-[620px] flex-col overflow-hidden rounded-lg border border-[var(--card-border)] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] lg:h-[700px]" aria-label="Classroom conversation">
           <div className="flex items-center justify-between gap-3 border-b border-[var(--card-border)] bg-white/80 px-4 py-3 backdrop-blur-sm sm:px-5">
             <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] sm:text-base"><ChatIcon /> Conversation Flow</div>
-            <button
-              type="button"
-              aria-label="End conversation. Session ending is not connected yet."
+            <Link
+              href={`/session/${encodeURIComponent(sessionId)}/feedback?student=${student}`}
+              aria-label={`End conversation and rate ${profile.name}'s learning session`}
               className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[#df6b71] bg-[#fff5f5] px-3 py-2 text-xs font-bold text-[#b83d45] transition hover:bg-[#ffe8e9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c94c54] focus-visible:ring-offset-2 sm:text-sm"
             >
               <EndConversationIcon />
               <span className="hidden xs:inline sm:inline">End Conversation</span>
               <span className="sm:hidden">End</span>
-            </button>
+            </Link>
           </div>
           <Transcript utterances={utterances} student={student} />
           <ClassroomComposer

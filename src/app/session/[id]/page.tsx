@@ -16,7 +16,7 @@ export default async function ClassroomPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--page-background)]">
-      <SiteHeader activeItem="classroom" />
+      <SiteHeader activeItem="classroom" sessionId={id} student={profile.id} />
       <main className="flex-1">
         <Classroom sessionId={id} student={profile.id} />
       </main>
