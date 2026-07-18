@@ -102,6 +102,11 @@ export interface Session {
   gap_map?: GapMap;
   /** Turn-policy state (probe counts, deepened flags). Optional — added post-CP0. */
   policy?: PolicyState;
+  /**
+   * Directive computed at end of turn N, spoken at start of turn N+1 (parallel eval).
+   * Optional — added post-CP0 for A3 crash/serverless safety.
+   */
+  pending_directive?: Directive;
   /** Mongo test-and-set lock — one turn stream at a time (serverless-safe). */
   turn_in_progress?: boolean;
   /** When the turn lock was acquired; stale after ~60s. */
@@ -118,8 +123,10 @@ export interface TurnTiming {
   first_token_to_first_audio_ms?: number;
   eval_ms?: number;
   policy_ms?: number;
-  /** Time from policy done to persona's first streamed token. */
+  /** Time from policy done to persona's first streamed token (sequential mode). */
   persona_first_token_ms?: number;
+  /** Request received to persona's first token — use for sequential vs parallel A/B. */
+  perceived_first_token_ms?: number;
   /** Request received to persona stream complete (server-side). */
   total_ms?: number;
   mode?: "sequential" | "parallel";

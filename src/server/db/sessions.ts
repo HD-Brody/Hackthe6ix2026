@@ -8,6 +8,7 @@ import type {
   PolicyState,
   GapMap,
   TurnTiming,
+  Directive,
 } from "@/lib/types";
 
 async function sessions() {
@@ -141,6 +142,17 @@ export async function pushTurnTiming(
   const res = await (await sessions()).updateOne(
     { _id: sessionId },
     { $push: { timings: timing } }
+  );
+  if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
+}
+
+export async function setPendingDirective(
+  sessionId: string,
+  directive: Directive
+): Promise<void> {
+  const res = await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $set: { pending_directive: directive } }
   );
   if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
 }

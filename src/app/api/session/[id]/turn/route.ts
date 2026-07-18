@@ -24,7 +24,7 @@ export async function POST(
 ) {
   const { id } = await ctx.params;
 
-  let body: { user_text?: string };
+  let body: { user_text?: string; parallel_eval?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -35,6 +35,8 @@ export async function POST(
   if (!userText) {
     return NextResponse.json({ error: "user_text is required" }, { status: 400 });
   }
+
+  const parallelEval = body.parallel_eval;
 
   const session = await getSession(id);
   if (!session) {
@@ -62,5 +64,7 @@ export async function POST(
     throw err;
   }
 
-  return new Response(createTurnStream(id), { headers: SSE_HEADERS });
+  return new Response(createTurnStream(id, { parallel: parallelEval }), {
+    headers: SSE_HEADERS,
+  });
 }

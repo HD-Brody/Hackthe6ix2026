@@ -9,11 +9,21 @@
  *
  * Mock seam (A-side loop only, until B ships evaluate/persona):
  *   LLM_MOCK=true ECHO_MODE=false npm run cp2:integration
+ *
+ * Runs sequential + parallel back-to-back and prints a timing comparison table.
+ * Per-turn mode is set via `parallel_eval` on POST /turn (server env not required).
  */
 
 import testUtterances from "../src/llm/harness/test-utterances.json";
 import { consumeTurnStream } from "../src/lib/sse";
-import type { Session, Verdict, TurnSSEEvent, Directive, PolicyState } from "../src/lib/types";
+import type {
+  Session,
+  Verdict,
+  TurnSSEEvent,
+  Directive,
+  PolicyState,
+  TurnTiming,
+} from "../src/lib/types";
 
 const BASE = process.env.APP_BASE_URL ?? "http://localhost:3000";
 const MIN_TURNS = Number(process.env.CP2_MIN_TURNS ?? "5");
@@ -112,12 +122,13 @@ async function getSession(id: string): Promise<Session> {
 
 async function postTurn(
   sessionId: string,
-  userText: string
+  userText: string,
+  parallelEval: boolean
 ): Promise<{ events: TurnSSEEvent[]; studentText: string }> {
   const res = await fetch(`${BASE}/api/session/${sessionId}/turn`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_text: userText }),
+    body: JSON.stringify({ user_text: userText, parallel_eval: parallelEval }),
   });
   if (res.status === 409) {
     throw new Error("turn already in progress (409)");
@@ -143,6 +154,155 @@ async function endSession(sessionId: string) {
   return res.json();
 }
 
+function avg(nums: number[]): number {
+  if (nums.length === 0) return 0;
+  return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+}
+
+function printComparisonTable(
+  sequential: TurnTiming[],
+  parallel: TurnTiming[]
+): void {
+  const turns = Math.min(sequential.length, parallel.length);
+  const seqPerceived: number[] = [];
+  const parPerceived: number[] = [];
+
+  console.log("\n=== Timing comparison (perceived first token) ===");
+  console.log("Turn | Sequential | Parallel | Δ (seq−par)");
+  console.log("-----|------------|----------|-------------");
+
+  for (let i = 0; i < turns; i++) {
+    const s = sequential[i].perceived_first_token_ms ?? 0;
+    const p = parallel[i].perceived_first_token_ms ?? 0;
+    seqPerceived.push(s);
+    parPerceived.push(p);
+    const delta = s - p;
+    console.log(
+      `  ${String(i + 1).padStart(2)} | ${String(s).padStart(8)}ms | ${String(p).padStart(6)}ms | ${delta >= 0 ? "+" : ""}${delta}ms`
+    );
+  }
+
+  const seqAvg = avg(seqPerceived);
+  const parAvg = avg(parPerceived);
+  const mockEvalMs = Number(process.env.MOCK_EVAL_MS ?? "800");
+  console.log("-----|------------|----------|-------------");
+  console.log(
+    ` avg | ${String(seqAvg).padStart(8)}ms | ${String(parAvg).padStart(6)}ms | ${seqAvg - parAvg >= 0 ? "+" : ""}${seqAvg - parAvg}ms`
+  );
+  console.log(
+    `\nExpected parallel savings ≈ MOCK_EVAL_MS (${mockEvalMs}ms); actual avg Δ = ${seqAvg - parAvg}ms`
+  );
+}
+
+async function runSession(
+  parallel: boolean,
+  opts: { verbose: boolean; llmMock: boolean }
+): Promise<{ failures: number; timings: TurnTiming[]; wrapUpSeen: boolean }> {
+  const mode = parallel ? "parallel" : "sequential";
+  const utterances = testUtterances.utterances.filter(
+    (u) => !u.text.startsWith("TODO")
+  );
+
+  console.log(`\n=== ${mode.toUpperCase()} session ===`);
+  const { session_id, graph } = await createSession("TCP congestion control");
+  if (opts.verbose) {
+    log("✓", `session ${session_id} (${graph.nodes.length} nodes)`);
+  }
+
+  const userTexts: string[] = [];
+  let failures = 0;
+  let session = await getSession(session_id);
+  let wrapUpSeen = false;
+
+  for (let i = 0; i < Math.max(MIN_TURNS, utterances.length); i++) {
+    const u = utterances[i % utterances.length];
+    const before = session;
+    userTexts.push(u.text);
+
+    if (opts.verbose) {
+      console.log(`\n--- turn ${i + 1} [${u.kind}] (${mode}) ---`);
+      console.log(`user: ${u.text.slice(0, 80)}${u.text.length > 80 ? "…" : ""}`);
+    }
+
+    let events: TurnSSEEvent[];
+    let studentText: string;
+    try {
+      ({ events, studentText } = await postTurn(session_id, u.text, parallel));
+    } catch (err) {
+      log("✗", `${mode} turn failed: ${err instanceof Error ? err.message : err}`);
+      failures++;
+      break;
+    }
+
+    const done = events.find((e) => e.event === "done");
+    const errEv = events.find((e) => e.event === "error");
+    if (errEv && !done) {
+      log("✗", `${mode} stream error: ${errEv.data.message}`);
+      failures++;
+      break;
+    }
+    if (!done) {
+      log("✗", `${mode}: no done event`);
+      failures++;
+      break;
+    }
+
+    const verdict = done.data.verdict;
+    session = await getSession(session_id);
+
+    if (opts.verbose) {
+      const policyBefore = before.policy ?? { probeCounts: {}, deepened: {} };
+      const directive = done.data.directive;
+      const checks: CheckResult[] = [
+        verdictSane(verdict),
+        nodesChanged(before, session),
+        policySane(policyBefore, directive, i + 1),
+      ];
+      if (!opts.llmMock) {
+        checks.splice(1, 0, quotesVerbatim(u.text, verdict, userTexts));
+      } else {
+        log("⚠️", "quote check skipped (LLM_MOCK uses fixture verdicts with canned quotes)");
+      }
+
+      for (const c of checks) {
+        log(c.ok ? "✓" : "✗", c.detail);
+        if (!c.ok) failures++;
+      }
+
+      log("→", `policy directive: ${directive?.type ?? "?"}${directive?.node_id ? `(${directive.node_id})` : ""}`);
+      log("→", `student: ${studentText.slice(0, 100)}${studentText.length > 100 ? "…" : ""}`);
+      log("→", `status: ${done.data.session_status}`);
+      if (done.data.timing) {
+        log(
+          "→",
+          `timing: perceived=${done.data.timing.perceived_first_token_ms}ms total=${done.data.timing.total_ms}ms`
+        );
+      }
+    }
+
+    if (done.data.session_status === "wrapping") wrapUpSeen = true;
+    if (done.data.directive?.type === "WRAP_UP") wrapUpSeen = true;
+  }
+
+  try {
+    await endSession(session_id);
+  } catch (err) {
+    log("✗", `${mode} end failed: ${err instanceof Error ? err.message : err}`);
+    failures++;
+  }
+
+  session = await getSession(session_id);
+  const timings = session.timings ?? [];
+  if (timings.length === 0) {
+    log("✗", `${mode}: no turn timings persisted`);
+    failures++;
+  } else if (opts.verbose) {
+    log("✓", `${timings.length} turn timing(s) persisted (${mode})`);
+  }
+
+  return { failures, timings, wrapUpSeen };
+}
+
 async function main(): Promise<void> {
   const llmMock = process.env.LLM_MOCK === "true";
   const echoMode = process.env.ECHO_MODE === "true";
@@ -165,105 +325,16 @@ async function main(): Promise<void> {
     throw new Error(`need at least ${MIN_TURNS} test utterances`);
   }
 
-  const { session_id, graph } = await createSession("TCP congestion control");
-  log("✓", `session ${session_id} (${graph.nodes.length} nodes)`);
+  const seq = await runSession(false, { verbose: true, llmMock });
+  const par = await runSession(true, { verbose: false, llmMock });
 
-  const userTexts: string[] = [];
-  let failures = 0;
-  let session = await getSession(session_id);
-  let wrapUpSeen = false;
+  printComparisonTable(seq.timings, par.timings);
 
-  for (let i = 0; i < Math.max(MIN_TURNS, utterances.length); i++) {
-    const u = utterances[i % utterances.length];
-    const before = session;
-    userTexts.push(u.text);
-
-    console.log(`\n--- turn ${i + 1} [${u.kind}] ---`);
-    console.log(`user: ${u.text.slice(0, 80)}${u.text.length > 80 ? "…" : ""}`);
-
-    let events: TurnSSEEvent[];
-    let studentText: string;
-    try {
-      ({ events, studentText } = await postTurn(session_id, u.text));
-    } catch (err) {
-      log("✗", `turn failed: ${err instanceof Error ? err.message : err}`);
-      failures++;
-      break;
-    }
-
-    const done = events.find((e) => e.event === "done");
-    const errEv = events.find((e) => e.event === "error");
-    if (errEv && !done) {
-      log("✗", `stream error: ${errEv.data.message}`);
-      failures++;
-      break;
-    }
-    if (!done) {
-      log("✗", "no done event");
-      failures++;
-      break;
-    }
-
-    const verdict = done.data.verdict;
-    session = await getSession(session_id);
-
-    const policyBefore = before.policy ?? { probeCounts: {}, deepened: {} };
-    const directive = done.data.directive;
-    const checks: CheckResult[] = [
-      verdictSane(verdict),
-      nodesChanged(before, session),
-      policySane(policyBefore, directive, i + 1),
-    ];
-    if (!llmMock) {
-      checks.splice(1, 0, quotesVerbatim(u.text, verdict, userTexts));
-    } else {
-      log("⚠️", "quote check skipped (LLM_MOCK uses fixture verdicts with canned quotes)");
-    }
-
-    for (const c of checks) {
-      log(c.ok ? "✓" : "✗", c.detail);
-      if (!c.ok) failures++;
-    }
-
-    log("→", `policy directive: ${directive?.type ?? "?"}${directive?.node_id ? `(${directive.node_id})` : ""}`);
-    log("→", `student: ${studentText.slice(0, 100)}${studentText.length > 100 ? "…" : ""}`);
-    log("→", `status: ${done.data.session_status}`);
-
-    if (done.data.session_status === "wrapping") wrapUpSeen = true;
-    if (directive?.type === "WRAP_UP") wrapUpSeen = true;
-  }
-
-  console.log("\n--- end session ---");
-  try {
-    const { gap_map } = await endSession(session_id);
-    log("✓", `gap_map one_liner: "${gap_map.one_liner}"`);
-  } catch (err) {
-    log("✗", `end failed: ${err instanceof Error ? err.message : err}`);
-    failures++;
-  }
-
-  session = await getSession(session_id);
-  log("✓", `replay check: ${session.utterances.length} utterances, status=${session.status}, gap_map=${!!session.gap_map}`);
-
-  const timings = session.timings ?? [];
-  if (timings.length === 0) {
-    log("✗", "no turn timings persisted on session");
-    failures++;
-  } else {
-    log("✓", `${timings.length} turn timing(s) persisted`);
-    for (const t of timings) {
-      log(
-        "→",
-        `turn ${t.turn}: eval=${t.eval_ms}ms policy=${t.policy_ms}ms ` +
-          `persona_first_token=${t.persona_first_token_ms}ms total=${t.total_ms}ms mode=${t.mode}`
-      );
-    }
-  }
-
-  if (!wrapUpSeen) {
+  if (!seq.wrapUpSeen && !par.wrapUpSeen) {
     log("⚠️", "WRAP_UP / wrapping not seen — may need more turns for full graph coverage");
   }
 
+  const failures = seq.failures + par.failures;
   console.log(`\n=== ${failures === 0 ? "PASS" : `FAIL (${failures} checks)`} ===\n`);
   process.exit(failures > 0 ? 1 : 0);
 }
