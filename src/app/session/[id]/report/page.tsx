@@ -31,10 +31,6 @@ const moments = [
   { time: "14:06", label: "QUANTUM GATES", color: "border-l-[#b7b7c3]", text: report.vaguest_moments[2].quote },
 ];
 
-function ShareIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-4"><circle cx="18" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.7"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.7"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" strokeWidth="1.7"/><path d="m8.3 10.9 7.4-4.5M8.3 13.1l7.4 4.5" stroke="currentColor" strokeWidth="1.7"/></svg>;
-}
-
 export default async function ReportPage({
   params,
   searchParams,
@@ -45,6 +41,11 @@ export default async function ReportPage({
   const { id } = await params;
   const { student } = await searchParams;
   const selectedStudent = student === "elena" ? "elena" : "sam";
+  const completedDate = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "America/Toronto",
+  }).format(new Date());
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f9f9fc] text-[var(--text-primary)]">
@@ -56,10 +57,7 @@ export default async function ReportPage({
             <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">Session Analysis: {report.topic}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-[#ecebff] px-4 py-2 text-xs font-bold text-[#5655c8]">Completed Apr 24</span>
-            <button type="button" className="inline-flex items-center gap-2 rounded-lg border border-[#c9c7d8] bg-white px-4 py-2 text-sm font-bold shadow-sm transition hover:border-[#7776df] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
-              <ShareIcon /> Share Report
-            </button>
+            <span className="rounded-full bg-[#ecebff] px-4 py-2 text-xs font-bold text-[#5655c8]">Completed {completedDate}</span>
           </div>
         </section>
 

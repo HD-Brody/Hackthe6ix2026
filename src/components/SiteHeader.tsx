@@ -1,14 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-function BellIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 20h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>;
-}
-
-function GearIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5"><path d="M9.6 3.2 9 5.4a7.4 7.4 0 0 0-1.7 1L5 5.8 3.3 8.7 5 10.3a7 7 0 0 0 0 2L3.3 14 5 17l2.3-.7a7.4 7.4 0 0 0 1.7 1l.6 2.3h3.4l.6-2.3a7.4 7.4 0 0 0 1.7-1l2.3.7 1.7-3-1.7-1.6a7 7 0 0 0 0-2l1.7-1.6L17.6 6l-2.3.7a7.4 7.4 0 0 0-1.7-1L13 3.2H9.6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="11.3" cy="11.4" r="2.5" stroke="currentColor" strokeWidth="1.5"/></svg>;
-}
-
 function ProfileAvatar() {
   return (
     <svg aria-hidden="true" viewBox="0 0 32 32" className="size-8 rounded-full">
@@ -75,11 +67,7 @@ export function SiteHeader({ activeItem, sessionId, student = "sam" }: SiteHeade
           </nav>
         </div>
 
-        <div className="flex items-center gap-1 text-[var(--text-secondary)]">
-          <button type="button" aria-label="Notifications" className="rounded-full p-2 transition hover:bg-indigo-50 hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><BellIcon /></button>
-          <button type="button" aria-label="Settings" className="hidden rounded-full p-2 transition hover:bg-indigo-50 hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] sm:block"><GearIcon /></button>
-          <button type="button" aria-label="User profile" className="ml-1 rounded-full border-2 border-[#c7c4d7] p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ProfileAvatar /></button>
-        </div>
+        <button type="button" aria-label="User profile" className="rounded-full border-2 border-[#c7c4d7] p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ProfileAvatar /></button>
       </div>
     </header>
   );
