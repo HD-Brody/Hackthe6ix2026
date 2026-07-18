@@ -45,10 +45,35 @@ const verdictSchema = {
   required: ["nodes_touched", "verdicts", "recommended_directive"],
 };
 
+/**
+ * CP4 audit fix: some callers (e.g. the orchestrator's turn loop) pass a
+ * `transcript` whose last entry is the user's current utterance AND that
+ * same text again as `userText` — the current utterance is persisted into
+ * the session before evaluate() is ever called, so `transcript` already
+ * ends with it. evaluatorPrompt() then shows the model the same sentence
+ * twice ("Conversation so far" ends with it, then "The user just said"
+ * repeats it), wasting tokens on every call. Rather than requiring every
+ * caller to remember to slice it off themselves, evaluate() defends
+ * against this itself: callers who already pass a prior-only transcript
+ * (the eval harness, the adversarial sessions) are unaffected, since their
+ * last entry never equals `userText`.
+ */
+export function dropDuplicateCurrentTurn(
+  transcript: Utterance[],
+  userText: string
+): Utterance[] {
+  const last = transcript[transcript.length - 1];
+  if (last && last.role === "user" && last.text === userText) {
+    return transcript.slice(0, -1);
+  }
+  return transcript;
+}
+
 export async function evaluate(
   graph: ConceptGraph,
   transcript: Utterance[],
   userText: string
 ): Promise<Verdict> {
-  return callFast<Verdict>(evaluatorPrompt(graph, transcript, userText), verdictSchema);
+  const priorTranscript = dropDuplicateCurrentTurn(transcript, userText);
+  return callFast<Verdict>(evaluatorPrompt(graph, priorTranscript, userText), verdictSchema);
 }
