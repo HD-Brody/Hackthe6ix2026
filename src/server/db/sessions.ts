@@ -1,42 +1,40 @@
-/**
- * Session persistence. Owner: A.
- *
- * createSession / getSession / appendUtterance / applyVerdict /
- * setGapMap / setStatus — keep writes per-turn (crash safety, Block A3 step 16).
- * Rate limits live here too (Block A4 step 19): cap 40 turns/session,
- * cap sessions/user.
- */
+import { randomUUID } from "crypto";
+import { getDb } from "./mongo";
+import type { Session, Utterance, Verdict, GapMap, ConceptGraph } from "@/lib/types";
 
-import type { Session, Utterance, Verdict, GapMap } from "@/lib/types";
-
-export async function createSession(
-  _userId: string,
-  _topic: string
-): Promise<Session> {
-  throw new Error("not implemented");
+async function sessions() {
+  return (await getDb()).collection<Session>("sessions");
 }
 
-export async function getSession(_id: string): Promise<Session | null> {
-  throw new Error("not implemented");
+export async function createSession(
+  userId: string,
+  topic: string,
+  graph: ConceptGraph
+): Promise<Session> {
+  const session: Session = {
+    _id: randomUUID(),
+    user_id: userId,
+    topic,
+    status: "created",
+    graph,
+    utterances: [],
+    started_at: Date.now(),
+  };
+  await (await sessions()).insertOne(session);
+  return session;
+}
+
+export async function getSession(id: string): Promise<Session | null> {
+  return (await sessions()).findOne({ _id: id });
 }
 
 export async function appendUtterance(
-  _sessionId: string,
-  _utterance: Utterance
+  sessionId: string,
+  utterance: Utterance
 ): Promise<void> {
-  throw new Error("not implemented");
-}
-
-export async function applyVerdict(
-  _sessionId: string,
-  _verdict: Verdict
-): Promise<void> {
-  throw new Error("not implemented");
-}
-
-export async function setGapMap(
-  _sessionId: string,
-  _gapMap: GapMap
-): Promise<void> {
-  throw new Error("not implemented");
+  const res = await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $push: { utterances: utterance } }
+  );
+  if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
 }
