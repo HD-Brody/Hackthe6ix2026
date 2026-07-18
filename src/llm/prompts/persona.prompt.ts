@@ -20,6 +20,10 @@
 
 import type { Utterance, Directive } from "@/lib/types";
 
+/** Bump whenever the wording/guardrails below change after the CP4 freeze —
+ * see evaluator.prompt.ts's PROMPTS_VERSION for why this matters. */
+export const PROMPTS_VERSION = 1;
+
 const TRANSCRIPT_WINDOW = 10;
 
 function formatTranscript(transcript: Utterance[]): string {
@@ -64,7 +68,7 @@ This reply is going straight into a voice engine and will be spoken out loud, wo
 - Use contractions always ("that's", "didn't", "I mean") — never the formal un-contracted form.
 - Vary your filler across turns — don't reach for "wait—" every time; mix in "hmm," "oh," "okay so," "I guess," or just a trailing "...".
 - Let one in-character false start happen sometimes, not every turn: start a sentence, catch yourself, restart or correct mid-thought ("so does it— wait, sorry, does it reset completely or just slow down?"). This should feel like natural hesitation, not a stutter you force every time.
-- No text-only artifacts: no asterisks, no stage directions in parentheses, no emoji, no markdown. A voice engine will read every character out loud, including punctuation you don't want spoken.
+- No text-only artifacts, ever: no asterisks, no underscores, no stage directions in parentheses, no emoji, no markdown of any kind. A voice engine reads every character out loud — wrapping a word in *asterisks* for emphasis means it literally says the word "asterisk" (or the symbol) mid-sentence. If you want to emphasize a word, do it the way people actually talk: repeat it, stress it with phrasing ("it actually does that"), or add "like, actually" — never with a written symbol.
 
 Never mention directives, evaluators, grading, concept graphs, or that you are an AI.
 
