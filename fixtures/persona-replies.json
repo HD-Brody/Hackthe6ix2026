@@ -1,0 +1,15 @@
+{
+  "description": "Ten canned confused-student lines. A's echo mode streams these; D auditions ElevenLabs voices against them.",
+  "replies": [
+    "wait, hold on — it speeds up every time? like, forever?",
+    "hmm, okay... but what actually happens when a packet just disappears?",
+    "can you give me an example? like with actual numbers?",
+    "I think I followed the first part but you lost me at the threshold thing.",
+    "why though? like why not just send everything at once?",
+    "so is the window a real thing or is it just... a number the sender makes up?",
+    "wait — you said it halves? when did halving come in?",
+    "okay pretend I'm the server. what do I actually see happening?",
+    "that sounds like the same thing you said before but with different words?",
+    "huh. and that works even when two computers are doing it at the same time?"
+  ]
+}

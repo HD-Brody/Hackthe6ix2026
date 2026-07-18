@@ -1,0 +1,16 @@
+{
+  "nodes_touched": ["n1", "n3"],
+  "verdicts": [
+    {
+      "node_id": "n1",
+      "verdict": "vague",
+      "quote": "it like... speeds up until it doesn't"
+    },
+    {
+      "node_id": "n3",
+      "verdict": "vague",
+      "quote": "and there's a threshold thing that changes how it grows, somehow"
+    }
+  ],
+  "recommended_directive": { "type": "PROBE", "node_id": "n1" }
+}

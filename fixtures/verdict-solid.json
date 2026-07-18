@@ -1,0 +1,11 @@
+{
+  "nodes_touched": ["n1"],
+  "verdicts": [
+    {
+      "node_id": "n1",
+      "verdict": "solid",
+      "quote": "the window doubles every round trip until it hits the threshold or a packet drops"
+    }
+  ],
+  "recommended_directive": { "type": "DEEPEN", "node_id": "n1" }
+}

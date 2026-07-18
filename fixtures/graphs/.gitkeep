@@ -1,0 +1,4 @@
+# B commits the five vetted generated graphs here at CP1 (Block B1, step 3):
+# graph-tcp.json, graph-https.json, graph-photosynthesis.json,
+# graph-inflation.json, graph-bst.json
+# These replace A's hand-written fixture and become the demo cache.

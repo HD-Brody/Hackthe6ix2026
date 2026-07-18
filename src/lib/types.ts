@@ -1,0 +1,116 @@
+/**
+ * Shared types — mirrors /contracts/*.schema.json (the CP0 contracts).
+ *
+ * FROZEN at CP0. Changing anything here requires all four to agree.
+ * If you need a new field, add it as optional and announce it in the group chat.
+ */
+
+// ── Concept graph (contracts/concept-graph.schema.json) ─────────
+
+export type NodeState =
+  | "unvisited"
+  | "touched"
+  | "vague"
+  | "solid"
+  | "wrong"
+  | "dodged";
+
+export type ProbeAngle = "ask-example" | "ask-why" | "ask-edge-case";
+
+export interface ConceptNode {
+  id: string;
+  name: string;
+  /** One-sentence ground truth. Only the Evaluator ever sees this. */
+  truth: string;
+  difficulty: 1 | 2 | 3;
+  prereqs: string[];
+  probes: ProbeAngle[];
+  state: NodeState;
+  vague_quotes: string[];
+}
+
+export interface ConceptGraph {
+  topic: string;
+  nodes: ConceptNode[];
+}
+
+// ── Evaluator verdict (contracts/verdict.schema.json) ───────────
+
+export type VerdictLabel = "solid" | "vague" | "wrong" | "dodged";
+
+/** The ONLY vocabulary A's policy and B's prompts share. */
+export type DirectiveType = "PROBE" | "DEEPEN" | "ADVANCE" | "WRAP_UP";
+
+export interface Directive {
+  type: DirectiveType;
+  node_id?: string;
+}
+
+export interface NodeVerdict {
+  node_id: string;
+  verdict: VerdictLabel;
+  /** VERBATIM from the user — never paraphrased. */
+  quote?: string;
+}
+
+export interface Verdict {
+  nodes_touched: string[];
+  verdicts: NodeVerdict[];
+  recommended_directive: Directive;
+}
+
+// ── Gap map (contracts/gap-map.schema.json) ─────────────────────
+
+export interface VagueMoment {
+  quote: string;
+  node_id: string;
+}
+
+export interface GapMap {
+  topic: string;
+  nodes: Pick<ConceptNode, "id" | "name" | "state">[];
+  vaguest_moments: VagueMoment[];
+  dodged_questions: string[];
+  reteach_order: string[];
+  one_liner: string;
+}
+
+// ── Session (data model, design doc §4) ─────────────────────────
+
+export type SessionStatus = "created" | "teaching" | "wrapping" | "ended";
+
+export interface Utterance {
+  role: "user" | "student";
+  text: string;
+  ts: number;
+  eval?: Verdict;
+}
+
+export interface Session {
+  _id: string;
+  user_id: string;
+  topic: string;
+  status: SessionStatus;
+  graph: ConceptGraph;
+  utterances: Utterance[];
+  gap_map?: GapMap;
+  started_at: number;
+  ended_at?: number;
+  /** Per-stage timing (A, Block A3) — D's CP4 latency report reads from this. */
+  timings?: TurnTiming[];
+}
+
+export interface TurnTiming {
+  turn: number;
+  stt_end_to_first_token_ms?: number;
+  first_token_to_first_audio_ms?: number;
+  eval_ms?: number;
+  persona_first_token_ms?: number;
+}
+
+// ── SSE events (contracts/api.md) ───────────────────────────────
+
+export type TurnSSEEvent =
+  | { event: "token"; data: { text: string } }
+  | { event: "done"; data: { verdict: Verdict; session_status: SessionStatus } }
+  | { event: "error"; data: { message: string; fallback_line: string } };

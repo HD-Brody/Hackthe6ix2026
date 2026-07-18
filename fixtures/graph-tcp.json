@@ -1,0 +1,85 @@
+{
+  "topic": "TCP congestion control",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Slow start",
+      "truth": "Window grows exponentially until ssthresh or loss.",
+      "difficulty": 1,
+      "prereqs": [],
+      "probes": ["ask-example", "ask-why"],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n2",
+      "name": "Congestion window",
+      "truth": "Sender-side limit on in-flight unacknowledged data, adjusted per feedback.",
+      "difficulty": 1,
+      "prereqs": [],
+      "probes": ["ask-example", "ask-why"],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n3",
+      "name": "ssthresh",
+      "truth": "Threshold where growth switches from exponential to linear.",
+      "difficulty": 2,
+      "prereqs": ["n1", "n2"],
+      "probes": ["ask-why", "ask-edge-case"],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n4",
+      "name": "Congestion avoidance",
+      "truth": "Above ssthresh the window grows additively, roughly one MSS per RTT.",
+      "difficulty": 2,
+      "prereqs": ["n3"],
+      "probes": ["ask-why", "ask-example"],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n5",
+      "name": "Packet loss as congestion signal",
+      "truth": "Loss (timeout or dup ACKs) is interpreted as network congestion.",
+      "difficulty": 1,
+      "prereqs": ["n2"],
+      "probes": ["ask-why", "ask-edge-case"],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n6",
+      "name": "Fast retransmit",
+      "truth": "Three duplicate ACKs trigger retransmission before the timeout fires.",
+      "difficulty": 2,
+      "prereqs": ["n5"],
+      "probes": ["ask-example", "ask-why"],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n7",
+      "name": "Fast recovery",
+      "truth": "After fast retransmit, halve the window and continue in congestion avoidance instead of restarting slow start.",
+      "difficulty": 3,
+      "prereqs": ["n6", "n4"],
+      "probes": ["ask-why", "ask-edge-case"],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n8",
+      "name": "AIMD",
+      "truth": "Additive increase, multiplicative decrease — the fairness/stability core of TCP.",
+      "difficulty": 3,
+      "prereqs": ["n4", "n5"],
+      "probes": ["ask-why", "ask-edge-case"],
+      "state": "unvisited",
+      "vague_quotes": []
+    }
+  ]
+}

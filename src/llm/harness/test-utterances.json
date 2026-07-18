@@ -1,0 +1,9 @@
+{
+  "description": "B's test utterances (Block B2 step 7). 10–15 covering: clean correct, vague hand-wave, confidently wrong, multi-concept ramble, off-topic derail. Also A's policy test inputs and the seeds for the Block B4 adversarial scripts (rambler / confident-wrong / derailer).",
+  "utterances": [
+    {
+      "kind": "clean-correct",
+      "text": "TODO(B): replace with real test utterances against the TCP fixture graph"
+    }
+  ]
+}

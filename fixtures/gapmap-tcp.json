@@ -1,0 +1,24 @@
+{
+  "topic": "TCP congestion control",
+  "nodes": [
+    { "id": "n1", "name": "Slow start", "state": "solid" },
+    { "id": "n2", "name": "Congestion window", "state": "solid" },
+    { "id": "n3", "name": "ssthresh", "state": "vague" },
+    { "id": "n4", "name": "Congestion avoidance", "state": "vague" },
+    { "id": "n5", "name": "Packet loss as congestion signal", "state": "solid" },
+    { "id": "n6", "name": "Fast retransmit", "state": "dodged" },
+    { "id": "n7", "name": "Fast recovery", "state": "unvisited" },
+    { "id": "n8", "name": "AIMD", "state": "wrong" }
+  ],
+  "vaguest_moments": [
+    { "quote": "it like... speeds up until it doesn't", "node_id": "n1" },
+    { "quote": "the threshold is just, you know, a number the connection picks", "node_id": "n3" },
+    { "quote": "after that it grows... slower? in some proportional way", "node_id": "n4" }
+  ],
+  "dodged_questions": [
+    "But how does the sender KNOW a packet was lost without waiting forever?",
+    "Why three duplicate ACKs and not two?"
+  ],
+  "reteach_order": ["n3", "n4", "n6", "n8", "n7"],
+  "one_liner": "You understand TCP until a packet actually gets lost."
+}

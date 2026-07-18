@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EvaluatorVerdict",
+  "description": "CP0 contract. The directive enum is the ONLY vocabulary A's policy and B's prompts share.",
+  "type": "object",
+  "required": ["nodes_touched", "verdicts", "recommended_directive"],
+  "properties": {
+    "nodes_touched": { "type": "array", "items": { "type": "string" } },
+    "verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["node_id", "verdict"],
+        "properties": {
+          "node_id": { "type": "string" },
+          "verdict": { "enum": ["solid", "vague", "wrong", "dodged"] },
+          "quote": {
+            "type": "string",
+            "description": "VERBATIM from the user. Never paraphrased — paraphrased quotes poison the gap map."
+          }
+        }
+      }
+    },
+    "recommended_directive": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["PROBE", "DEEPEN", "ADVANCE", "WRAP_UP"] },
+        "node_id": { "type": "string" }
+      }
+    }
+  }
+}

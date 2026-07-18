@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConceptGraph",
+  "description": "CP0 contract. Frozen at hour 1 — changes after that require all four to agree.",
+  "type": "object",
+  "required": ["topic", "nodes"],
+  "properties": {
+    "topic": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "truth", "difficulty", "prereqs", "probes", "state", "vague_quotes"],
+        "properties": {
+          "id": { "type": "string", "description": "e.g. n1" },
+          "name": { "type": "string" },
+          "truth": { "type": "string", "description": "One-sentence ground truth" },
+          "difficulty": { "type": "integer", "minimum": 1, "maximum": 3 },
+          "prereqs": { "type": "array", "items": { "type": "string" } },
+          "probes": {
+            "type": "array",
+            "items": { "enum": ["ask-example", "ask-why", "ask-edge-case"] }
+          },
+          "state": {
+            "enum": ["unvisited", "touched", "vague", "solid", "wrong", "dodged"]
+          },
+          "vague_quotes": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

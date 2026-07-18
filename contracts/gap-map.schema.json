@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GapMap",
+  "description": "CP0 contract. End-of-session artifact — half the demo's punch. Quotes are verbatim, always.",
+  "type": "object",
+  "required": ["topic", "nodes", "vaguest_moments", "dodged_questions", "reteach_order", "one_liner"],
+  "properties": {
+    "topic": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "state"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "state": { "enum": ["unvisited", "touched", "vague", "solid", "wrong", "dodged"] }
+        }
+      }
+    },
+    "vaguest_moments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["quote", "node_id"],
+        "properties": {
+          "quote": { "type": "string" },
+          "node_id": { "type": "string" }
+        }
+      }
+    },
+    "dodged_questions": { "type": "array", "items": { "type": "string" } },
+    "reteach_order": { "type": "array", "items": { "type": "string" } },
+    "one_liner": {
+      "type": "string",
+      "description": "Calibrated to sting productively: 'You understand TCP until a packet actually gets lost.'"
+    }
+  }
+}

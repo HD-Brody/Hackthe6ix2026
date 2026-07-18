@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Owner: C. Node-state colors are the gap map's visual language — define
+   once here, use everywhere (classroom indicators + gap map grid). */
+:root {
+  --state-solid: #22c55e;
+  --state-vague: #eab308;
+  --state-wrong: #ef4444;
+  --state-dodged: #a855f7;
+  --state-touched: #38bdf8;
+  --state-unvisited: #6b7280;
+}
