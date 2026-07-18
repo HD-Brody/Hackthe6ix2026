@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>STT Test — Web Speech API</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 640px;
+      margin: 60px auto;
+      padding: 0 20px;
+      background: #111;
+      color: #eee;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    p.subtitle { color: #888; font-size: 0.85rem; margin-top: 0; }
+
+    .controls { display: flex; gap: 10px; margin: 24px 0 16px; }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #startBtn { background: #2563eb; color: #fff; }
+    #startBtn:disabled { background: #1e3a8a; opacity: 0.6; cursor: not-allowed; }
+    #stopBtn  { background: #374151; color: #eee; }
+    #stopBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 4px; }
+    .box {
+      background: #1f2937;
+      border-radius: 8px;
+      padding: 14px 16px;
+      min-height: 48px;
+      margin-bottom: 16px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    #interimBox { color: #9ca3af; font-style: italic; }
+    #finalBox   { color: #d1fae5; }
+    #errorBox   { color: #f87171; display: none; }
+
+    #statusDot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #374151;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    #statusDot.listening { background: #22c55e; animation: pulse 1.2s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+  <h1>STT Standalone Test</h1>
+  <p class="subtitle">Uses Web Speech API (Chrome only). Open DevTools console for timing logs.</p>
+
+  <div class="controls">
+    <button id="startBtn">🎤 Start Listening</button>
+    <button id="stopBtn" disabled>⏹ Stop</button>
+    <span id="statusDot"></span><span id="statusText">Idle</span>
+  </div>
+
+  <div class="label">Live (interim)</div>
+  <div class="box" id="interimBox">—</div>
+
+  <div class="label">Final transcript</div>
+  <div class="box" id="finalBox">—</div>
+
+  <div class="box" id="errorBox"></div>
+
+  <script type="module">
+    import { startListening, stopListening } from './browser-stt.js';
+
+    const startBtn    = document.getElementById('startBtn');
+    const stopBtn     = document.getElementById('stopBtn');
+    const interimBox  = document.getElementById('interimBox');
+    const finalBox    = document.getElementById('finalBox');
+    const errorBox    = document.getElementById('errorBox');
+    const statusDot   = document.getElementById('statusDot');
+    const statusText  = document.getElementById('statusText');
+
+    let startTime = null;
+
+    function setListening(active) {
+      startBtn.disabled = active;
+      stopBtn.disabled  = !active;
+      statusDot.className = active ? 'listening' : '';
+      statusText.textContent = active ? 'Listening…' : 'Idle';
+    }
+
+    function showError(msg) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = '⚠ ' + msg;
+    }
+    function clearError() {
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+    }
+
+    startBtn.addEventListener('click', () => {
+      clearError();
+      interimBox.textContent = '—';
+      finalBox.textContent   = '—';
+      startTime = Date.now();
+
+      setListening(true);
+
+      startListening(
+        // onResult — phrase finalized
+        (final) => {
+          const ms = Date.now() - startTime;
+          console.log(`[STT] Final (${ms}ms from start):`, final);
+          finalBox.textContent = final;
+          interimBox.textContent = '—';
+          // Reset timer for the next phrase
+          startTime = Date.now();
+        },
+        // onInterim — live partial text
+        (interim) => {
+          interimBox.textContent = interim;
+        },
+        // onError
+        (err) => {
+          console.error('[STT] Error:', err);
+          showError(err);
+          setListening(false);
+        }
+      );
+    });
+
+    stopBtn.addEventListener('click', () => {
+      stopListening();
+      setListening(false);
+      interimBox.textContent = '—';
+    });
+  </script>
+</body>
+</html>

@@ -22,3 +22,6 @@ next-env.d.ts
 
 # scratch — B's prompt-iteration junk goes here, not in commits
 /scratch/
+
+# testing files
+/latency-test/
