@@ -1,13 +1,18 @@
-/**
- * MongoDB Atlas connection. Owner: A (connection string from D at CP0).
- *
- * Collections (design doc §4): users, sessions, conceptGraphs, utterances.
- * Persist per turn so a refresh doesn't kill a demo.
- */
+import { MongoClient, Db } from "mongodb";
 
-// TODO(A): singleton MongoClient (cache across hot reloads — the standard
-// global-in-dev pattern), export getDb().
+// Cache across Next.js hot reloads — without this, every file save in dev
+// opens a new connection pool until Atlas's M0 connection cap (500) kills you.
+const g = globalThis as unknown as { _mongoClient?: MongoClient };
 
-export async function getDb(): Promise<never> {
-  throw new Error("not implemented");
+function getClient(): MongoClient {
+  if (!g._mongoClient) {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) throw new Error("MONGODB_URI is not set — check .env.local");
+    g._mongoClient = new MongoClient(uri);
+  }
+  return g._mongoClient;
+}
+
+export async function getDb(): Promise<Db> {
+  return getClient().db(process.env.MONGODB_DB ?? "professor_me");
 }

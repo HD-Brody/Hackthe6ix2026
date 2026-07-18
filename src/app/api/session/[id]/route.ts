@@ -7,11 +7,16 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/server/db/sessions";
 
 export async function GET(
   _req: NextRequest,
-  _ctx: { params: Promise<{ id: string }> }
+  ctx: { params: Promise<{ id: string }> }
 ) {
-  // TODO(A): load session from Mongo, 404 if not found
-  return NextResponse.json({ error: "not implemented" }, { status: 501 });
+  const { id } = await ctx.params;
+  const session = await getSession(id);
+  if (!session) {
+    return NextResponse.json({ error: "session not found" }, { status: 404 });
+  }
+  return NextResponse.json(session);
 }
