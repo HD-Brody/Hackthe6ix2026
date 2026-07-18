@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "eval": "tsx --env-file=.env.local src/llm/harness/eval-harness.ts",
     "cp2:integration": "tsx --env-file=.env.local scripts/cp2-integration.ts",
+    "crash-drill": "tsx --env-file=.env.local scripts/crash-drill.ts",
+    "prod-sse-drill": "tsx scripts/prod-sse-drill.ts",
     "seed-demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {

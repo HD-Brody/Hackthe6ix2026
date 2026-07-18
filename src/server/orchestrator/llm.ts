@@ -22,7 +22,18 @@ import type {
 } from "@/lib/types";
 
 const MOCK = process.env.LLM_MOCK === "true";
-const TOKEN_DELAY_MS = 40;
+
+function envMs(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/** Simulated Gemini latency for mock mode — tune for slow-day A/B tests. */
+const MOCK_EVAL_MS = envMs("MOCK_EVAL_MS", 800);
+const MOCK_PERSONA_FIRST_TOKEN_MS = envMs("MOCK_PERSONA_FIRST_TOKEN_MS", 600);
+const MOCK_TOKEN_MS = envMs("MOCK_TOKEN_MS", 40);
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,6 +50,7 @@ async function mockEvaluate(
   transcript: Utterance[],
   _userText: string
 ): Promise<Verdict> {
+  await delay(MOCK_EVAL_MS);
   const turn = userTurnNumber(transcript);
   return (turn % 2 === 1 ? verdictVague : verdictSolid) as Verdict;
 }
@@ -47,13 +59,14 @@ async function* mockPersonaReply(
   transcript: Utterance[],
   _directive: Directive
 ): AsyncIterable<string> {
+  await delay(MOCK_PERSONA_FIRST_TOKEN_MS);
   const index = transcript.length % personaReplies.replies.length;
   const line = personaReplies.replies[index];
   const words = line.split(" ");
 
   for (let i = 0; i < words.length; i++) {
     yield i < words.length - 1 ? `${words[i]} ` : words[i];
-    if (i < words.length - 1) await delay(TOKEN_DELAY_MS);
+    if (i < words.length - 1) await delay(MOCK_TOKEN_MS);
   }
 }
 

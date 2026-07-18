@@ -7,6 +7,8 @@ import type {
   ConceptGraph,
   PolicyState,
   GapMap,
+  TurnTiming,
+  Directive,
 } from "@/lib/types";
 
 async function sessions() {
@@ -95,30 +97,51 @@ export async function updatePolicy(
 export const TURN_LOCK_STALE_MS = 60_000;
 
 /**
+ * True when the last utterance is user with no following student reply.
+ * Happens when the server dies mid-stream after pre-stream user persist.
+ */
+export function hasOrphanedUserTurn(utterances: Utterance[]): boolean {
+  if (utterances.length === 0) return false;
+  return utterances[utterances.length - 1].role === "user";
+}
+
+/** Mongo filter for atomic lock acquire — exported for unit tests. */
+export function buildTurnLockAcquireFilter(
+  sessionId: string,
+  now: number,
+  orphaned: boolean
+): {
+  _id: string;
+  $or: Record<string, unknown>[];
+} {
+  const or: Record<string, unknown>[] = [
+    { turn_in_progress: { $ne: true } },
+    { turn_in_progress: { $exists: false } },
+    { turn_lock_at: { $lt: now - TURN_LOCK_STALE_MS } },
+  ];
+  if (orphaned) {
+    or.push({ turn_in_progress: true });
+  }
+  return { _id: sessionId, $or: or };
+}
+
+/**
  * Test-and-set turn lock. Returns false if another turn is in progress.
- * Steals locks older than TURN_LOCK_STALE_MS before attempting acquire.
+ *
+ * Acquires when: not locked, lock is stale (>60s), or orphaned user turn
+ * (server died mid-stream after pre-stream user persist).
  */
 export async function acquireTurnLock(sessionId: string): Promise<boolean> {
   const col = await sessions();
   const now = Date.now();
 
-  await col.updateOne(
-    {
-      _id: sessionId,
-      turn_in_progress: true,
-      turn_lock_at: { $lt: now - TURN_LOCK_STALE_MS },
-    },
-    { $set: { turn_in_progress: false }, $unset: { turn_lock_at: "" } }
-  );
+  const session = await col.findOne({ _id: sessionId });
+  if (!session) return false;
+
+  const orphaned = hasOrphanedUserTurn(session.utterances);
 
   const res = await col.findOneAndUpdate(
-    {
-      _id: sessionId,
-      $or: [
-        { turn_in_progress: { $ne: true } },
-        { turn_in_progress: { $exists: false } },
-      ],
-    },
+    buildTurnLockAcquireFilter(sessionId, now, orphaned),
     { $set: { turn_in_progress: true, turn_lock_at: now } },
     { returnDocument: "after" }
   );
@@ -131,6 +154,44 @@ export async function releaseTurnLock(sessionId: string): Promise<void> {
     { _id: sessionId },
     { $set: { turn_in_progress: false }, $unset: { turn_lock_at: "" } }
   );
+}
+
+export async function pushTurnTiming(
+  sessionId: string,
+  timing: TurnTiming
+): Promise<void> {
+  const res = await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $push: { timings: timing } }
+  );
+  if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
+}
+
+export async function setPendingDirective(
+  sessionId: string,
+  directive: Directive
+): Promise<void> {
+  const res = await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $set: { pending_directive: directive } }
+  );
+  if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
+}
+
+/** Max user turns per session — quota insurance (A4). Env-tunable for drills. */
+export const MAX_TURNS_PER_SESSION = Number(
+  process.env.MAX_TURNS_PER_SESSION ?? "40"
+);
+
+export const TURN_CAP_MESSAGE =
+  "I think my brain is full — can we wrap up?";
+
+export function countUserTurns(utterances: Utterance[]): number {
+  return utterances.filter((u) => u.role === "user").length;
+}
+
+export function isTurnCapReached(utterances: Utterance[]): boolean {
+  return countUserTurns(utterances) >= MAX_TURNS_PER_SESSION;
 }
 
 export async function setGapMap(

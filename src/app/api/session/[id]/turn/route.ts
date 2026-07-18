@@ -14,9 +14,15 @@ import {
   acquireTurnLock,
   appendUtterance,
   getSession,
+  isTurnCapReached,
   releaseTurnLock,
+  TURN_CAP_MESSAGE,
 } from "@/server/db/sessions";
 import { createTurnStream, SSE_HEADERS } from "@/server/orchestrator/runTurn";
+
+/** Vercel serverless: slow turns + token pacing can exceed default 10–15s cap. */
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
 
 export async function POST(
   req: NextRequest,
@@ -24,7 +30,7 @@ export async function POST(
 ) {
   const { id } = await ctx.params;
 
-  let body: { user_text?: string };
+  let body: { user_text?: string; parallel_eval?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -36,12 +42,21 @@ export async function POST(
     return NextResponse.json({ error: "user_text is required" }, { status: 400 });
   }
 
+  const parallelEval = body.parallel_eval;
+
   const session = await getSession(id);
   if (!session) {
     return NextResponse.json({ error: "session not found" }, { status: 404 });
   }
   if (session.status === "ended") {
     return NextResponse.json({ error: "session ended" }, { status: 400 });
+  }
+
+  if (isTurnCapReached(session.utterances)) {
+    return NextResponse.json(
+      { error: "turn_cap_reached", message: TURN_CAP_MESSAGE },
+      { status: 400 }
+    );
   }
 
   if (!(await acquireTurnLock(id))) {
@@ -62,5 +77,7 @@ export async function POST(
     throw err;
   }
 
-  return new Response(createTurnStream(id), { headers: SSE_HEADERS });
+  return new Response(createTurnStream(id, { parallel: parallelEval }), {
+    headers: SSE_HEADERS,
+  });
 }

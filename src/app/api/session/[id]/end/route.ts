@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getSession, setGapMap } from "@/server/db/sessions";
+import { getSession, releaseTurnLock, setGapMap } from "@/server/db/sessions";
 import { collectGapMapMaterials } from "@/server/orchestrator/gapMapMaterials";
 import { generateGapMap } from "@/server/orchestrator/llm";
 import { transition } from "@/server/orchestrator/stateMachine";
@@ -53,6 +53,10 @@ export async function POST(
   }
 
   const { quotes, dodged } = collectGapMapMaterials(session.graph);
+
+  if (session.turn_in_progress) {
+    await releaseTurnLock(id);
+  }
 
   let gapMap;
   try {
