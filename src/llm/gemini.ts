@@ -11,12 +11,28 @@
 
 import { ApiError, GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+/**
+ * Vertex AI mode (ADC-billed, no free-tier RPM ceiling) is opt-in via
+ * GOOGLE_GENAI_USE_VERTEXAI so teammates who haven't set up `gcloud`/ADC yet
+ * keep working unaffected on the API-key path.
+ */
+const ai =
+  process.env.GOOGLE_GENAI_USE_VERTEXAI === "true"
+    ? new GoogleGenAI({
+        vertexai: true,
+        project: requireEnv("GOOGLE_CLOUD_PROJECT"),
+        location: process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1",
+      })
+    : new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+function requireEnv(envVar: string): string {
+  const value = process.env[envVar];
+  if (!value) throw new Error(`${envVar} is not set (check .env.local)`);
+  return value;
+}
 
 function requireModel(envVar: "GEMINI_MODEL_FAST" | "GEMINI_MODEL_STRONG"): string {
-  const model = process.env[envVar];
-  if (!model) throw new Error(`${envVar} is not set (check .env.local)`);
-  return model;
+  return requireEnv(envVar);
 }
 
 function sleep(ms: number): Promise<void> {
