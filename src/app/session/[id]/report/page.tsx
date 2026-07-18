@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { GapMapGrid } from "@/components/GapMapGrid";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -106,7 +107,7 @@ export default async function ReportPage({
         <section className="mt-10 rounded-2xl bg-[#eeedff] px-6 py-9 text-center sm:px-10">
           <h2 className="font-heading text-2xl font-extrabold">Ready to close these gaps?</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">Turn the concepts that need another pass into a focused follow-up lesson.</p>
-          <button type="button" className="mt-5 rounded-lg bg-[#5755d8] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#4846c5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">Start Bridging Lesson</button>
+          <Link href="/" className="mt-5 inline-block rounded-lg bg-[#5755d8] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#4846c5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">Start Bridging Lesson</Link>
         </section>
       </main>
       <SiteFooter />
