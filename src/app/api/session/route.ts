@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import graphFixture from "@/../fixtures/graph-tcp.json";
 import { createSession } from "@/server/db/sessions";
+import { transition } from "@/server/orchestrator/stateMachine";
 import type { ConceptGraph } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
 
   const graph: ConceptGraph = { ...(graphFixture as ConceptGraph), topic };
   const session = await createSession("dev", topic, graph);
+  await transition(session._id, "created", "teaching");
 
   return NextResponse.json({ session_id: session._id, graph: session.graph });
 }
