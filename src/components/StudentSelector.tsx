@@ -1,15 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  studentProfiles,
+  type StudentId,
+} from "@/lib/studentProfiles";
 
-type StudentId = "sam" | "elena";
 type CuriosityLevel = "low" | "medium" | "high";
 
-const students: Array<{ id: StudentId; name: string }> = [
-  { id: "sam", name: "Sam" },
-  { id: "elena", name: "Elena" },
-];
+const students = Object.values(studentProfiles);
 
 const curiosityLevels: Array<{ id: CuriosityLevel; label: string }> = [
   { id: "low", label: "Low" },
@@ -26,10 +27,11 @@ function ArrowRightIcon() {
 }
 
 function StudentPortrait({ student }: { student: StudentId }) {
+  const profile = studentProfiles[student];
   return (
     <Image
-      src={`/students/${student}.png`}
-      alt={student === "sam" ? "Sam" : "Elena"}
+      src={profile.image}
+      alt={profile.name}
       width={104}
       height={104}
       priority
@@ -41,6 +43,47 @@ function StudentPortrait({ student }: { student: StudentId }) {
 export function StudentSelector({ topic }: { topic: string }) {
   const [student, setStudent] = useState<StudentId>("sam");
   const [curiosity, setCuriosity] = useState<CuriosityLevel>("medium");
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function startTeaching() {
+    if (isCreating) return;
+
+    const selectedTopic = topic.trim();
+    if (!selectedTopic) {
+      setError("Choose a topic before starting a teaching session.");
+      return;
+    }
+
+    setIsCreating(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: selectedTopic }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        session_id?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.session_id) {
+        throw new Error(payload.error || "Unable to create a teaching session.");
+      }
+
+      router.push(`/session/${payload.session_id}?student=${student}`);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Unable to create a teaching session."
+      );
+      setIsCreating(false);
+    }
+  }
 
   return (
     <div className="flex w-full max-w-[762px] flex-col items-center">
@@ -89,10 +132,18 @@ export function StudentSelector({ topic }: { topic: string }) {
         <p className="mt-2 text-center text-xs italic leading-5 text-[var(--text-secondary)]">Determines how often the student asks clarifying questions.</p>
       </fieldset>
 
-      <button type="button" aria-describedby="confirm-help" className="font-heading mt-7 flex items-center gap-3 rounded-xl bg-[#4648d4] px-9 py-4 font-semibold text-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 sm:mt-8 sm:px-11">
-        Confirm &amp; Start Teaching <ArrowRightIcon />
+      <button
+        type="button"
+        onClick={startTeaching}
+        disabled={isCreating}
+        aria-describedby="confirm-help"
+        className="font-heading mt-7 flex items-center gap-3 rounded-xl bg-[#4648d4] px-9 py-4 font-semibold text-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70 sm:mt-8 sm:px-11"
+      >
+        {isCreating ? "Creating Classroom..." : "Confirm & Start Teaching"}
+        {!isCreating ? <ArrowRightIcon /> : null}
       </button>
-      <p id="confirm-help" className="sr-only">Starting a teaching session is not connected yet.</p>
+      <p id="confirm-help" className="sr-only">Creates a classroom for the selected topic and student.</p>
+      {error ? <p role="alert" className="mt-3 text-center text-sm font-medium text-red-600">{error}</p> : null}
     </div>
   );
 }

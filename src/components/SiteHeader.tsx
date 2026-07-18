@@ -21,7 +21,17 @@ function ProfileAvatar() {
   );
 }
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  activeItem?: "dashboard" | "classroom" | "analytics";
+};
+
+const navigationItems = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "classroom", label: "Classroom" },
+  { id: "analytics", label: "Analytics" },
+] as const;
+
+export function SiteHeader({ activeItem }: SiteHeaderProps) {
   return (
     <header className="relative z-10 h-16 border-b border-indigo-50 bg-white shadow-[0_4px_10px_rgba(99,102,241,0.05)]">
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
@@ -41,7 +51,19 @@ export function SiteHeader() {
         </Link>
 
         <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-sm text-[var(--text-secondary)] md:flex lg:text-base">
-          {['Dashboard', 'Classroom', 'Analytics'].map((item) => <button key={item} type="button" className="rounded-md px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">{item}</button>)}
+          {navigationItems.map((item) => {
+            const active = activeItem === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                aria-current={active ? "page" : undefined}
+                className={`rounded-sm border-b-2 px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${active ? "border-[#4648d4] font-bold text-[#4648d4]" : "border-transparent"}`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-1 text-[var(--text-secondary)]">

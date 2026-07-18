@@ -1,26 +1,26 @@
-/**
- * The classroom — `/session/:id`. Owner: C (Blocks C1–C3).
- *
- * - transcript pane (user right, student left), text input, status header (C1)
- * - SSE token streaming into the transcript (C2 step 6)
- * - refresh recovery: GET /api/session/:id on load, rebuild transcript (C2 step 7)
- * - "wrap up" button → end call → route to report (C2 step 8)
- * - voice UI per D's transport: MicButton, partial transcript, audio state (C3)
- * - interruption UX: user talks over student → stop playback, yield floor (C3 step 12)
- *
- * Where judges spend 3 of the 5 demo minutes — first in the polish order.
- */
+import { Classroom } from "@/components/Classroom";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
+import { getStudentProfile } from "@/lib/studentProfiles";
 
 export default async function ClassroomPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ student?: string }>;
 }) {
-  const { id } = await params;
+  await params;
+  const { student } = await searchParams;
+  const profile = getStudentProfile(student);
+
   return (
-    <main className="flex h-screen flex-col p-4">
-      {/* TODO(C): header / <Transcript /> / input row with <MicButton /> */}
-      <p className="text-gray-500">classroom for session {id} — not built yet</p>
-    </main>
+    <div className="flex min-h-screen flex-col bg-[var(--page-background)]">
+      <SiteHeader activeItem="classroom" />
+      <main className="flex-1">
+        <Classroom student={profile.id} />
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
