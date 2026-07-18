@@ -10,8 +10,9 @@
  *   4. Probed twice already → ADVANCE to nextAdvanceTarget(graph).
  *   5. solid and !deepened[node] → DEEPEN(node). Caller sets flag. Already deepened → ADVANCE.
  *   6. nextAdvanceTarget null → WRAP_UP.
- *   7. Nothing actionable (empty verdicts, e.g. off-topic derail) → evaluator's
- *      recommended_directive; if absent/nonsense → ADVANCE.
+ *   7. Nothing actionable (empty verdicts / dodge-only / derail) → ADVANCE.
+ *      Never honor recommended PROBE/DEEPEN on an empty turn — that creates
+ *      probe loops after off-topic chatter. WRAP_UP only when no advance target.
  *
  * Cheap to test, expensive to debug live — keep turnPolicy.test.ts green.
  */
@@ -116,8 +117,20 @@ export function turnPolicy(
   const primary = pickPrimaryVerdict(graph, verdict.verdicts);
 
   if (!primary) {
+    // Empty / dodge-only / derail: never chase a PROBE/DEEPEN recommendation —
+    // the user didn't actually teach anything this turn. Steer back with ADVANCE.
+    const onlyDodged =
+      verdict.verdicts.length > 0 &&
+      verdict.verdicts.every((v) => v.verdict === "dodged");
+    if (verdict.verdicts.length === 0 || onlyDodged) {
+      return advanceDirective(graph);
+    }
+
     const rec = verdict.recommended_directive;
     if (rec && isValidRecommended(rec)) {
+      if (rec.type === "PROBE" || rec.type === "DEEPEN") {
+        return advanceDirective(graph);
+      }
       if (rec.type === "ADVANCE" && !rec.node_id) {
         return advanceDirective(graph);
       }
@@ -133,6 +146,7 @@ export function turnPolicy(
     if (probeCount < 2) {
       return { type: "PROBE", node_id };
     }
+    // Twice probed and still a mess — leave it terminal, move on (don't loop).
     return advanceDirective(graph);
   }
 

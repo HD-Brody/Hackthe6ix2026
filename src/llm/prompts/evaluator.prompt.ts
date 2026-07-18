@@ -8,6 +8,12 @@
 
 import type { ConceptGraph, Utterance } from "@/lib/types";
 
+/** Bump whenever the wording/rubric below changes after the CP4 freeze —
+ * this is the audit line: any saved fixture, transcript, or eval-harness
+ * output should be read against the PROMPTS_VERSION that produced it, since
+ * verdicts on borderline utterances can shift between wordings. */
+export const PROMPTS_VERSION = 1;
+
 /** Recent-history window. Trimmed at CP3 (Block B3 step 12) from 10 to 6 turns
  * to keep the fast tier's per-turn prompt small — the node-state summary
  * below (`formatGraph`) already carries the durable signal (what's been

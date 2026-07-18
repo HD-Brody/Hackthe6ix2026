@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { pickVaguestMoments, sanitizeReteachOrder } from "./generateGapMap";
+import {
+  filterQuotesToNonSolid,
+  pickOneLiner,
+  pickVaguestMoments,
+  sanitizeReteachOrder,
+} from "./generateGapMap";
 import type { ConceptGraph, VagueMoment } from "@/lib/types";
 
 const graph: ConceptGraph = {
@@ -11,6 +16,30 @@ const graph: ConceptGraph = {
     { id: "n4", name: "AIMD", truth: "t", difficulty: 3, prereqs: ["n2"], probes: ["ask-why", "ask-example"], state: "unvisited", vague_quotes: [] },
   ],
 };
+
+describe("filterQuotesToNonSolid", () => {
+  it("drops quotes attached to a node whose final state is solid", () => {
+    // n1 is solid — even though it has a recorded quote (e.g. from an
+    // earlier vague moment that later resolved to solid), it must not
+    // survive into the gap map's vaguest_moments candidates.
+    const quotes: VagueMoment[] = [
+      { quote: "solid node's old quote", node_id: "n1" },
+      { quote: "vague node's quote", node_id: "n2" },
+      { quote: "dodged node's quote", node_id: "n3" },
+      { quote: "unvisited node's quote", node_id: "n4" },
+    ];
+    expect(filterQuotesToNonSolid(graph, quotes)).toEqual([
+      { quote: "vague node's quote", node_id: "n2" },
+      { quote: "dodged node's quote", node_id: "n3" },
+      { quote: "unvisited node's quote", node_id: "n4" },
+    ]);
+  });
+
+  it("returns an empty array when every quoted node is solid", () => {
+    const quotes: VagueMoment[] = [{ quote: "old quote", node_id: "n1" }];
+    expect(filterQuotesToNonSolid(graph, quotes)).toEqual([]);
+  });
+});
 
 describe("pickVaguestMoments", () => {
   it("passes through unchanged when there are 3 or fewer quotes", () => {
@@ -87,5 +116,23 @@ describe("sanitizeReteachOrder", () => {
       nodes: graph.nodes.map((n) => ({ ...n, state: "solid" })),
     };
     expect(sanitizeReteachOrder(allSolid, ["n1", "n2"])).toEqual([]);
+  });
+});
+
+describe("pickOneLiner", () => {
+  it("skips flat candidates in favor of a specific sting", () => {
+    expect(
+      pickOneLiner([
+        "You did pretty well but had some gaps.",
+        "You understand TCP until a packet actually gets lost.",
+        "Overall solid with a few vague spots.",
+      ])
+    ).toBe("You understand TCP until a packet actually gets lost.");
+  });
+
+  it("falls back to first candidate when all are flat", () => {
+    expect(pickOneLiner(["You did pretty well but had some gaps."])).toBe(
+      "You did pretty well but had some gaps."
+    );
   });
 });

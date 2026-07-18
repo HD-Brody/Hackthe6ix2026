@@ -19,6 +19,10 @@
 
 import type { ConceptGraph, VagueMoment } from "@/lib/types";
 
+/** Bump whenever the wording below changes after the CP4 freeze — see
+ * evaluator.prompt.ts's PROMPTS_VERSION for why this matters. */
+export const PROMPTS_VERSION = 1;
+
 function formatGraph(graph: ConceptGraph): string {
   return graph.nodes
     .map((n) => `- ${n.id} "${n.name}" (final state: ${n.state}): ${n.truth}`)
@@ -57,5 +61,18 @@ Produce exactly three things:
 
 2. "reteach_order": order the ids of every concept whose final state is NOT "solid" (i.e. vague, wrong, dodged, or unvisited) into the sequence the user should re-study them in. Prioritize concepts other concepts depend on (check prereqs — you can't productively re-teach something whose prerequisite is also shaky) before concepts that depend on them, and within the same prerequisite depth put the worse states first (wrong/dodged before vague, vague before unvisited). Every id in this list must be one of the concept ids from the answer key above. If every concept is "solid", return an empty array.
 
-3. "one_liner_candidates": write 5 candidate one-line summaries of the whole session, ranked BEST FIRST. Each must be a single sentence that stings productively — specific, a little uncomfortable, and immediately clear about where understanding actually broke down. Model: "You understand TCP until a packet actually gets lost." Bad example (too vague to sting): "You did pretty well but had some gaps." Ground every candidate in the actual concept names and states above — don't write something generic enough to apply to any topic. If literally everything is "solid", the one-liner should read as genuine praise instead of manufacturing a fake gap — don't invent a weakness that isn't in the data.`;
+3. "one_liner_candidates": write 5 candidate one-line summaries of the whole session, ranked BEST FIRST. Each must be ONE sentence that stings productively — specific, a little uncomfortable, and immediately clear about WHERE understanding broke.
+
+Good (name the cliff edge):
+- "You understand TCP until a packet actually gets lost."
+- "You can describe slow start until someone asks what ssthresh actually does."
+- "You're solid on the happy path and blank the moment three duplicate ACKs show up."
+
+Bad (flat / generic — never produce these):
+- "You did pretty well but had some gaps."
+- "Your explanation of TCP congestion control needs more depth."
+- "You understand some concepts but struggle with others."
+- "Overall solid with a few vague spots."
+
+Rules for every candidate: (a) name at least one concrete concept from the answer key above, (b) pin the failure to a specific moment/state (vague/wrong/dodged/never reached), (c) would feel embarrassing if read aloud on a projector. Ground every candidate in the actual concept names and states — nothing generic enough to apply to any topic. If literally everything is "solid", the one-liner should be genuine praise that still names what they nailed — don't invent a fake gap.`;
 }
