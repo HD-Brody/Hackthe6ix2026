@@ -1,0 +1,225 @@
+{
+  "topic": "how HTTPS works",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "What is HTTPS?",
+      "truth": "HTTPS is an extension of HTTP that encrypts and authenticates communication over a computer network using Transport Layer Security (TLS).",
+      "difficulty": 1,
+      "prereqs": [],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n2",
+      "name": "Role of TLS",
+      "truth": "TLS (Transport Layer Security) is a cryptographic protocol that provides end-to-end encryption and data integrity for network communication, establishing a secure channel over an insecure network like the internet.",
+      "difficulty": 1,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-example"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n3",
+      "name": "Symmetric Encryption",
+      "truth": "Symmetric encryption uses a single shared secret key for both encrypting and decrypting data, offering high performance once the key is established.",
+      "difficulty": 1,
+      "prereqs": [
+        "n2"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n4",
+      "name": "Asymmetric Encryption (Public Key Cryptography)",
+      "truth": "Asymmetric encryption uses a pair of mathematically related keys, a public key for encryption and a private key for decryption, allowing secure communication without prior sharing of a secret key.",
+      "difficulty": 2,
+      "prereqs": [
+        "n2"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n5",
+      "name": "TLS Handshake Purpose",
+      "truth": "The TLS handshake is a negotiation process between a client and server to establish the parameters for a secure communication session, including cryptographic algorithms, shared secret keys, and server authentication.",
+      "difficulty": 2,
+      "prereqs": [
+        "n2",
+        "n3",
+        "n4"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-example"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n6",
+      "name": "Server Certificates",
+      "truth": "A server certificate is a digital document issued by a Certificate Authority (CA) that binds a server's public key to its identity, allowing clients to verify the server's authenticity.",
+      "difficulty": 2,
+      "prereqs": [
+        "n4"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-example"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n7",
+      "name": "Certificate Authorities (CA)",
+      "truth": "A Certificate Authority (CA) is a trusted third-party entity that issues and signs digital certificates, thereby vouching for the identity of the certificate owner.",
+      "difficulty": 2,
+      "prereqs": [
+        "n6"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n8",
+      "name": "Key Exchange in Handshake",
+      "truth": "During the TLS handshake, clients and servers use asymmetric cryptography (or a Diffie-Hellman exchange) to securely agree upon a shared symmetric session key for subsequent data encryption.",
+      "difficulty": 3,
+      "prereqs": [
+        "n3",
+        "n4",
+        "n5",
+        "n6"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-example",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n9",
+      "name": "Data Encryption with Symmetric Key",
+      "truth": "After the TLS handshake, all application data exchanged between the client and server is encrypted using the agreed-upon symmetric session key for efficiency and confidentiality.",
+      "difficulty": 2,
+      "prereqs": [
+        "n3",
+        "n8"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n10",
+      "name": "Message Authentication Code (MAC)",
+      "truth": "Message Authentication Codes (MACs) are cryptographic checksums calculated over encrypted data using a shared key to ensure data integrity and authenticity, preventing tampering and unauthorized modification.",
+      "difficulty": 2,
+      "prereqs": [
+        "n9"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n11",
+      "name": "Forward Secrecy",
+      "truth": "Forward Secrecy ensures that if a server's long-term private key is compromised in the future, past recorded encrypted communications cannot be decrypted, typically achieved by using ephemeral session keys.",
+      "difficulty": 3,
+      "prereqs": [
+        "n8"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n12",
+      "name": "Certificate Revocation",
+      "truth": "Certificate revocation is the process by which a Certificate Authority invalidates a previously issued digital certificate before its natural expiration date, often due to private key compromise or change in identity.",
+      "difficulty": 2,
+      "prereqs": [
+        "n7"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n13",
+      "name": "HTTPS Downgrade Attack",
+      "truth": "A HTTPS downgrade attack forces a client and server to communicate over an insecure HTTP connection, or a weaker version of TLS, by tampering with the initial connection request.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1",
+        "n5"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n14",
+      "name": "Server Name Indication (SNI)",
+      "truth": "Server Name Indication (SNI) is an extension to TLS that allows a client to indicate the hostname it is trying to connect to at the start of the handshake process, enabling a server to host multiple TLS certificates on a single IP address.",
+      "difficulty": 2,
+      "prereqs": [
+        "n5",
+        "n6"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    }
+  ]
+}
