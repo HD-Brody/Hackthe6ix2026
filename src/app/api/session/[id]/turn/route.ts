@@ -10,7 +10,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { appendUtterance, getSession } from "@/server/db/sessions";
+import {
+  acquireTurnLock,
+  appendUtterance,
+  getSession,
+  releaseTurnLock,
+} from "@/server/db/sessions";
 import { createTurnStream, SSE_HEADERS } from "@/server/orchestrator/runTurn";
 
 export async function POST(
@@ -39,11 +44,23 @@ export async function POST(
     return NextResponse.json({ error: "session ended" }, { status: 400 });
   }
 
-  await appendUtterance(id, {
-    role: "user",
-    text: userText,
-    ts: Date.now(),
-  });
+  if (!(await acquireTurnLock(id))) {
+    return NextResponse.json(
+      { error: "turn already in progress" },
+      { status: 409 }
+    );
+  }
+
+  try {
+    await appendUtterance(id, {
+      role: "user",
+      text: userText,
+      ts: Date.now(),
+    });
+  } catch (err) {
+    await releaseTurnLock(id);
+    throw err;
+  }
 
   return new Response(createTurnStream(id), { headers: SSE_HEADERS });
 }

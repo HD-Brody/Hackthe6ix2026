@@ -102,6 +102,10 @@ export interface Session {
   gap_map?: GapMap;
   /** Turn-policy state (probe counts, deepened flags). Optional — added post-CP0. */
   policy?: PolicyState;
+  /** Mongo test-and-set lock — one turn stream at a time (serverless-safe). */
+  turn_in_progress?: boolean;
+  /** When the turn lock was acquired; stale after ~60s. */
+  turn_lock_at?: number;
   started_at: number;
   ended_at?: number;
   /** Per-stage timing (A, Block A3) — D's CP4 latency report reads from this. */

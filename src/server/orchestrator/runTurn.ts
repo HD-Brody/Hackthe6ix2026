@@ -9,6 +9,7 @@ import {
   appendUtterance,
   applyVerdict,
   getSession,
+  releaseTurnLock,
   updatePolicy,
 } from "@/server/db/sessions";
 import { evaluate, personaReply } from "@/server/orchestrator/llm";
@@ -101,6 +102,7 @@ function lastUserText(utterances: Utterance[]): string {
 }
 
 function createSseStream(
+  sessionId: string,
   run: (send: (event: TurnSSEEvent) => void) => Promise<void>
 ): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -120,14 +122,19 @@ function createSseStream(
           data: { message, fallback_line: FALLBACK_LINE },
         });
         controller.close();
+      } finally {
+        await releaseTurnLock(sessionId);
       }
+    },
+    async cancel() {
+      await releaseTurnLock(sessionId);
     },
   });
 }
 
 /** Echo mode — canned persona lines, fixture verdict. Demo kill switch. */
 export function createEchoTurnStream(sessionId: string): ReadableStream<Uint8Array> {
-  return createSseStream(async (send) => {
+  return createSseStream(sessionId, async (send) => {
     const session = await getSession(sessionId);
     if (!session) throw new Error("session not found");
 
@@ -158,7 +165,7 @@ export function createEchoTurnStream(sessionId: string): ReadableStream<Uint8Arr
 
 /** Real loop — evaluate → policy → persona. Sequential v1 (A3 adds parallel eval). */
 export function createRealTurnStream(sessionId: string): ReadableStream<Uint8Array> {
-  return createSseStream(async (send) => {
+  return createSseStream(sessionId, async (send) => {
     const session = await getSession(sessionId);
     if (!session) throw new Error("session not found");
 

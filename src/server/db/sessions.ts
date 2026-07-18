@@ -90,6 +90,48 @@ export async function updatePolicy(
   if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
 }
 
+/** Locks older than this are treated as stale (crashed stream, stuck demo). */
+export const TURN_LOCK_STALE_MS = 60_000;
+
+/**
+ * Test-and-set turn lock. Returns false if another turn is in progress.
+ * Steals locks older than TURN_LOCK_STALE_MS before attempting acquire.
+ */
+export async function acquireTurnLock(sessionId: string): Promise<boolean> {
+  const col = await sessions();
+  const now = Date.now();
+
+  await col.updateOne(
+    {
+      _id: sessionId,
+      turn_in_progress: true,
+      turn_lock_at: { $lt: now - TURN_LOCK_STALE_MS },
+    },
+    { $set: { turn_in_progress: false }, $unset: { turn_lock_at: "" } }
+  );
+
+  const res = await col.findOneAndUpdate(
+    {
+      _id: sessionId,
+      $or: [
+        { turn_in_progress: { $ne: true } },
+        { turn_in_progress: { $exists: false } },
+      ],
+    },
+    { $set: { turn_in_progress: true, turn_lock_at: now } },
+    { returnDocument: "after" }
+  );
+
+  return res !== null;
+}
+
+export async function releaseTurnLock(sessionId: string): Promise<void> {
+  await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $set: { turn_in_progress: false }, $unset: { turn_lock_at: "" } }
+  );
+}
+
 /** Pure graph mutation — exported for unit tests. */
 export function applyVerdictToGraph(
   graph: ConceptGraph,
