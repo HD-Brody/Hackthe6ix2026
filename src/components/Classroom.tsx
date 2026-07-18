@@ -1,11 +1,21 @@
 "use client";
 
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import type { Utterance } from "@/lib/types";
 import { studentProfiles, type StudentId } from "@/lib/studentProfiles";
 import { MicButton } from "@/components/MicButton";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { Transcript } from "@/components/Transcript";
+import {
+  isMockSessionId,
+  readMockSession,
+  saveMockTranscript,
+} from "@/lib/mockSession";
 
 function ChatIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5 text-[var(--brand)]"><path d="M4 5h16v11H8l-4 3V5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /></svg>;
@@ -117,15 +127,40 @@ function ClassroomComposer({
   );
 }
 
-export function Classroom({ student }: { student: StudentId }) {
+export function Classroom({
+  sessionId,
+  student,
+}: {
+  sessionId: string;
+  student: StudentId;
+}) {
   const profile = studentProfiles[student];
+  const mockSession = isMockSessionId(sessionId);
   const [utterances, setUtterances] = useState<Utterance[]>(() =>
-    sampleConversation(profile.name)
+    mockSession ? [] : sampleConversation(profile.name)
   );
   const [message, setMessage] = useState("");
   const [studentState, setStudentState] = useState<"listening" | "thinking" | "speaking">("listening");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mockHydrated, setMockHydrated] = useState(!mockSession);
+
+  useEffect(() => {
+    if (!mockSession) return;
+    const storedSession = readMockSession(sessionId);
+    setUtterances(storedSession?.utterances ?? []);
+    setMockHydrated(true);
+  }, [mockSession, sessionId]);
+
+  useEffect(() => {
+    if (mockSession && mockHydrated) {
+      saveMockTranscript(sessionId, utterances);
+    }
+  }, [mockHydrated, mockSession, sessionId, utterances]);
+
+  function appendUtterance(utterance: Utterance) {
+    setUtterances((current) => [...current, utterance]);
+  }
 
   async function sendMessage() {
     const userText = message.trim();
@@ -134,10 +169,7 @@ export function Classroom({ student }: { student: StudentId }) {
     setIsSending(true);
     setError(null);
     setMessage("");
-    setUtterances((current) => [
-      ...current,
-      { role: "user", text: userText, ts: Date.now() },
-    ]);
+    appendUtterance({ role: "user", text: userText, ts: Date.now() });
     setStudentState("thinking");
 
     try {
@@ -148,14 +180,11 @@ export function Classroom({ student }: { student: StudentId }) {
       const shortText = userText.length > 72
         ? `${userText.slice(0, 72)}...`
         : userText;
-      setUtterances((current) => [
-        ...current,
-        {
-          role: "student",
-          text: `Hmm, I think I follow. When you say “${shortText}”, could you explain that with a simple example?`,
-          ts: Date.now(),
-        },
-      ]);
+      appendUtterance({
+        role: "student",
+        text: `Hmm, I think I follow. When you say “${shortText}”, could you explain that with a simple example?`,
+        ts: Date.now(),
+      });
     } catch {
       setError("The mock student could not respond. Please try again.");
     } finally {

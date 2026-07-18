@@ -7,6 +7,7 @@ import {
   studentProfiles,
   type StudentId,
 } from "@/lib/studentProfiles";
+import { createMockSession, isForcedMockMode } from "@/lib/mockSession";
 
 type CuriosityLevel = "low" | "medium" | "high";
 
@@ -59,6 +60,12 @@ export function StudentSelector({ topic }: { topic: string }) {
     setIsCreating(true);
     setError(null);
 
+    if (isForcedMockMode) {
+      const mockSession = createMockSession(selectedTopic, student);
+      router.push(`/session/${mockSession.id}?student=${student}`);
+      return;
+    }
+
     try {
       const response = await fetch("/api/session", {
         method: "POST",
@@ -76,12 +83,14 @@ export function StudentSelector({ topic }: { topic: string }) {
 
       router.push(`/session/${payload.session_id}?student=${student}`);
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Unable to create a teaching session."
-      );
-      setIsCreating(false);
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "[CP1 mock fallback] Session API unavailable; using a local mock session.",
+          caught
+        );
+      }
+      const mockSession = createMockSession(selectedTopic, student);
+      router.push(`/session/${mockSession.id}?student=${student}`);
     }
   }
 

@@ -10,7 +10,7 @@ export default async function ClassroomPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ student?: string }>;
 }) {
-  await params;
+  const { id } = await params;
   const { student } = await searchParams;
   const profile = getStudentProfile(student);
 
@@ -18,7 +18,7 @@ export default async function ClassroomPage({
     <div className="flex min-h-screen flex-col bg-[var(--page-background)]">
       <SiteHeader activeItem="classroom" />
       <main className="flex-1">
-        <Classroom student={profile.id} />
+        <Classroom sessionId={id} student={profile.id} />
       </main>
       <SiteFooter />
     </div>
