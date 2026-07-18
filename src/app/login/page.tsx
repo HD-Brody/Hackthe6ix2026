@@ -29,14 +29,34 @@ export default function LoginPage() {
             <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-[var(--text-secondary)] sm:text-base">Continue your teaching journey with Professor Me.</p>
           </div>
 
-          <div className="mt-8 space-y-4">
-            <a
-              href="/auth/login"
+          {/* Identifier-first: email is collected HERE; the GET form forwards it
+              as login_hint so Auth0's (branded) step only asks for the password. */}
+          <form action="/auth/login" method="GET" className="mt-8 space-y-4">
+            <div>
+              <label htmlFor="login_hint" className="mb-1.5 block text-sm text-[var(--text-secondary)] sm:text-base">Email Address</label>
+              <div className="relative">
+                <input
+                  id="login_hint"
+                  name="login_hint"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  placeholder="name@example.com"
+                  className="h-12 w-full rounded-lg border border-transparent bg-[#f2f4f6] px-4 pr-11 text-base outline-none placeholder:text-[#c7c4d7] focus:border-[#7979df] focus:ring-2 focus:ring-[#e1e0ff]"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#b9b7cb]"><EmailIcon /></span>
+              </div>
+            </div>
+
+            <button
+              type="submit"
               className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#4648d4] text-base font-medium text-white shadow-[0_4px_10px_rgba(99,102,241,0.12)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
             >
-              <EmailIcon /> Log in with Email
-            </a>
+              Continue
+            </button>
+          </form>
 
+          <div className="mt-4 space-y-4">
             <div className="flex items-center gap-3"><span className="h-px flex-1 bg-[#c7c4d7]" /><span className="text-xs font-medium text-[var(--text-secondary)]">Or continue with</span><span className="h-px flex-1 bg-[#c7c4d7]" /></div>
 
             <a

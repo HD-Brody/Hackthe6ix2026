@@ -47,9 +47,29 @@ export default function SignUpPage() {
               </div>
               <div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-[#c7c4d7]"/><span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-secondary)] sm:text-xs">Or continue with email</span><span className="h-px flex-1 bg-[#c7c4d7]"/></div>
 
-              <a href="/auth/login?screen_hint=signup" className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#4648d4] text-base font-medium text-white shadow-[0_10px_15px_-3px_rgba(70,72,212,0.2)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">
-                <FieldIcon type="email" /> Sign up with Email
-              </a>
+              {/* Identifier-first: email collected here, forwarded as login_hint;
+                  screen_hint=signup sends Auth0's branded step straight to sign-up. */}
+              <form action="/auth/login" method="GET" className="space-y-3.5">
+                <input type="hidden" name="screen_hint" value="signup" />
+                <div>
+                  <label htmlFor="signup-email" className="mb-1.5 block text-sm text-[var(--text-secondary)]">Email Address</label>
+                  <div className="relative">
+                    <input
+                      id="signup-email"
+                      name="login_hint"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      placeholder="name@example.com"
+                      className="h-12 w-full rounded-lg border-2 border-transparent bg-[#f2f4f6] px-4 pr-11 text-base outline-none placeholder:text-[#6b7280] focus:border-[#7979df] focus:ring-2 focus:ring-[#e1e0ff]"
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#aaa8bc]"><FieldIcon type="email" /></span>
+                  </div>
+                </div>
+                <button type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#4648d4] text-base font-medium text-white shadow-[0_10px_15px_-3px_rgba(70,72,212,0.2)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">
+                  Continue
+                </button>
+              </form>
               <p className="mt-3 text-center text-xs leading-5 text-[var(--text-secondary)]">Accounts are secured by Auth0. By signing up you agree to be quizzed relentlessly by an AI student.</p>
 
               <p className="mt-5 text-center text-sm text-[var(--text-secondary)]">Already have an account? <Link href="/login" className="font-bold text-[#4648d4] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">Log In</Link></p>
