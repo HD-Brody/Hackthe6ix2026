@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pickVaguestMoments, sanitizeReteachOrder } from "./generateGapMap";
+import { pickVaguestMoments, sanitizeReteachOrder, pickOneLiner } from "./generateGapMap";
 import type { ConceptGraph, VagueMoment } from "@/lib/types";
 
 const graph: ConceptGraph = {
@@ -87,5 +87,23 @@ describe("sanitizeReteachOrder", () => {
       nodes: graph.nodes.map((n) => ({ ...n, state: "solid" })),
     };
     expect(sanitizeReteachOrder(allSolid, ["n1", "n2"])).toEqual([]);
+  });
+});
+
+describe("pickOneLiner", () => {
+  it("skips flat candidates in favor of a specific sting", () => {
+    expect(
+      pickOneLiner([
+        "You did pretty well but had some gaps.",
+        "You understand TCP until a packet actually gets lost.",
+        "Overall solid with a few vague spots.",
+      ])
+    ).toBe("You understand TCP until a packet actually gets lost.");
+  });
+
+  it("falls back to first candidate when all are flat", () => {
+    expect(pickOneLiner(["You did pretty well but had some gaps."])).toBe(
+      "You did pretty well but had some gaps."
+    );
   });
 });

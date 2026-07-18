@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createSession,
+  MAX_SESSIONS_PER_USER,
   SessionCapError,
 } from "@/server/db/sessions";
 import { resolveGraph } from "@/server/orchestrator/resolveGraph";
@@ -38,7 +39,8 @@ export async function POST(req: NextRequest) {
         {
           error: err.code,
           message: err.message,
-          limit: err.count,
+          limit: MAX_SESSIONS_PER_USER,
+          current: err.count,
         },
         { status: 429 }
       );

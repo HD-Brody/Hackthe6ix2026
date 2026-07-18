@@ -1,0 +1,47 @@
+{
+  "description": "B4 adversarial session scripts — full teaching sessions for A↔B policy tuning. Run via npm run drill:adversarial (PARALLEL_EVAL=true, live Gemini).",
+  "topic": "TCP congestion control",
+  "scripts": [
+    {
+      "id": "rambler",
+      "name": "Multi-concept rambler",
+      "goal": "User sprays 3–6 concepts per turn. Policy must pick ONE thread (wrong > vague > solid), probe it, and not thrash. Watch parallel one-turn lag: Sam's question should still feel about the right thread.",
+      "turns": [
+        "Okay so TCP congestion control is basically about not flooding the network — the sender has this window of how much it can send, and it like grows and shrinks somehow based on whether things are getting through.",
+        "So it starts slow then speeds up and also sometimes packets get lost and it has to like, resend them, and there's a threshold thing too I think, and then it goes back to increasing but slower after that.",
+        "The window doubles each round trip, and if three duplicate acks show up it resends without waiting, but if a timeout happens instead the whole window just resets and it starts over from slow start, and also AIMD is the thing where you add on the way up and cut hard on the way down.",
+        "Yeah the threshold is ssthresh — once you hit that you stop doubling and do the slower increase, and after a loss you set ssthresh to half the window I think, and then maybe go back into slow start or fast recovery depending on how you noticed the loss.",
+        "Fast retransmit is the three-dup-ack path, fast recovery means you don't fully restart from one, you cut the window and keep going from there — wait also congestion avoidance is just adding one MSS per RTT roughly.",
+        "Anyway packet loss is the congestion signal, either via timeout or triple duplicate ACKs, and the point of all this is to avoid filling up router buffers until the network collapses."
+      ]
+    },
+    {
+      "id": "confident-wrong",
+      "name": "Confidently wrong user",
+      "goal": "User states specific wrong mechanisms fluently. Evaluator must mark wrong (not vague); policy must PROBE then ADVANCE past the disaster after two probes — never DEEPEN a wrong node.",
+      "turns": [
+        "TCP congestion control is how the receiver tells the sender to slow down by shrinking its receive window whenever its buffer fills up.",
+        "Slow start doesn't actually grow the window at all — it keeps the window flat at one segment the whole time, right up until ssthresh is hit, and only then does it start increasing.",
+        "Yeah I'm sure — slow start means the window stays at one until the threshold, that's why it's called slow.",
+        "Packet loss happens when the receiver's buffer is full, so it just refuses new packets — that's literally what tells the sender to slow down.",
+        "And fast recovery means going all the way back to slow start and rebuilding the window from scratch after any packet loss, every time.",
+        "AIMD is the opposite of what people think — you multiply the window when things are good and add a little when you see loss, so you recover gently."
+      ]
+    },
+    {
+      "id": "derailer",
+      "name": "Off-topic derailer",
+      "goal": "User dodges and changes subject. Policy must ADVANCE (not chase PROBE on empty verdicts). Persona must deflect factual 'do YOU know' questions. Gap map should capture dodges / vagueness from real teaching moments.",
+      "turns": [
+        "TCP has this congestion window that limits how much unacked data the sender can have in flight.",
+        "Wait, is this related to how Wi-Fi works? My Wi-Fi has been so bad lately.",
+        "Can we talk about something else, this is kind of boring.",
+        "Okay fine — slow start doubles the window every round trip until a threshold or a loss.",
+        "Wait, do YOU know what ssthresh actually is? Just tell me.",
+        "I mean, it just switches when it's supposed to, that's kinda just how TCP works, anyway what else do you want to know?",
+        "Three duplicate ACKs mean you retransmit right away without waiting for the timer.",
+        "Anyway, did you see the game last night? Totally unrelated but wow."
+      ]
+    }
+  ]
+}
