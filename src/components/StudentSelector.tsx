@@ -83,14 +83,14 @@ export function StudentSelector({ topic }: { topic: string }) {
 
       router.push(`/session/${payload.session_id}?student=${student}`);
     } catch (caught) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "[CP1 mock fallback] Session API unavailable; using a local mock session.",
-          caught
-        );
-      }
-      const mockSession = createMockSession(selectedTopic, student);
-      router.push(`/session/${mockSession.id}?student=${student}`);
+      // No silent mock fallback: a failed session must LOOK failed, or a demo
+      // outage gets papered over with a fake student. (NEXT_PUBLIC_MOCK_MODE
+      // still forces mock sessions explicitly for frontend-only dev.)
+      console.warn("[student-selector] session create failed:", caught);
+      setError(
+        `${students.find((s) => s.id === student)?.name ?? "Your student"} couldn't make it to class — check your connection and try again.`
+      );
+      setIsCreating(false);
     }
   }
 

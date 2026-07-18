@@ -36,8 +36,9 @@ export function SessionFeedback({ profile, sessionId }: { profile: StudentProfil
         <h1 className="font-heading mt-4 max-w-2xl text-xl font-extrabold tracking-tight sm:text-2xl sm:leading-8">
           Great Session! How was {profile.name}&apos;s learning today?
         </h1>
+        {/* Never confirm correctness — only the gap map renders verdicts. */}
         <p className="mt-1.5 text-sm font-medium italic text-[#8127cf] sm:text-base">
-          “I understood everything! Thank you for teaching me.” — {profile.name}
+          “Whew, that was a lot — I need a minute to let it all sink in.” — {profile.name}
         </p>
       </section>
 
