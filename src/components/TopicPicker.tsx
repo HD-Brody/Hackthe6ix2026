@@ -11,7 +11,6 @@ type Topic = {
   description: string;
   accent: "green" | "indigo" | "purple" | "rose";
   icon: ReactNode;
-  featured?: boolean;
 };
 
 function SearchIcon() {
@@ -48,16 +47,11 @@ function BookIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5"><path d="M4 5.5h6.3c1 0 1.7.7 1.7 1.7v11.3c0-1.1-.9-2-2-2H4V5.5Zm16 0h-6.3c-1 0-1.7.7-1.7 1.7v11.3c0-1.1.9-2 2-2h6V5.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="m6.5 8 3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 }
 
-function CodeIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 32 24" fill="none" className="h-5 w-8"><path d="m11 4-7 8 7 8m10-16 7 8-7 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
-}
-
 const topics: Topic[] = [
   { title: "Photosynthesis", description: "Explain how plants convert sunlight into chemical energy for Sam's biology quiz.", accent: "green", icon: <LeafIcon /> },
   { title: "Machine Learning", description: "Help Sam understand neural networks without the heavy math jargon.", accent: "indigo", icon: <BrainIcon /> },
   { title: "Quantum Physics", description: "Break down entanglement and superposition into simple, everyday analogies.", accent: "purple", icon: <AtomIcon /> },
   { title: "Canadian History", description: "Narrate the key moments of Confederation for Sam's upcoming social studies project.", accent: "rose", icon: <BookIcon /> },
-  { title: "React Hooks", description: "Simplify useEffect and useState for a student who only knows basic HTML.", accent: "indigo", icon: <CodeIcon />, featured: true },
 ];
 
 const accentClasses = {
@@ -73,12 +67,12 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`group flex min-h-48 w-full text-left transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 ${topic.featured ? "items-center gap-5 sm:col-span-2 sm:min-h-28" : "flex-col items-start gap-2"} ${selected ? "border-[var(--brand)] shadow-md" : "border-[var(--card-border)]"} rounded-xl border bg-white p-6`}
+      className={`group flex min-h-48 w-full flex-col items-start gap-2 rounded-xl border bg-white p-6 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 ${selected ? "border-[var(--brand)] shadow-md" : "border-[var(--card-border)]"}`}
     >
-      <span className={`flex shrink-0 items-center justify-center rounded-lg ${topic.featured ? "size-16" : "size-12"} ${accentClasses[topic.accent]}`}>
+      <span className={`flex size-12 shrink-0 items-center justify-center rounded-lg ${accentClasses[topic.accent]}`}>
         {topic.icon}
       </span>
-      <span className={topic.featured ? "min-w-0" : "mt-1"}>
+      <span className="mt-1">
         <span className="font-heading block text-xl font-semibold leading-8 text-[var(--text-primary)] sm:text-2xl">
           {topic.title}
         </span>

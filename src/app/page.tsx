@@ -7,7 +7,7 @@ export default function TopicPickerPage() {
     <div className="flex min-h-screen flex-col bg-[var(--page-background)]">
       <SiteHeader />
       <main className="home-background flex-1">
-        <section className="mx-auto flex w-full max-w-7xl flex-col items-center px-5 pb-16 pt-14 sm:px-8 sm:pt-20 lg:px-10">
+        <section className="mx-auto flex w-full max-w-7xl flex-col items-center px-5 pb-28 pt-14 sm:px-8 sm:pb-36 sm:pt-20 lg:px-10">
           <div className="rounded-full bg-[var(--brand-soft)] px-4 py-1.5 text-center text-sm font-semibold tracking-[0.01em] text-[var(--brand-strong)]">
             Revolutionary Learning Model
           </div>
