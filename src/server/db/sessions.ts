@@ -237,6 +237,64 @@ export async function setGapMap(
   if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
 }
 
+/** Lightweight per-session summary for profile/history views. */
+export interface SessionSummary {
+  session_id: string;
+  topic: string;
+  status: Session["status"];
+  started_at: number;
+  ended_at?: number;
+  solid: number;
+  total: number;
+  has_gap_map: boolean;
+}
+
+export async function listSessionsByUser(
+  userId: string,
+  limit = 20
+): Promise<SessionSummary[]> {
+  const docs = await (await sessions())
+    .find(
+      { user_id: userId },
+      {
+        projection: {
+          _id: 1,
+          topic: 1,
+          status: 1,
+          started_at: 1,
+          ended_at: 1,
+          "graph.nodes.state": 1,
+          gap_map: 1,
+        },
+        sort: { started_at: -1 },
+        limit,
+      }
+    )
+    .toArray();
+
+  return docs.map((doc) => ({
+    session_id: doc._id,
+    topic: doc.topic,
+    status: doc.status,
+    started_at: doc.started_at,
+    ended_at: doc.ended_at,
+    solid: doc.graph?.nodes?.filter((n) => n.state === "solid").length ?? 0,
+    total: doc.graph?.nodes?.length ?? 0,
+    has_gap_map: !!doc.gap_map,
+  }));
+}
+
+export async function setFeedback(
+  sessionId: string,
+  feedback: NonNullable<Session["feedback"]>
+): Promise<void> {
+  const res = await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $set: { feedback } }
+  );
+  if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
+}
+
 /** Pure graph mutation — exported for unit tests. */
 export function applyVerdictToGraph(
   graph: ConceptGraph,

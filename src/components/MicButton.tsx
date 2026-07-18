@@ -1,18 +1,31 @@
 /**
- * Mic button — hold-to-talk AND auto-VAD toggle. Owner: C, transport by D.
- * (Block C3 step 11; decide with D at CP3 which ships — hold-to-talk is the
- * reliable demo default. If CP3 slips past hour 16: hold-to-talk only.)
- * Shows live partial transcript so the user sees the STT hearing them.
+ * Mic button — click-to-talk toggle (the reliable demo default per the plan).
+ * Owner: C, transport by D. Wired to src/voice/sttClient.ts via Classroom.
  */
 
 "use client";
 
-export function MicButton() {
+export function MicButton({
+  active,
+  disabled,
+  onClick,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
-      aria-label="Use microphone. Voice input is not connected yet."
-      className="flex size-10 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-white hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={active}
+      aria-label={active ? "Stop listening" : "Explain out loud with your microphone"}
+      className={`flex size-10 items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-40 ${
+        active
+          ? "animate-pulse bg-[#4648d4] text-white shadow-md"
+          : "text-[var(--text-secondary)] hover:bg-white hover:text-[var(--brand)]"
+      }`}
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">
         <rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" strokeWidth="1.8" />

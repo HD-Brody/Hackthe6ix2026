@@ -17,12 +17,31 @@ function formatTime(timestamp: number) {
   }).format(timestamp);
 }
 
+function TypingIndicator({ image }: { image: string }) {
+  return (
+    <div className="flex gap-3">
+      <Image src={image} alt="" width={40} height={40} className="size-9 shrink-0 rounded-full border-2 border-white object-cover shadow-sm sm:size-10" />
+      <div className="flex items-center gap-1 rounded-xl bg-[#eceef0] px-4 py-3 shadow-sm" aria-label="Student is thinking">
+        {[0, 150, 300].map((delay) => (
+          <span
+            key={delay}
+            className="size-2 animate-bounce rounded-full bg-[var(--text-secondary)]/50"
+            style={{ animationDelay: `${delay}ms` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Transcript({
   utterances,
   student,
+  studentTyping = false,
 }: {
   utterances: Utterance[];
   student: StudentId;
+  studentTyping?: boolean;
 }) {
   const profile = studentProfiles[student];
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,7 +50,7 @@ export function Transcript({
     const container = containerRef.current;
     if (!container) return;
     container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-  }, [utterances]);
+  }, [utterances, studentTyping]);
 
   return (
     <div ref={containerRef} className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-5 sm:px-6" aria-live="polite" aria-label="Conversation transcript">
@@ -53,6 +72,7 @@ export function Transcript({
           </div>
         );
       })}
+      {studentTyping ? <TypingIndicator image={profile.image} /> : null}
     </div>
   );
 }

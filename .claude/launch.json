@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev-echo",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["ECHO_MODE=true", "LLM_MOCK=true", "npm", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}
