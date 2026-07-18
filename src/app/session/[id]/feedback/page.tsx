@@ -1,9 +1,9 @@
-import { Classroom } from "@/components/Classroom";
+import { SessionFeedback } from "@/components/SessionFeedback";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getStudentProfile } from "@/lib/studentProfiles";
 
-export default async function ClassroomPage({
+export default async function FeedbackPage({
   params,
   searchParams,
 }: {
@@ -15,11 +15,9 @@ export default async function ClassroomPage({
   const profile = getStudentProfile(student);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--page-background)]">
+    <div className="flex min-h-screen flex-col bg-[#f8fafc] text-[var(--text-primary)]">
       <SiteHeader activeItem="classroom" sessionId={id} student={profile.id} />
-      <main className="flex-1">
-        <Classroom sessionId={id} student={profile.id} />
-      </main>
+      <SessionFeedback profile={profile} sessionId={id} />
       <SiteFooter />
     </div>
   );

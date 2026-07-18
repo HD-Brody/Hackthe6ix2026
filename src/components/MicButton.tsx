@@ -8,6 +8,16 @@
 "use client";
 
 export function MicButton() {
-  // TODO(C+D): wire to src/voice/sttClient.ts
-  return null;
+  return (
+    <button
+      type="button"
+      aria-label="Use microphone. Voice input is not connected yet."
+      className="flex size-10 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-white hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">
+        <rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v4m-3 0h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    </button>
+  );
 }
