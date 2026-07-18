@@ -14,6 +14,7 @@ import {
 } from "@/server/db/sessions";
 import { resolveGraph } from "@/server/orchestrator/resolveGraph";
 import { transition } from "@/server/orchestrator/stateMachine";
+import { getUserId } from "@/lib/auth0";
 
 export async function POST(req: NextRequest) {
   let body: { topic?: string };
@@ -29,10 +30,12 @@ export async function POST(req: NextRequest) {
   }
 
   const graph = await resolveGraph(topic);
+  // Auth0 sub when logged in; anonymous "dev" pool otherwise (demo-safe).
+  const userId = await getUserId();
 
   let session;
   try {
-    session = await createSession("dev", topic, graph);
+    session = await createSession(userId, topic, graph);
   } catch (err) {
     if (err instanceof SessionCapError) {
       return NextResponse.json(

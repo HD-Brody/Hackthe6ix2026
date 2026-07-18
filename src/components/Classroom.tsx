@@ -520,19 +520,41 @@ export function Classroom({
               <span className="sm:hidden">{isEnding ? "..." : "End"}</span>
             </button>
           </div>
-          <Transcript utterances={utterances} student={student} />
-          <ClassroomComposer
+          {sessionStatus === "wrapping" ? (
+            <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 sm:px-5" role="status">
+              💡 {profile.name} feels like they&apos;ve got the full picture — hit <strong>End Conversation</strong> when you&apos;re ready to see your gap map.
+            </div>
+          ) : null}
+          <Transcript
+            utterances={utterances}
             student={student}
-            value={message}
-            isSending={isSending || isEnding}
-            error={error}
-            micActive={micActive}
-            micSupported={micSupported}
-            partialTranscript={partialTranscript}
-            onChange={setMessage}
-            onSubmit={() => void sendMessage()}
-            onMicToggle={toggleMic}
+            studentTyping={studentState === "thinking"}
           />
+          {sessionStatus === "ended" && !mockSession ? (
+            <div className="flex flex-col items-center gap-3 border-t border-[var(--card-border)] bg-white px-4 py-5 sm:flex-row sm:justify-between sm:px-6">
+              <p className="text-sm text-[var(--text-secondary)]">Class dismissed — {profile.name} went home to think about what you said.</p>
+              <button
+                type="button"
+                onClick={() => router.push(`/session/${encodeURIComponent(sessionId)}/report?student=${student}`)}
+                className="rounded-lg bg-[#4648d4] px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
+              >
+                View Understanding Map →
+              </button>
+            </div>
+          ) : (
+            <ClassroomComposer
+              student={student}
+              value={message}
+              isSending={isSending || isEnding}
+              error={error}
+              micActive={micActive}
+              micSupported={micSupported}
+              partialTranscript={partialTranscript}
+              onChange={setMessage}
+              onSubmit={() => void sendMessage()}
+              onMicToggle={toggleMic}
+            />
+          )}
         </section>
       </div>
     </div>

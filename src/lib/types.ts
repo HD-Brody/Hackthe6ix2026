@@ -102,6 +102,8 @@ export interface Session {
   gap_map?: GapMap;
   /** Turn-policy state (probe counts, deepened flags). Optional — added post-CP0. */
   policy?: PolicyState;
+  /** End-of-session user rating (optional — added post-CP0 for the feedback page). */
+  feedback?: { rating: number; comment?: string; ts: number };
   /**
    * Directive computed at end of turn N, spoken at start of turn N+1 (parallel eval).
    * Optional — added post-CP0 for A3 crash/serverless safety.

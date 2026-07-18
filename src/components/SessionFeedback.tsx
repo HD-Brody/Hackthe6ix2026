@@ -23,6 +23,28 @@ function DashboardIcon() {
 
 export function SessionFeedback({ profile, sessionId }: { profile: StudentProfile; sessionId: string }) {
   const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitState, setSubmitState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+
+  async function submitFeedback() {
+    if (rating === 0 || submitState === "saving" || submitState === "saved") return;
+    setSubmitState("saving");
+    // Mock (demo-*) sessions have no backend doc — accept locally.
+    if (sessionId.startsWith("demo-")) {
+      setSubmitState("saved");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/session/${encodeURIComponent(sessionId)}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, comment: comment.trim() || undefined }),
+      });
+      setSubmitState(res.ok ? "saved" : "failed");
+    } catch {
+      setSubmitState("failed");
+    }
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center px-5 py-6 sm:px-8 sm:py-7">
@@ -55,7 +77,28 @@ export function SessionFeedback({ profile, sessionId }: { profile: StudentProfil
         </fieldset>
 
         <label className="mt-4 block text-sm font-semibold text-[var(--text-primary)]" htmlFor="session-feedback">Any additional feedback? (optional)</label>
-        <textarea id="session-feedback" rows={2} placeholder="How can I improve my teaching?" className="mt-2 min-h-20 w-full resize-y rounded-xl border-0 bg-[#f2f4f6] px-4 py-3 text-sm outline-none placeholder:text-[#6b7280] focus-visible:ring-2 focus-visible:ring-[var(--brand)]" />
+        <textarea
+          id="session-feedback"
+          rows={2}
+          value={comment}
+          onChange={(event) => setComment(event.target.value)}
+          disabled={submitState === "saved"}
+          placeholder="How can I improve my teaching?"
+          className="mt-2 min-h-20 w-full resize-y rounded-xl border-0 bg-[#f2f4f6] px-4 py-3 text-sm outline-none placeholder:text-[#6b7280] focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:opacity-60"
+        />
+
+        {submitState === "saved" ? (
+          <p className="mt-3 text-center text-sm font-medium text-emerald-700" role="status">Noted in {profile.name}&apos;s diary. Thanks!</p>
+        ) : (
+          <button
+            type="button"
+            onClick={submitFeedback}
+            disabled={rating === 0 || submitState === "saving"}
+            className="mt-3 w-full rounded-xl border border-[#c7c4d7] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[#f7f9fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitState === "saving" ? "Saving..." : submitState === "failed" ? "Couldn't save — try again" : rating === 0 ? "Pick a star rating first" : "Submit feedback"}
+          </button>
+        )}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
           <Link href={`/session/${encodeURIComponent(sessionId)}/report?student=${profile.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4648d4] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><MapIcon /> View Understanding Map</Link>
