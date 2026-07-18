@@ -74,12 +74,12 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
             </Link>
           </div>
         ) : (
-          <a
-            href="/auth/login"
+          <Link
+            href="/login"
             className="rounded-lg bg-[#4648d4] px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
           >
             Log in
-          </a>
+          </Link>
         )}
       </div>
     </header>

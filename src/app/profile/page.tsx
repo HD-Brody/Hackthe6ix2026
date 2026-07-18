@@ -61,7 +61,7 @@ export default async function ProfilePage() {
         <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-20 text-center">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">Your teaching record lives here</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">Log in to keep your sessions, revisit past gap maps, and watch your students (fail to) grow.</p>
-          <a href="/auth/login" className="mt-6 inline-block rounded-lg bg-[#4648d4] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)]">Log in</a>
+          <Link href="/login" className="mt-6 inline-block rounded-lg bg-[#4648d4] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)]">Log in</Link>
         </main>
       ) : (
         <main className="mx-auto grid w-full max-w-7xl flex-1 gap-5 px-5 pb-7 pt-14 sm:px-8 sm:pt-16 lg:grid-cols-[220px_minmax(0,1fr)] lg:px-10">
