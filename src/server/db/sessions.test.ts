@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { applyVerdictToGraph } from "./sessions";
-import type { ConceptGraph, Verdict } from "@/lib/types";
+import {
+  applyVerdictToGraph,
+  buildTurnLockAcquireFilter,
+  hasOrphanedUserTurn,
+  TURN_LOCK_STALE_MS,
+} from "./sessions";
+import type { ConceptGraph, Utterance, Verdict } from "@/lib/types";
 
 const graph: ConceptGraph = {
   topic: "test",
@@ -74,5 +79,53 @@ describe("applyVerdictToGraph", () => {
       recommended_directive: { type: "ADVANCE" },
     });
     expect(result.nodes.find((n) => n.id === "n2")!.state).toBe("unvisited");
+  });
+});
+
+describe("hasOrphanedUserTurn", () => {
+  it("false when empty or last utterance is student", () => {
+    expect(hasOrphanedUserTurn([])).toBe(false);
+    const transcript: Utterance[] = [
+      { role: "user", text: "hi", ts: 1 },
+      { role: "student", text: "hey", ts: 2 },
+    ];
+    expect(hasOrphanedUserTurn(transcript)).toBe(false);
+  });
+
+  it("true when last utterance is user (mid-stream crash)", () => {
+    const transcript: Utterance[] = [
+      { role: "user", text: "first", ts: 1 },
+      { role: "student", text: "reply", ts: 2 },
+      { role: "user", text: "killed mid-stream", ts: 3 },
+    ];
+    expect(hasOrphanedUserTurn(transcript)).toBe(true);
+  });
+});
+
+describe("buildTurnLockAcquireFilter", () => {
+  const sessionId = "test-session";
+  const now = 1_000_000;
+
+  it("includes stale lock takeover in $or", () => {
+    const filter = buildTurnLockAcquireFilter(sessionId, now, false);
+    expect(filter.$or).toContainEqual({
+      turn_lock_at: { $lt: now - TURN_LOCK_STALE_MS },
+    });
+  });
+
+  it("includes unlocked paths in $or", () => {
+    const filter = buildTurnLockAcquireFilter(sessionId, now, false);
+    expect(filter.$or).toContainEqual({ turn_in_progress: { $ne: true } });
+    expect(filter.$or).toContainEqual({ turn_in_progress: { $exists: false } });
+  });
+
+  it("adds orphan steal branch when last utterance is orphaned user turn", () => {
+    const filter = buildTurnLockAcquireFilter(sessionId, now, true);
+    expect(filter.$or).toContainEqual({ turn_in_progress: true });
+  });
+
+  it("does not add orphan steal branch when transcript is complete", () => {
+    const filter = buildTurnLockAcquireFilter(sessionId, now, false);
+    expect(filter.$or.filter((c) => c.turn_in_progress === true)).toHaveLength(0);
   });
 });
