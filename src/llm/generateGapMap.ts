@@ -14,6 +14,17 @@
  * (`vaguest_moments` must be an exact match against `quotes`). This keeps
  * hallucination risk confined to the two fields that actually require
  * judgment instead of exact recall.
+ *
+ * CP4 audit fix (Block B4 step 16): `quotes` (built by A's
+ * collectGapMapMaterials from every node's `vague_quotes[]`) can contain
+ * quotes that were originally attached to a "solid" verdict —
+ * applyVerdictToGraph (src/server/db/sessions.ts) records a quote for ANY
+ * verdict that has one, not just vague/wrong ones, and a node's state can
+ * flip from vague to solid later in the same session (they nailed it on a
+ * follow-up). Featuring an old quote from a moment that later resolved to
+ * solid as a "vaguest moment" is exactly the kind of embarrassing verdict
+ * the CP4 audit is supposed to catch — so quotes are filtered down to
+ * currently-non-solid nodes before the model ever sees them.
  */
 
 import { Type } from "@google/genai";
@@ -53,6 +64,22 @@ const rawGapMapSchema = {
   },
   required: ["vaguest_moments", "reteach_order", "one_liner_candidates"],
 };
+
+/**
+ * Drop any quote attached to a node whose FINAL state is "solid" — a quote
+ * recorded during an earlier vague/wrong moment on a node the user later
+ * nailed isn't a real gap anymore, and shouldn't be eligible to show up as
+ * a "vaguest moment" in the final report.
+ */
+export function filterQuotesToNonSolid(
+  graph: ConceptGraph,
+  quotes: VagueMoment[]
+): VagueMoment[] {
+  const nonSolidIds = new Set(
+    graph.nodes.filter((n) => n.state !== "solid").map((n) => n.id)
+  );
+  return quotes.filter((q) => nonSolidIds.has(q.node_id));
+}
 
 /**
  * Never trust the model's quote text over our own records: keep an LLM pick
@@ -119,8 +146,10 @@ export async function generateGapMap(
   quotes: VagueMoment[],
   dodged: string[]
 ): Promise<GapMap> {
+  const relevantQuotes = filterQuotesToNonSolid(graph, quotes);
+
   const raw = await callStrong<RawGapMap>(
-    gapMapPrompt(graph, quotes, dodged),
+    gapMapPrompt(graph, relevantQuotes, dodged),
     rawGapMapSchema
   );
 
@@ -128,7 +157,7 @@ export async function generateGapMap(
     topic: graph.topic,
     nodes: toGapMapNodes(graph.nodes),
     dodged_questions: dodged,
-    vaguest_moments: pickVaguestMoments(quotes, raw.vaguest_moments),
+    vaguest_moments: pickVaguestMoments(relevantQuotes, raw.vaguest_moments),
     reteach_order: sanitizeReteachOrder(graph, raw.reteach_order),
     one_liner: pickOneLiner(raw.one_liner_candidates),
   };

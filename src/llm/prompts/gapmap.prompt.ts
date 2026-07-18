@@ -19,6 +19,10 @@
 
 import type { ConceptGraph, VagueMoment } from "@/lib/types";
 
+/** Bump whenever the wording below changes after the CP4 freeze — see
+ * evaluator.prompt.ts's PROMPTS_VERSION for why this matters. */
+export const PROMPTS_VERSION = 1;
+
 function formatGraph(graph: ConceptGraph): string {
   return graph.nodes
     .map((n) => `- ${n.id} "${n.name}" (final state: ${n.state}): ${n.truth}`)

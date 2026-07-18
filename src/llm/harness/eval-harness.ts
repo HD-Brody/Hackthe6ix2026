@@ -1,9 +1,9 @@
 /**
  * B's eval harness. Run: npm run eval
  *
- * Four modes, selected via --mode=graph|evaluator|persona|gapmap (default:
- * evaluator — cheap and fast enough to run constantly). Never wait on the
- * app to test a prompt; this script hits Gemini directly.
+ * Five modes, selected via --mode=graph|evaluator|persona|gapmap|adversarial
+ * (default: evaluator — cheap and fast enough to run constantly). Never
+ * wait on the app to test a prompt; this script hits Gemini directly.
  *
  * --mode=graph (Block B1 step 4, CP1): exercises generateGraph() against the
  *   5 fixed demo topics, dumps every node for eyeballing. `--save` writes
@@ -23,6 +23,12 @@
  *   vaguest_moments for eyeballing (iterate on the one_liner here), and
  *   flags anything that fails the deterministic-passthrough or
  *   verbatim-quote guarantees generateGapMap.ts is supposed to enforce.
+ * --mode=adversarial (Block B4 steps 15-16, CP4): replays the 5 full
+ *   multi-turn sessions in adversarial-sessions.ts (rambler,
+ *   confident-wrong, derailer, plus two earnest sessions) through the real
+ *   evaluate -> policy -> persona -> gap-map pipeline, printing every turn
+ *   and the final gap map for manual audit. `--session=<name>` runs just
+ *   one while iterating.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
@@ -32,6 +38,12 @@ import { evaluate } from "../evaluate";
 import { personaReply } from "../personaReply";
 import { generateGapMap } from "../generateGapMap";
 import { collectGapMapMaterials } from "@/server/orchestrator/gapMapMaterials";
+import {
+  ADVERSARIAL_SESSIONS,
+  runAdversarialSession,
+  generateAuditGapMap,
+  directiveLabel,
+} from "./adversarial-sessions";
 import type { ConceptGraph, ConceptNode, NodeState, Utterance, Verdict } from "@/lib/types";
 
 const DEMO_TOPICS = [
@@ -178,12 +190,25 @@ async function runEvaluatorMode(): Promise<void> {
 
 // ── --mode=persona (CP2) ─────────────────────────────────────────
 
+// General English stopwords, not domain jargon — kept topic-agnostic on
+// purpose (node names across any topic can read like "What is X?" or
+// "Role of Y", and "what"/"role" flagging as a fake term-leak on every
+// single reply is real noise, caught auditing the confident-wrong session,
+// CP4). Deliberately does NOT strip topic-scaffolding words like
+// "mechanism" or "function" — those are borderline jargon and worth a human
+// glance if Sam uses one unprompted.
 const STOPWORDS = new Set([
   "the", "a", "an", "of", "in", "on", "to", "and", "or", "is", "are", "as",
-  "per", "at", "for", "with", "via",
+  "per", "at", "for", "with", "via", "what", "how", "why", "when", "where",
+  "who", "which", "whom", "this", "that", "these", "those", "but", "so",
+  "you", "your", "yours", "do", "does", "did", "done", "has", "have", "had",
+  "not", "no", "yes", "can", "will", "would", "could", "should", "into",
+  "from", "over", "than", "then", "also", "may", "might", "must", "get",
+  "gets", "got", "one", "two", "three", "case", "way", "thing", "part",
+  "kind",
 ]);
 
-function graphKeywords(graph: ConceptGraph, exclude: Set<string>): string[] {
+export function graphKeywords(graph: ConceptGraph, exclude: Set<string>): string[] {
   const words = new Set<string>();
   for (const node of graph.nodes) {
     for (const word of node.name.toLowerCase().split(/\W+/)) {
@@ -191,6 +216,15 @@ function graphKeywords(graph: ConceptGraph, exclude: Set<string>): string[] {
     }
   }
   return [...words];
+}
+
+/** Word-boundary membership, not substring — `.includes()` would flag "slow"
+ * as leaked just because Sam said "slower" (which the user had *already*
+ * said themselves that same turn). A real false-positive caught auditing
+ * the rambler session, CP4. */
+export function containsWord(text: string, word: string): boolean {
+  const words = new Set(text.toLowerCase().split(/\W+/));
+  return words.has(word);
 }
 
 function userIntroducedWords(tc: RawTestUtterance): Set<string> {
@@ -202,8 +236,16 @@ function userIntroducedWords(tc: RawTestUtterance): Set<string> {
   return words;
 }
 
-function sentenceCount(text: string): number {
-  return text.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean).length;
+/** Ellipses ("...", "…") are a mid-sentence trailing-off, not a sentence
+ * break — strip them before splitting so "wait... what happens?" counts as
+ * one sentence, not two (a real false-positive seen auditing the rambler
+ * adversarial session, CP4). */
+export function sentenceCount(text: string): number {
+  return text
+    .replace(/\.{3}|…/g, " ")
+    .split(/[.!?]+/)
+    .map((s) => s.trim())
+    .filter(Boolean).length;
 }
 
 async function runPersonaMode(): Promise<void> {
@@ -228,7 +270,7 @@ async function runPersonaMode(): Promise<void> {
 
       const sentences = sentenceCount(reply);
       const introduced = userIntroducedWords(tc);
-      const leaked = graphKeywords(graph, introduced).filter((kw) => reply.toLowerCase().includes(kw));
+      const leaked = graphKeywords(graph, introduced).filter((kw) => containsWord(reply, kw));
 
       console.log(`  directive: ${verdict.recommended_directive.type}${verdict.recommended_directive.node_id ? `(${verdict.recommended_directive.node_id})` : ""}`);
       console.log(`  Sam: "${reply}"`);
@@ -365,6 +407,73 @@ async function runGapMapMode(): Promise<void> {
   );
 }
 
+// ── --mode=adversarial (CP4) ──────────────────────────────────────
+
+/** Cumulative words the user has actually used across the whole session so far. */
+function introducedWords(turns: { userText: string }[]): Set<string> {
+  const words = new Set<string>();
+  for (const t of turns) {
+    for (const word of t.userText.toLowerCase().split(/\W+/)) words.add(word);
+  }
+  return words;
+}
+
+async function runAdversarialMode(): Promise<void> {
+  const sessionArg = process.argv.find((a) => a.startsWith("--session="));
+  const only = sessionArg ? sessionArg.split("=")[1] : null;
+  const sessions = only ? ADVERSARIAL_SESSIONS.filter((s) => s.name === only) : ADVERSARIAL_SESSIONS;
+
+  if (sessions.length === 0) {
+    throw new Error(`No adversarial session named "${only}". Options: ${ADVERSARIAL_SESSIONS.map((s) => s.name).join(", ")}`);
+  }
+
+  for (const [si, session] of sessions.entries()) {
+    if (si > 0) await delay(RATE_LIMIT_DELAY_MS);
+    console.log(`\n\n=== [${session.name}] ${session.description} ===`);
+    console.log(`  graph: ${session.graphFile}`);
+
+    try {
+      const result = await runAdversarialSession(session, { delayMsBetweenTurns: 2000 });
+
+      for (const [i, turn] of result.turns.entries()) {
+        console.log(`\n--- turn ${i + 1} ---`);
+        console.log(`  user: "${truncate(turn.userText, 100)}"`);
+        for (const v of turn.verdict.verdicts) {
+          console.log(`    ${v.node_id}: ${v.verdict}${v.quote ? ` quote="${truncate(v.quote, 60)}"` : ""}`);
+        }
+        console.log(`  directive: ${directiveLabel(turn.directive)}`);
+        console.log(`  Sam: "${turn.studentReply}"`);
+
+        const sentences = sentenceCount(turn.studentReply);
+        if (sentences > 2) console.log(`    <-- GUARDRAIL: ${sentences} sentences (max 2)`);
+
+        const introduced = introducedWords(result.turns.slice(0, i + 1));
+        const leaked = graphKeywords(result.finalGraph, introduced).filter((kw) =>
+          containsWord(turn.studentReply, kw)
+        );
+        if (leaked.length) console.log(`    <-- GUARDRAIL: possible term leak: ${leaked.join(", ")}`);
+      }
+
+      console.log(`\n--- [${session.name}] final gap map ---`);
+      const { gapMap, quotes, dodged } = await generateAuditGapMap(result);
+      console.log(`  one_liner: "${gapMap.one_liner}"`);
+      console.log(`  reteach_order: [${gapMap.reteach_order.join(", ")}]`);
+      console.log(`  dodged_questions: [${dodged.join(", ")}]`);
+      console.log(`  vaguest_moments:`);
+      for (const m of gapMap.vaguest_moments) {
+        console.log(`    [${m.node_id}] "${m.quote}"`);
+      }
+      console.log(`  (candidate quotes this session: ${quotes.length})`);
+    } catch (err) {
+      console.error(`  FAILED: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  console.log(
+    "\n(Audit step: read every transcript + gap map above and fix anything embarrassing in the prompts before freezing.)"
+  );
+}
+
 // ── entrypoint ───────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -375,8 +484,9 @@ async function main(): Promise<void> {
   if (mode === "evaluator") return runEvaluatorMode();
   if (mode === "persona") return runPersonaMode();
   if (mode === "gapmap") return runGapMapMode();
+  if (mode === "adversarial") return runAdversarialMode();
 
-  throw new Error(`Unknown --mode="${mode}" (expected graph|evaluator|persona|gapmap)`);
+  throw new Error(`Unknown --mode="${mode}" (expected graph|evaluator|persona|gapmap|adversarial)`);
 }
 
 main().catch((err) => {
