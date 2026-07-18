@@ -6,6 +6,7 @@ import type {
   Verdict,
   ConceptGraph,
   PolicyState,
+  GapMap,
 } from "@/lib/types";
 
 async function sessions() {
@@ -130,6 +131,17 @@ export async function releaseTurnLock(sessionId: string): Promise<void> {
     { _id: sessionId },
     { $set: { turn_in_progress: false }, $unset: { turn_lock_at: "" } }
   );
+}
+
+export async function setGapMap(
+  sessionId: string,
+  gapMap: GapMap
+): Promise<void> {
+  const res = await (await sessions()).updateOne(
+    { _id: sessionId },
+    { $set: { gap_map: gapMap, ended_at: Date.now() } }
+  );
+  if (res.matchedCount === 0) throw new Error(`session not found: ${sessionId}`);
 }
 
 /** Pure graph mutation — exported for unit tests. */
