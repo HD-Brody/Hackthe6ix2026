@@ -15,11 +15,12 @@
  */
 
 import type { Utterance, Directive } from "@/lib/types";
+import { streamPersona } from "./gemini";
+import { personaPrompt } from "./prompts/persona.prompt";
 
 export async function* personaReply(
-  _transcript: Utterance[],
-  _directive: Directive
+  transcript: Utterance[],
+  directive: Directive
 ): AsyncIterable<string> {
-  // TODO(B): streaming Gemini call; yield text tokens (A pipes into SSE)
-  throw new Error("not implemented");
+  yield* streamPersona(personaPrompt(transcript, directive));
 }
