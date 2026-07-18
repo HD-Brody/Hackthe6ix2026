@@ -30,13 +30,14 @@ function quotesVerbatim(
   allUserTexts: string[]
 ): CheckResult {
   for (const nv of verdict.verdicts) {
-    if (!nv.quote) continue;
-    const inCurrent = userText.includes(nv.quote);
-    const inHistory = allUserTexts.some((t) => t.includes(nv.quote));
+    const quote = nv.quote;
+    if (!quote) continue;
+    const inCurrent = userText.includes(quote);
+    const inHistory = allUserTexts.some((t) => t.includes(quote));
     if (!inCurrent && !inHistory) {
       return {
         ok: false,
-        detail: `quote not verbatim in user text: "${nv.quote}"`,
+        detail: `quote not verbatim in user text: "${quote}"`,
       };
     }
   }
