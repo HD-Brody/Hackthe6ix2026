@@ -86,6 +86,12 @@ export interface Utterance {
   eval?: Verdict;
 }
 
+/** Turn-policy counters — persisted on the session so they survive restarts. */
+export interface PolicyState {
+  probeCounts: Record<string, number>;
+  deepened: Record<string, boolean>;
+}
+
 export interface Session {
   _id: string;
   user_id: string;
@@ -94,6 +100,8 @@ export interface Session {
   graph: ConceptGraph;
   utterances: Utterance[];
   gap_map?: GapMap;
+  /** Turn-policy state (probe counts, deepened flags). Optional — added post-CP0. */
+  policy?: PolicyState;
   started_at: number;
   ended_at?: number;
   /** Per-stage timing (A, Block A3) — D's CP4 latency report reads from this. */

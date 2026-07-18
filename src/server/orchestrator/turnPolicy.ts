@@ -12,14 +12,9 @@
  * If CP2 slips past hour 10: cut DEEPEN (probe-and-advance only).
  */
 
-import type { ConceptGraph, Verdict, Directive } from "@/lib/types";
+import type { ConceptGraph, Verdict, Directive, PolicyState } from "@/lib/types";
 
-export interface PolicyState {
-  /** node_id → number of times we've probed it */
-  probeCounts: Record<string, number>;
-  /** node_id → whether we've already deepened it */
-  deepened: Record<string, boolean>;
-}
+export type { PolicyState };
 
 export function turnPolicy(
   _graph: ConceptGraph,
