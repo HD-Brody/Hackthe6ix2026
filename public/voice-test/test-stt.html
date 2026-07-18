@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>STT Test — Web Speech API</title>
@@ -12,10 +13,24 @@
       background: #111;
       color: #eee;
     }
-    h1 { font-size: 1.4rem; margin-bottom: 4px; }
-    p.subtitle { color: #888; font-size: 0.85rem; margin-top: 0; }
 
-    .controls { display: flex; gap: 10px; margin: 24px 0 16px; }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+
+    p.subtitle {
+      color: #888;
+      font-size: 0.85rem;
+      margin-top: 0;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin: 24px 0 16px;
+    }
+
     button {
       padding: 10px 20px;
       border: none;
@@ -23,12 +38,36 @@
       font-size: 1rem;
       cursor: pointer;
     }
-    #startBtn { background: #2563eb; color: #fff; }
-    #startBtn:disabled { background: #1e3a8a; opacity: 0.6; cursor: not-allowed; }
-    #stopBtn  { background: #374151; color: #eee; }
-    #stopBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 4px; }
+    #startBtn {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    #startBtn:disabled {
+      background: #1e3a8a;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #stopBtn {
+      background: #374151;
+      color: #eee;
+    }
+
+    #stopBtn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
     .box {
       background: #1f2937;
       border-radius: 8px;
@@ -38,9 +77,20 @@
       font-size: 1rem;
       line-height: 1.5;
     }
-    #interimBox { color: #9ca3af; font-style: italic; }
-    #finalBox   { color: #d1fae5; }
-    #errorBox   { color: #f87171; display: none; }
+
+    #interimBox {
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    #finalBox {
+      color: #d1fae5;
+    }
+
+    #errorBox {
+      color: #f87171;
+      display: none;
+    }
 
     #statusDot {
       display: inline-block;
@@ -51,15 +101,28 @@
       margin-right: 6px;
       vertical-align: middle;
     }
-    #statusDot.listening { background: #22c55e; animation: pulse 1.2s infinite; }
+
+    #statusDot.listening {
+      background: #22c55e;
+      animation: pulse 1.2s infinite;
+    }
+
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
     }
   </style>
 </head>
+
 <body>
-  <h1>STT Standalone Test</h1>
+  <h1>Speech To Text Standalone Test</h1>
   <p class="subtitle">Uses Web Speech API (Chrome only). Open DevTools console for timing logs.</p>
 
   <div class="controls">
@@ -79,19 +142,19 @@
   <script type="module">
     import { startListening, stopListening } from './browser-stt.js';
 
-    const startBtn    = document.getElementById('startBtn');
-    const stopBtn     = document.getElementById('stopBtn');
-    const interimBox  = document.getElementById('interimBox');
-    const finalBox    = document.getElementById('finalBox');
-    const errorBox    = document.getElementById('errorBox');
-    const statusDot   = document.getElementById('statusDot');
-    const statusText  = document.getElementById('statusText');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const interimBox = document.getElementById('interimBox');
+    const finalBox = document.getElementById('finalBox');
+    const errorBox = document.getElementById('errorBox');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
 
     let startTime = null;
 
     function setListening(active) {
       startBtn.disabled = active;
-      stopBtn.disabled  = !active;
+      stopBtn.disabled = !active;
       statusDot.className = active ? 'listening' : '';
       statusText.textContent = active ? 'Listening…' : 'Idle';
     }
@@ -108,7 +171,7 @@
     startBtn.addEventListener('click', () => {
       clearError();
       interimBox.textContent = '—';
-      finalBox.textContent   = '—';
+      finalBox.textContent = '—';
       startTime = Date.now();
 
       setListening(true);
@@ -143,4 +206,5 @@
     });
   </script>
 </body>
+
 </html>
