@@ -33,9 +33,11 @@ export const FALLBACK_LINE =
   "sorry, zoned out for a second — say that again?";
 
 export const SSE_HEADERS = {
-  "Content-Type": "text/event-stream",
+  "Content-Type": "text/event-stream; charset=utf-8",
   "Cache-Control": "no-cache, no-transform",
   Connection: "keep-alive",
+  /** Disable proxy buffering (Vercel/nginx) so tokens flush incrementally. */
+  "X-Accel-Buffering": "no",
 } as const;
 
 const ECHO_TOKEN_DELAY_MS = 40;

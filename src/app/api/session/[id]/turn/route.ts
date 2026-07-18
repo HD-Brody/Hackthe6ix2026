@@ -18,6 +18,10 @@ import {
 } from "@/server/db/sessions";
 import { createTurnStream, SSE_HEADERS } from "@/server/orchestrator/runTurn";
 
+/** Vercel serverless: slow turns + token pacing can exceed default 10–15s cap. */
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
 export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
