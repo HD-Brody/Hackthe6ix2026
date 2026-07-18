@@ -1,0 +1,192 @@
+{
+  "topic": "binary search trees",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "BST Definition",
+      "truth": "A binary search tree is a rooted binary tree where each node has a key, and for any given node, all keys in its left subtree are less than its own key, and all keys in its right subtree are greater.",
+      "difficulty": 1,
+      "prereqs": [],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n2",
+      "name": "Search Operation",
+      "truth": "To search for a key in a BST, one starts at the root and iteratively moves to the left child if the target key is smaller than the current node's key, or to the right child if it is larger, until the key is found or a null node is reached.",
+      "difficulty": 1,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n3",
+      "name": "Insertion Operation",
+      "truth": "To insert a new key into a BST, one searches for the correct position as if searching for the key, and then adds the new node as a child of the last visited non-null node, maintaining the BST property.",
+      "difficulty": 1,
+      "prereqs": [
+        "n1",
+        "n2"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n4",
+      "name": "In-order Traversal",
+      "truth": "An in-order traversal of a BST visits nodes by first recursively traversing the left subtree, then visiting the current node, and finally recursively traversing the right subtree, resulting in an output of keys in sorted order.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n5",
+      "name": "BST Time Complexity (Average)",
+      "truth": "In an average-case scenario, where the BST is relatively balanced, search, insertion, and deletion operations have a time complexity of O(log n), where n is the number of nodes in the tree.",
+      "difficulty": 2,
+      "prereqs": [
+        "n2",
+        "n3"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-example"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n6",
+      "name": "BST Time Complexity (Worst Case)",
+      "truth": "In the worst-case scenario, such as when a BST degrades into a skewed list, search, insertion, and deletion operations can have a time complexity of O(n), where n is the number of nodes.",
+      "difficulty": 2,
+      "prereqs": [
+        "n5"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n7",
+      "name": "Deletion Operation (No Children)",
+      "truth": "Deleting a node with no children from a BST involves simply removing the node and setting its parent's pointer to null.",
+      "difficulty": 1,
+      "prereqs": [
+        "n1",
+        "n2"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n8",
+      "name": "Deletion Operation (One Child)",
+      "truth": "Deleting a node with one child from a BST involves removing the node and replacing it with its sole child, connecting the child directly to the deleted node's parent.",
+      "difficulty": 2,
+      "prereqs": [
+        "n7"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n9",
+      "name": "Deletion Operation (Two Children)",
+      "truth": "Deleting a node with two children from a BST involves finding its in-order successor (the smallest node in its right subtree), replacing the deleted node's key with the successor's key, and then deleting the successor node from its original position.",
+      "difficulty": 3,
+      "prereqs": [
+        "n4",
+        "n8"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-why",
+        "ask-edge-case"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n10",
+      "name": "Importance of Tree Balance",
+      "truth": "Maintaining a balanced BST is crucial because it ensures that the height of the tree remains logarithmic with respect to the number of nodes, thus preserving the O(log n) average-case time complexity for operations and avoiding O(n) worst-case performance.",
+      "difficulty": 2,
+      "prereqs": [
+        "n5",
+        "n6"
+      ],
+      "probes": [
+        "ask-why",
+        "ask-example"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n11",
+      "name": "Handling Duplicate Keys",
+      "truth": "Duplicate keys in a BST can be handled by either disallowing them, storing them in the right subtree (or left) for consistency, or by having nodes store a count of duplicates or a list of values with the same key.",
+      "difficulty": 2,
+      "prereqs": [
+        "n1",
+        "n3"
+      ],
+      "probes": [
+        "ask-edge-case",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    },
+    {
+      "id": "n12",
+      "name": "Predecessor and Successor Finding",
+      "truth": "For a given node in a BST, its in-order successor is the leftmost node in its right subtree, and its in-order predecessor is the rightmost node in its left subtree, or an ancestor if no such node exists.",
+      "difficulty": 3,
+      "prereqs": [
+        "n1",
+        "n4"
+      ],
+      "probes": [
+        "ask-example",
+        "ask-edge-case",
+        "ask-why"
+      ],
+      "state": "unvisited",
+      "vague_quotes": []
+    }
+  ]
+}

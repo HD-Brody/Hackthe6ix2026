@@ -5,7 +5,8 @@
  * All transitions logged (console + session doc).
  */
 
-import type { SessionStatus } from "@/lib/types";
+import type { Session, SessionStatus } from "@/lib/types";
+import { getDb } from "@/server/db/mongo";
 
 const TRANSITIONS: Record<SessionStatus, SessionStatus[]> = {
   created: ["teaching"],
@@ -18,11 +19,24 @@ export function canTransition(from: SessionStatus, to: SessionStatus): boolean {
   return TRANSITIONS[from].includes(to);
 }
 
-export function transition(
-  _sessionId: string,
-  _from: SessionStatus,
-  _to: SessionStatus
-): SessionStatus {
-  // TODO(A): validate, log, persist, return new status
-  throw new Error("not implemented");
+export async function transition(
+  sessionId: string,
+  from: SessionStatus,
+  to: SessionStatus
+): Promise<SessionStatus> {
+  if (!canTransition(from, to)) {
+    throw new Error(`invalid transition: ${from} → ${to}`);
+  }
+
+  console.log(`[session ${sessionId}] ${from} → ${to}`);
+
+  const res = await (await getDb())
+    .collection<Session>("sessions")
+    .updateOne({ _id: sessionId, status: from }, { $set: { status: to } });
+
+  if (res.matchedCount === 0) {
+    throw new Error(`session not found or status mismatch: ${sessionId}`);
+  }
+
+  return to;
 }

@@ -1,9 +1,82 @@
 {
-  "description": "B's test utterances (Block B2 step 7). 10–15 covering: clean correct, vague hand-wave, confidently wrong, multi-concept ramble, off-topic derail. Also A's policy test inputs and the seeds for the Block B4 adversarial scripts (rambler / confident-wrong / derailer).",
+  "description": "B's test utterances (Block B2 step 7). 15 utterances against fixtures/graph-tcp.json, covering: clean correct, vague hand-wave, confidently wrong, multi-concept ramble, off-topic derail, plus one dodged-with-context case. Also A's policy test inputs and the seeds for the Block B4 adversarial scripts (rambler / confident-wrong / derailer). Optional `transcript` gives prior turns for utterances that need context (e.g. dodging a direct question).",
   "utterances": [
     {
       "kind": "clean-correct",
-      "text": "TODO(B): replace with real test utterances against the TCP fixture graph"
+      "node": "n2",
+      "text": "The congestion window is a sender-side limit on how much unacknowledged data can be in flight at once, and it gets adjusted up or down based on ACKs and loss."
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n6",
+      "text": "If the sender gets three duplicate ACKs for the same segment, it retransmits that segment immediately instead of waiting for the retransmission timer to expire."
+    },
+    {
+      "kind": "clean-correct",
+      "node": "n8",
+      "text": "TCP increases its window additively each round trip when things are going fine, but cuts it multiplicatively, like halving it, the moment it sees a loss - that's AIMD."
+    },
+    {
+      "kind": "vague-handwave",
+      "node": "n1",
+      "text": "it like... speeds up until it doesn't, you know?"
+    },
+    {
+      "kind": "vague-handwave",
+      "node": "n3",
+      "text": "there's a threshold thing that changes how it grows, somehow"
+    },
+    {
+      "kind": "vague-handwave",
+      "node": "n7",
+      "text": "after a loss it kind of just... recovers and keeps going I think"
+    },
+    {
+      "kind": "confidently-wrong",
+      "node": "n1",
+      "text": "Slow start doesn't actually grow the window at all - it keeps the window flat at one segment the whole time, right up until ssthresh is hit, and only then does it start increasing."
+    },
+    {
+      "kind": "confidently-wrong",
+      "node": "n5",
+      "text": "Packet loss happens when the receiver's buffer is full, so it just refuses new packets - that's literally what tells the sender to slow down."
+    },
+    {
+      "kind": "confidently-wrong",
+      "node": "n7",
+      "text": "Fast recovery means going all the way back to slow start and rebuilding the window from scratch after any packet loss."
+    },
+    {
+      "kind": "multi-concept-ramble",
+      "nodes": ["n1", "n3", "n4"],
+      "text": "So it starts slow then speeds up and also sometimes packets get lost and it has to like, resend them, and there's a threshold thing too I think, and then it goes back to increasing but slower after that."
+    },
+    {
+      "kind": "multi-concept-ramble",
+      "nodes": ["n1", "n6", "n7"],
+      "text": "The window doubles each round trip, and if three duplicate acks show up it resends without waiting, but if a timeout happens instead the whole window just resets and it starts over from slow start."
+    },
+    {
+      "kind": "multi-concept-ramble",
+      "nodes": ["n2", "n5", "n8"],
+      "text": "The window is basically how much data you can have out there unacknowledged, and when you lose a packet that's the signal something's wrong, so you cut back hard but then creep back up slowly, additive-increase-multiplicative-decrease or whatever it's called."
+    },
+    {
+      "kind": "off-topic-derail",
+      "text": "Wait, is this related to how Wi-Fi works? My Wi-Fi has been so bad lately."
+    },
+    {
+      "kind": "off-topic-derail",
+      "text": "Can we talk about something else, this is kind of boring."
+    },
+    {
+      "kind": "dodged-context",
+      "node": "n3",
+      "transcript": [
+        { "role": "user", "text": "So after slow start, the growth changes to something else." },
+        { "role": "student", "text": "wait, changes how exactly? what makes it switch?" }
+      ],
+      "text": "I mean, it just switches, that's kinda just how TCP works, anyway what else do you want to know?"
     }
   ]
 }
