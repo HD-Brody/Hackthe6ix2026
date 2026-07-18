@@ -26,17 +26,15 @@ function ArrowRightIcon() {
 }
 
 function StudentPortrait({ student }: { student: StudentId }) {
-  if (student === "sam") {
-    return <Image src="/students/sam.jpg" alt="Sam" width={128} height={128} priority className="relative z-10 size-32 rounded-full object-cover" />;
-  }
-
   return (
-    <div role="img" aria-label="Elena" className="relative z-10 flex size-32 items-center justify-center rounded-full bg-[#f0dbff]">
-      <svg aria-hidden="true" viewBox="0 0 128 128" className="size-24 text-[#c488ed]">
-        <circle cx="64" cy="46" r="24" fill="currentColor" opacity=".48" />
-        <path d="M20 119c4-29 20-44 44-44s40 15 44 44" fill="currentColor" opacity=".48" />
-      </svg>
-    </div>
+    <Image
+      src={`/students/${student}.png`}
+      alt={student === "sam" ? "Sam" : "Elena"}
+      width={104}
+      height={104}
+      priority
+      className="relative z-10 size-24 rounded-full object-cover sm:size-[104px]"
+    />
   );
 }
 
@@ -47,25 +45,25 @@ export function StudentSelector({ topic }: { topic: string }) {
   return (
     <div className="flex w-full max-w-[762px] flex-col items-center">
       <div className="text-center">
-        <h1 className="font-heading text-4xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-5xl">Choose Your AI Student</h1>
-        <p className="mt-2 text-base leading-7 text-[var(--text-secondary)] sm:text-lg">Customize your learning companion to match your teaching style.</p>
+        <h1 className="font-heading text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">Choose Your AI Student</h1>
+        <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">Customize your learning companion to match your teaching style.</p>
         {topic ? <p className="sr-only">Selected topic: {topic}</p> : null}
       </div>
 
-      <fieldset className="mt-10 w-full sm:mt-12">
+      <fieldset className="mt-7 w-full sm:mt-8">
         <legend className="sr-only">Choose a student</legend>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {students.map((item) => {
             const selected = student === item.id;
             return (
-              <div key={item.id} className={`relative flex min-h-64 flex-col items-center rounded-xl border-2 bg-white p-6 transition ${selected ? "border-[#4648d4] shadow-[0_0_0_4px_rgba(70,72,212,0.1)]" : "border-[var(--card-border)]"}`}>
+              <div key={item.id} className={`relative flex min-h-[218px] flex-col items-center justify-center rounded-xl border-2 bg-white p-5 transition ${selected ? "border-[#4648d4] shadow-[0_0_0_4px_rgba(70,72,212,0.1)]" : "border-[var(--card-border)]"}`}>
                 <label className="flex cursor-pointer flex-col items-center focus-within:outline-none">
                   <input type="radio" name="student" value={item.id} checked={selected} onChange={() => setStudent(item.id)} className="peer sr-only" />
                   <StudentPortrait student={item.id} />
-                  <span className={`font-heading relative z-10 mt-3 text-base font-semibold ${selected ? "text-[#4648d4]" : "text-[var(--text-primary)]"}`}>{item.name}</span>
+                  <span className={`font-heading relative z-10 mt-2 text-sm font-semibold sm:text-base ${selected ? "text-[#4648d4]" : "text-[var(--text-primary)]"}`}>{item.name}</span>
                   <span className="absolute inset-0 rounded-xl peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--brand)] peer-focus-visible:ring-offset-2" aria-hidden="true" />
                 </label>
-                <button type="button" aria-label={`Preview ${item.name}'s voice. Audio preview is not connected yet.`} className={`relative z-10 mt-1 flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 ${selected ? "bg-[#9c48ea] text-white hover:bg-[#8127cf]" : "bg-[#e6e8ea] text-[var(--text-secondary)] hover:bg-slate-300"}`}>
+                <button type="button" aria-label={`Preview ${item.name}'s voice. Audio preview is not connected yet.`} className="relative z-10 mt-1 flex items-center gap-1 rounded-full bg-[#9c48ea] px-3 py-1 text-[10px] font-medium text-white transition hover:bg-[#8127cf] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
                   <PlayIcon /> Preview Voice
                 </button>
               </div>
@@ -74,14 +72,14 @@ export function StudentSelector({ topic }: { topic: string }) {
         </div>
       </fieldset>
 
-      <fieldset className="mt-10 w-full rounded-xl border border-[var(--card-border)] bg-white p-6 shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
+      <fieldset className="mt-7 w-full rounded-xl border border-[var(--card-border)] bg-white p-5 shadow-[0_1px_1px_rgba(0,0,0,0.05)] sm:mt-8">
         <legend className="sr-only">Curiosity level</legend>
         <p aria-hidden="true" className="text-center text-sm font-semibold tracking-[0.05em] text-[var(--text-secondary)]">CURIOSITY LEVEL</p>
-        <div className="mt-3 grid grid-cols-3 rounded-xl bg-[var(--surface-muted)] p-1.5">
+        <div className="mt-2.5 grid grid-cols-3 rounded-xl bg-[var(--surface-muted)] p-1.5">
           {curiosityLevels.map((level) => {
             const selected = curiosity === level.id;
             return (
-              <label key={level.id} className={`cursor-pointer rounded-lg px-2 py-3 text-center text-sm font-semibold transition focus-within:ring-2 focus-within:ring-[var(--brand)] ${selected ? "bg-white font-bold text-[#4648d4] shadow-[0_1px_1px_rgba(0,0,0,0.05)]" : "text-[var(--text-primary)] hover:bg-white/60"}`}>
+              <label key={level.id} className={`cursor-pointer rounded-lg px-2 py-2.5 text-center text-sm font-semibold transition focus-within:ring-2 focus-within:ring-[var(--brand)] ${selected ? "bg-white font-bold text-[#4648d4] shadow-[0_1px_1px_rgba(0,0,0,0.05)]" : "text-[var(--text-primary)] hover:bg-white/60"}`}>
                 <input type="radio" name="curiosity" value={level.id} checked={selected} onChange={() => setCuriosity(level.id)} className="sr-only" />
                 {level.label}
               </label>
@@ -91,7 +89,7 @@ export function StudentSelector({ topic }: { topic: string }) {
         <p className="mt-2 text-center text-xs italic leading-5 text-[var(--text-secondary)]">Determines how often the student asks clarifying questions.</p>
       </fieldset>
 
-      <button type="button" aria-describedby="confirm-help" className="font-heading mt-12 flex items-center gap-3 rounded-xl bg-[#4648d4] px-10 py-5 font-semibold text-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 sm:px-12">
+      <button type="button" aria-describedby="confirm-help" className="font-heading mt-7 flex items-center gap-3 rounded-xl bg-[#4648d4] px-9 py-4 font-semibold text-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 sm:mt-8 sm:px-11">
         Confirm &amp; Start Teaching <ArrowRightIcon />
       </button>
       <p id="confirm-help" className="sr-only">Starting a teaching session is not connected yet.</p>

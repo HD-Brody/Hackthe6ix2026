@@ -106,6 +106,11 @@ export function TopicPicker() {
     router.push(`/student?topic=${encodeURIComponent(selectedTopic)}`);
   }
 
+  function selectRecommendedTopic(selectedTopic: string) {
+    setTopic(selectedTopic);
+    router.push(`/student?topic=${encodeURIComponent(selectedTopic)}`);
+  }
+
   return (
     <div className="mt-8 w-full max-w-6xl sm:mt-10">
       <form onSubmit={handleSubmit} className="relative mx-auto max-w-3xl">
@@ -124,7 +129,7 @@ export function TopicPicker() {
         <button
           type="submit"
           disabled={!topic.trim()}
-          className="absolute right-2 top-1/2 flex h-16 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[var(--brand)] px-5 font-semibold text-white transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#c7c4d7] sm:px-6"
+          className="absolute right-2 top-1/2 flex h-16 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[#4648d4] px-5 font-semibold text-white transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:px-6"
         >
           <span className="hidden sm:inline">Start</span>
           <ArrowRightIcon />
@@ -141,7 +146,12 @@ export function TopicPicker() {
 
         <div className="mt-6 grid grid-cols-1 gap-6 sm:mt-8 sm:grid-cols-2">
           {topics.map((item) => (
-            <TopicCard key={item.title} topic={item} selected={topic === item.title} onSelect={() => setTopic(item.title)} />
+            <TopicCard
+              key={item.title}
+              topic={item}
+              selected={topic === item.title}
+              onSelect={() => selectRecommendedTopic(item.title)}
+            />
           ))}
         </div>
       </section>

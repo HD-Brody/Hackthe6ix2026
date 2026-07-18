@@ -1,3 +1,6 @@
+import Image from "next/image";
+import Link from "next/link";
+
 function BellIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 20h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>;
 }
@@ -22,7 +25,20 @@ export function SiteHeader() {
   return (
     <header className="relative z-10 h-16 border-b border-indigo-50 bg-white shadow-[0_4px_10px_rgba(99,102,241,0.05)]">
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
-        <div className="font-heading text-xl font-semibold tracking-[-0.025em] text-[#4648d4] sm:text-2xl">Professor Me</div>
+        <Link
+          href="/"
+          aria-label="Professor Me home"
+          className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
+        >
+          <Image
+            src="/logo.svg"
+            alt="Professor Me"
+            width={191}
+            height={32}
+            priority
+            className="h-7 w-auto sm:h-8"
+          />
+        </Link>
 
         <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-sm text-[var(--text-secondary)] md:flex lg:text-base">
           {['Dashboard', 'Classroom', 'Analytics'].map((item) => <button key={item} type="button" className="rounded-md px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">{item}</button>)}
