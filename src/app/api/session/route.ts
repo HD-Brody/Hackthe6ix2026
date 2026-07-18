@@ -8,8 +8,25 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import graphFixture from "@/../fixtures/graph-tcp.json";
+import { createSession } from "@/server/db/sessions";
+import type { ConceptGraph } from "@/lib/types";
 
-export async function POST(_req: NextRequest) {
-  // TODO(A): parse {topic}, create session doc, persist, return {session_id, graph}
-  return NextResponse.json({ error: "not implemented" }, { status: 501 });
+export async function POST(req: NextRequest) {
+  let body: { topic?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
+  }
+
+  const topic = body.topic?.trim();
+  if (!topic) {
+    return NextResponse.json({ error: "topic is required" }, { status: 400 });
+  }
+
+  const graph: ConceptGraph = { ...(graphFixture as ConceptGraph), topic };
+  const session = await createSession("dev", topic, graph);
+
+  return NextResponse.json({ session_id: session._id, graph: session.graph });
 }
