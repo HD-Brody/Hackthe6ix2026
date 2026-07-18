@@ -158,6 +158,7 @@ export function createEchoTurnStream(sessionId: string): ReadableStream<Uint8Arr
       data: {
         verdict,
         session_status: updated?.status ?? "teaching",
+        directive: verdict.recommended_directive,
       },
     });
   });
@@ -234,6 +235,7 @@ export function createRealTurnStream(sessionId: string): ReadableStream<Uint8Arr
       data: {
         verdict,
         session_status: updated?.status ?? "teaching",
+        directive,
       },
     });
   });

@@ -124,5 +124,13 @@ export interface TurnTiming {
 
 export type TurnSSEEvent =
   | { event: "token"; data: { text: string } }
-  | { event: "done"; data: { verdict: Verdict; session_status: SessionStatus } }
+  | {
+      event: "done";
+      data: {
+        verdict: Verdict;
+        session_status: SessionStatus;
+        /** Policy output for this turn (optional — added post-CP0 for debugging/C). */
+        directive?: Directive;
+      };
+    }
   | { event: "error"; data: { message: string; fallback_line: string } };
