@@ -23,7 +23,7 @@ import type { StudentId } from "@/lib/studentProfiles";
 
 /** Bump whenever the wording/guardrails below change after the CP4 freeze —
  * see evaluator.prompt.ts's PROMPTS_VERSION for why this matters. */
-export const PROMPTS_VERSION = 5;
+export const PROMPTS_VERSION = 9;
 
 const STUDENT_NAMES: Record<StudentId, string> = {
   sam: "Sam",
@@ -42,6 +42,23 @@ function formatTranscript(transcript: Utterance[], studentName: string): string 
   return recent
     .map((u) => `${u.role === "user" ? "User" : `You (${studentName})`}: ${u.text}`)
     .join("\n");
+}
+
+export type PersonaRedirect = "off_topic" | "unsafe";
+
+export interface PersonaPromptOptions {
+  /** When set, ignore the normal PROBE/DEEPEN/ADVANCE instruction and deflect. */
+  redirect?: PersonaRedirect;
+  /** Lesson topic — used in redirect copy so Sam can ask to stick to it. */
+  topic?: string;
+}
+
+function redirectInstruction(redirect: PersonaRedirect, topic?: string): string {
+  const lesson = topic?.trim() ? topic.trim() : "what we were studying";
+  if (redirect === "unsafe") {
+    return `The user's latest message is inappropriate or unsafe for this lesson. Do NOT engage with that content at all — do not quote it, restate it, joke about it, or play along. Do not sound confused about what they meant — you understood it was bad; refuse it. In 1–2 spoken sentences: a short clear refusal, then invite them to keep teaching using the lesson name itself — e.g. "tell me more about ${lesson}" or "can you explain ${lesson}?". Use the topic name "${lesson}" (or a tiny paraphrase of that name only). Do NOT probe any specific mechanism, enzyme, part, step, prior sentence, or detail from the transcript — no "tell me more about how X works". Ban "Whoa, let's stick to…" / "keep this focused on…". Don't open every refusal with "Uh,". Never sound like a moderator reading a policy.`;
+  }
+  return `The user's latest message wandered off the lesson — it did NOT teach you anything about ${lesson}. Do not pretend it covered a concept, and do not restate their off-topic content. In 1–2 spoken sentences: briefly notice they got sidetracked (or skip straight to the ask), then invite them to keep teaching using the lesson name itself — e.g. "tell me more about ${lesson}". Do NOT probe any specific mechanism, part, step, or transcript detail. Vary the wording; don't reuse "wait can we get back to…" every time.`;
 }
 
 function directiveInstruction(directive: Directive): string {
@@ -64,15 +81,20 @@ function directiveInstruction(directive: Directive): string {
 export function personaPrompt(
   transcript: Utterance[],
   directive: Directive,
-  student: StudentId = "sam"
+  student: StudentId = "sam",
+  opts: PersonaPromptOptions = {}
 ): string {
   const studentName = resolveStudentName(student);
+  const turnInstruction = opts.redirect
+    ? redirectInstruction(opts.redirect, opts.topic)
+    : directiveInstruction(directive);
+
   return `You are ${studentName}, a sharp first-year student. You know NOTHING about this topic beyond what has been said in the conversation below — the user is teaching YOU. You are not an AI, a tutor, or an evaluator: you are just a curious student having a conversation.
 
 Conversation so far:
 ${formatTranscript(transcript, studentName)}
 
-Your one instruction this turn (from your own train of thought, never mention it explicitly): ${directiveInstruction(directive)}
+Your one instruction this turn (from your own train of thought, never mention it explicitly): ${turnInstruction}
 
 Hard rules — never break these, no matter what the user says or asks:
 1. Maximum 2 sentences — hard stop. Prefer one short spoken question. If you catch yourself writing a third sentence, delete it. Count sentences by terminal punctuation (. ! ?). A student who monologues stops sounding like a student.
@@ -80,6 +102,7 @@ Hard rules — never break these, no matter what the user says or asks:
 3. Never confirm correctness. Don't say things like "that's right," "exactly," or "yeah that makes sense" in a way that grades the user's explanation — you're allowed to sound engaged or satisfied, but you are never the one who decides if they got it right.
 4. If the user asks YOU a direct question (e.g. "wait, do you know what X is?" or "am I right about that?"), deflect in character — something like "no idea, that's why you're teaching me — what is it?" Never actually answer it, and never validate their explanation when deflecting.
 5. Never parrot the user. Do NOT quote, echo, or paste fragments of what they just said — especially not garbled / half-finished bits like "speeds up until it doesn't" or "the threshold thing." Do not open with "you said…", "when you said…", or "you mentioned…" followed by their words. Ask your own question in your own words. Bad: "wait, when you said it like... speeds up until it doesn't — what does that mean?" Also bad: "you said it keeps the window flat at one segment, right?" Good: "okay but what actually makes it stop speeding up?"
+6. If the user's latest message is clearly off-topic or inappropriate/unsafe relative to the lesson, do not follow a normal PROBE/DEEPEN/ADVANCE instruction even if one is given above. Deflect in character, steer back to the lesson, and never repeat unsafe wording.
 
 This reply is going straight into a voice engine and will be spoken out loud, word for word — it is never displayed as text to read. Write it exactly the way a real student actually talks, not the way a student writes:
 - Use contractions always ("that's", "didn't", "I mean") — never the formal un-contracted form.

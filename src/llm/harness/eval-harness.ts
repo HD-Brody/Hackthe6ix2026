@@ -1,7 +1,7 @@
 /**
  * B's eval harness. Run: npm run eval
  *
- * Five modes, selected via --mode=graph|evaluator|persona|gapmap|adversarial
+ * Modes via --mode=graph|evaluator|persona|gapmap|adversarial|screen
  * (default: evaluator — cheap and fast enough to run constantly). Never
  * wait on the app to test a prompt; this script hits Gemini directly.
  *
@@ -29,6 +29,8 @@
  *   evaluate -> policy -> persona -> gap-map pipeline, printing every turn
  *   and the final gap map for manual audit. `--session=<name>` runs just
  *   one while iterating.
+ * --mode=screen: runs screenUserTurn() over screen-cases.json and checks
+ *   category vs expected (ok / off_topic / unsafe).
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
@@ -37,6 +39,7 @@ import { generateGraph } from "../generateGraph";
 import { evaluate } from "../evaluate";
 import { personaReply } from "../personaReply";
 import { generateGapMap } from "../generateGapMap";
+import { screenUserTurn, type ScreenCategory } from "../screenUserTurn";
 import { collectGapMapMaterials } from "@/server/orchestrator/gapMapMaterials";
 import {
   ADVERSARIAL_SESSIONS,
@@ -58,6 +61,7 @@ const ROOT = join(__dirname, "..", "..", "..");
 const FIXTURES_DIR = join(ROOT, "fixtures", "graphs");
 const TCP_GRAPH_PATH = join(ROOT, "fixtures", "graph-tcp.json");
 const TEST_UTTERANCES_PATH = join(__dirname, "test-utterances.json");
+const SCREEN_CASES_PATH = join(__dirname, "screen-cases.json");
 
 function slugify(topic: string): string {
   return topic
@@ -474,6 +478,57 @@ async function runAdversarialMode(): Promise<void> {
   );
 }
 
+// ── --mode=screen ────────────────────────────────────────────────
+
+interface ScreenCase {
+  id: string;
+  expected: ScreenCategory;
+  text: string;
+  topic?: string;
+}
+
+interface ScreenCasesFile {
+  default_topic: string;
+  cases: ScreenCase[];
+}
+
+async function runScreenMode(): Promise<void> {
+  const file = JSON.parse(readFileSync(SCREEN_CASES_PATH, "utf8")) as ScreenCasesFile;
+
+  console.log(`\n=== screen mode (${file.cases.length} cases) ===\n`);
+  let mismatches = 0;
+
+  // Vertex / billed path can take denser calls; keep a short gap for free-tier keys.
+  const screenDelayMs = Math.min(RATE_LIMIT_DELAY_MS, 3000);
+
+  for (let i = 0; i < file.cases.length; i++) {
+    const c = file.cases[i];
+    const topic = c.topic ?? file.default_topic;
+    if (i > 0) await delay(screenDelayMs);
+
+    try {
+      const result = await screenUserTurn(c.text, topic);
+      const ok = result.category === c.expected;
+      if (!ok) mismatches++;
+      console.log(
+        `${ok ? "PASS" : "FAIL"}  [${c.id}] expected=${c.expected} got=${result.category}`
+      );
+      console.log(`       topic: ${topic}`);
+      console.log(
+        `       text:  ${c.text.slice(0, 120)}${c.text.length > 120 ? "…" : ""}`
+      );
+    } catch (err) {
+      mismatches++;
+      console.log(
+        `FAIL  [${c.id}] error: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
+
+  console.log(`\n=== screen summary: ${mismatches} mismatch(es) ===`);
+  if (mismatches > 0) process.exitCode = 1;
+}
+
 // ── entrypoint ───────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -485,8 +540,11 @@ async function main(): Promise<void> {
   if (mode === "persona") return runPersonaMode();
   if (mode === "gapmap") return runGapMapMode();
   if (mode === "adversarial") return runAdversarialMode();
+  if (mode === "screen") return runScreenMode();
 
-  throw new Error(`Unknown --mode="${mode}" (expected graph|evaluator|persona|gapmap|adversarial)`);
+  throw new Error(
+    `Unknown --mode="${mode}" (expected graph|evaluator|persona|gapmap|adversarial|screen)`
+  );
 }
 
 main().catch((err) => {

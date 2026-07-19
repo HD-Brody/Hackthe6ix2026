@@ -14,12 +14,13 @@ import {
   setPendingDirective,
   updatePolicy,
 } from "@/server/db/sessions";
-import { evaluate, personaReply, bridgingPersonaReply } from "@/server/orchestrator/llm";
+import { evaluate, personaReply, bridgingPersonaReply, screenUserTurn } from "@/server/orchestrator/llm";
 import { transition } from "@/server/orchestrator/stateMachine";
 import { nextAdvanceTarget, turnPolicy } from "@/server/orchestrator/turnPolicy";
 import { formatSSE } from "@/lib/sse";
 import { probeThresholdForCuriosity } from "@/lib/curiosity";
 import { parseStudentId } from "@/lib/studentProfiles";
+import type { PersonaPromptOptions } from "@/llm/personaReply";
 import type {
   ConceptGraph,
   Directive,
@@ -237,14 +238,20 @@ async function streamPersonaTokens(
   transcript: Utterance[],
   directive: Directive,
   student: ReturnType<typeof parseStudentId>,
-  send: (event: TurnSSEEvent) => void
+  send: (event: TurnSSEEvent) => void,
+  personaOpts: PersonaPromptOptions = {}
 ): Promise<{ text: string; tFirst?: number; tLast?: number }> {
   let text = "";
   let tFirst: number | undefined;
   let tLast: number | undefined;
 
   await retryOnce(async () => {
-    for await (const token of personaReply(transcript, directive, student)) {
+    for await (const token of personaReply(
+      transcript,
+      directive,
+      student,
+      personaOpts
+    )) {
       if (tFirst === undefined) tFirst = Date.now();
       text += token;
       send({ event: "token", data: { text: token } });
@@ -331,43 +338,79 @@ export function createSequentialTurnStream(
     const userText = lastUserText(transcript);
     const turn = userTurnNumber(transcript);
     const student = parseStudentId(session.student);
+    const topic = session.graph.topic;
+
+    const screen = await screenUserTurn(userText, topic);
+    const redirect =
+      screen.category === "off_topic" || screen.category === "unsafe"
+        ? screen.category
+        : undefined;
 
     let verdict: Verdict;
-    const tEvalStart = Date.now();
-    try {
-      verdict = await retryOnce(() =>
-        evaluate(session.graph, transcript, userText, session.prior_gap_context)
-      );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "evaluate failed";
-      await streamTextAsTokens(FALLBACK_LINE, send);
-      send({
-        event: "error",
-        data: { message, fallback_line: FALLBACK_LINE },
-      });
-      return;
-    }
-    const tEvalEnd = Date.now();
-
+    let directive: Directive;
     let policy = session.policy ?? emptyPolicy();
-    const afterVerdict = await applyVerdict(sessionId, verdict, policy);
-    const directive = turnPolicy(afterVerdict.graph, verdict, policy, {
-      probeThreshold: probeThresholdForCuriosity(session.curiosity),
-    });
+    const tEvalStart = Date.now();
+    let tEvalEnd: number;
+    let tPolicyDone: number;
 
-    policy = await consumeDirective(
-      sessionId,
-      directive,
-      policy,
-      session.status
-    );
-    const tPolicyDone = Date.now();
+    if (redirect) {
+      // Off-topic / unsafe: skip evaluate so we don't invent node matches or
+      // vague quotes from derail/abuse text. Speak an ADVANCE (or WRAP_UP if
+      // the graph is exhausted) with a persona redirect instruction.
+      directive = safeAdvanceDirective(session.graph);
+      verdict = emptyVerdict(directive);
+      tEvalEnd = Date.now();
+      policy = await consumeDirective(
+        sessionId,
+        directive,
+        policy,
+        session.status
+      );
+      tPolicyDone = Date.now();
+      console.log(
+        `[turn ${turn}] screen=${redirect} — skipped evaluate, redirecting`
+      );
+    } else {
+      try {
+        verdict = await retryOnce(() =>
+          evaluate(session.graph, transcript, userText, session.prior_gap_context)
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "evaluate failed";
+        await streamTextAsTokens(FALLBACK_LINE, send);
+        send({
+          event: "error",
+          data: { message, fallback_line: FALLBACK_LINE },
+        });
+        return;
+      }
+      tEvalEnd = Date.now();
+
+      const afterVerdict = await applyVerdict(sessionId, verdict, policy);
+      directive = turnPolicy(afterVerdict.graph, verdict, policy, {
+        probeThreshold: probeThresholdForCuriosity(session.curiosity),
+      });
+
+      policy = await consumeDirective(
+        sessionId,
+        directive,
+        policy,
+        session.status
+      );
+      tPolicyDone = Date.now();
+    }
 
     let studentLine = "";
     let tPersonaFirst: number | undefined;
     let tPersonaLast: number | undefined;
     try {
-      const streamed = await streamPersonaTokens(transcript, directive, student, send);
+      const streamed = await streamPersonaTokens(
+        transcript,
+        directive,
+        student,
+        send,
+        redirect ? { redirect, topic } : {}
+      );
       studentLine = streamed.text;
       tPersonaFirst = streamed.tFirst;
       tPersonaLast = streamed.tLast;
@@ -432,8 +475,19 @@ export function createParallelTurnStream(
     const userText = lastUserText(transcript);
     const turn = userTurnNumber(transcript);
     const student = parseStudentId(session.student);
-    const spokenDirective =
-      session.pending_directive ?? syntheticFirstDirective(session.graph);
+    const topic = session.graph.topic;
+
+    const screen = await screenUserTurn(userText, topic);
+    const redirect =
+      screen.category === "off_topic" || screen.category === "unsafe"
+        ? screen.category
+        : undefined;
+
+    // Flagged turns must not speak a stale PROBE/DEEPEN from the prior turn
+    // while the user just sent derail/abuse — override to ADVANCE + redirect.
+    const spokenDirective = redirect
+      ? safeAdvanceDirective(session.graph)
+      : (session.pending_directive ?? syntheticFirstDirective(session.graph));
 
     let policy = session.policy ?? emptyPolicy();
     policy = await consumeDirective(
@@ -446,31 +500,49 @@ export function createParallelTurnStream(
     const tEvalStart = Date.now();
     let tEvalEnd = tEvalStart;
     let tPolicyDone = tEvalStart;
-    let verdict: Verdict = emptyVerdict(safeAdvanceDirective(session.graph));
+    let verdict: Verdict = emptyVerdict(spokenDirective);
 
-    const evalWork = (async () => {
-      try {
-        verdict = await retryOnce(() =>
-          evaluate(session.graph, transcript, userText, session.prior_gap_context)
-        );
-        tEvalEnd = Date.now();
+    if (redirect) {
+      // Skip evaluate; keep pending in sync with what we spoke.
+      await setPendingDirective(sessionId, spokenDirective);
+      tEvalEnd = Date.now();
+      tPolicyDone = Date.now();
+      console.log(
+        `[turn ${turn}] screen=${redirect} — parallel redirect, skipped evaluate`
+      );
+    }
 
-        const afterVerdict = await applyVerdict(sessionId, verdict, policy);
-        const nextPending = turnPolicy(afterVerdict.graph, verdict, policy, {
-          probeThreshold: probeThresholdForCuriosity(session.curiosity),
-        });
-        await setPendingDirective(sessionId, nextPending);
-        tPolicyDone = Date.now();
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "evaluate failed";
-        console.error(`[turn ${turn}] parallel eval failed: ${message}`);
-        const safe = safeAdvanceDirective(session.graph);
-        verdict = emptyVerdict(safe);
-        await setPendingDirective(sessionId, safe);
-        tEvalEnd = Date.now();
-        tPolicyDone = Date.now();
-      }
-    })();
+    const evalWork = redirect
+      ? Promise.resolve()
+      : (async () => {
+          try {
+            verdict = await retryOnce(() =>
+              evaluate(
+                session.graph,
+                transcript,
+                userText,
+                session.prior_gap_context
+              )
+            );
+            tEvalEnd = Date.now();
+
+            const afterVerdict = await applyVerdict(sessionId, verdict, policy);
+            const nextPending = turnPolicy(afterVerdict.graph, verdict, policy, {
+              probeThreshold: probeThresholdForCuriosity(session.curiosity),
+            });
+            await setPendingDirective(sessionId, nextPending);
+            tPolicyDone = Date.now();
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : "evaluate failed";
+            console.error(`[turn ${turn}] parallel eval failed: ${message}`);
+            const safe = safeAdvanceDirective(session.graph);
+            verdict = emptyVerdict(safe);
+            await setPendingDirective(sessionId, safe);
+            tEvalEnd = Date.now();
+            tPolicyDone = Date.now();
+          }
+        })();
 
     let studentLine = "";
     let tPersonaFirst: number | undefined;
@@ -482,7 +554,8 @@ export function createParallelTurnStream(
           transcript,
           spokenDirective,
           student,
-          send
+          send,
+          redirect ? { redirect, topic } : {}
         );
         studentLine = streamed.text;
         tPersonaFirst = streamed.tFirst;
