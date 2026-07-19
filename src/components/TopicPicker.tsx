@@ -21,6 +21,8 @@ type Topic = {
   description: string;
   accent: "green" | "indigo" | "purple" | "rose";
   icon: ReactNode;
+  /** Course-catalog code — the registrar aesthetic. */
+  code: string;
 };
 
 const ACCEPTED_EXTENSIONS = [".txt", ".md", ".pdf"];
@@ -78,10 +80,10 @@ function CloseIcon() {
 }
 
 const topics: Topic[] = [
-  { title: "Photosynthesis", description: "Light energy to glucose — plants, chlorophyll, the Calvin cycle.", accent: "green", icon: <LeafIcon /> },
-  { title: "Machine Learning", description: "Neural networks, gradient descent, overfitting, the basics.", accent: "indigo", icon: <BrainIcon /> },
-  { title: "Quantum Physics", description: "Superposition, entanglement, wave-particle duality.", accent: "purple", icon: <AtomIcon /> },
-  { title: "Canadian History", description: "Confederation, the fur trade, key turning points.", accent: "rose", icon: <BookIcon /> },
+  { title: "Photosynthesis", description: "Light energy to glucose — plants, chlorophyll, the Calvin cycle.", accent: "green", icon: <LeafIcon />, code: "BIO 141" },
+  { title: "Machine Learning", description: "Neural networks, gradient descent, overfitting, the basics.", accent: "indigo", icon: <BrainIcon />, code: "CS 3244" },
+  { title: "Quantum Physics", description: "Superposition, entanglement, wave-particle duality.", accent: "purple", icon: <AtomIcon />, code: "PHY 256" },
+  { title: "Canadian History", description: "Confederation, the fur trade, key turning points.", accent: "rose", icon: <BookIcon />, code: "HIS 271" },
 ];
 
 const accentClasses = {
@@ -97,14 +99,19 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`group flex w-full items-center gap-4 rounded-xl border bg-[var(--surface)] px-5 py-4 text-left transition hover:border-[var(--brand)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 ${selected ? "border-[var(--brand)] shadow-sm" : "border-[var(--card-border)]"}`}
+      className={`group card-lift flex w-full items-center gap-4 rounded-xl border bg-[var(--surface)] px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 hover:border-[var(--brand)] ${selected ? "border-[var(--brand)] shadow-sm" : "border-[var(--card-border)]"}`}
     >
       <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${accentClasses[topic.accent]}`}>
         {topic.icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="font-heading block text-sm font-semibold text-[var(--text-primary)]">
-          {topic.title}
+        <span className="flex items-baseline gap-2">
+          <span className="font-heading block text-sm font-semibold text-[var(--text-primary)]">
+            {topic.title}
+          </span>
+          <span className="font-display shrink-0 text-[10px] italic tracking-wide text-[var(--text-muted)]">
+            {topic.code}
+          </span>
         </span>
         <span className="mt-0.5 block truncate text-xs text-[var(--text-secondary)]">
           {topic.description}

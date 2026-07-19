@@ -62,6 +62,14 @@
   --blur-accent-2: rgba(125, 39, 206, 0.06);
   --home-gradient-1: rgba(96, 99, 238, 0.09);
   --home-gradient-2: rgba(129, 39, 207, 0.055);
+  /* ── design-signature layer (classroom motif) ────────────────── */
+  --ink-stamp: #b3402f;
+  --card-line: rgba(96, 99, 238, 0.14);
+  --card-margin: rgba(179, 64, 47, 0.35);
+  --tape: rgba(255, 224, 138, 0.55);
+  --grid-line: rgba(96, 99, 238, 0.05);
+  --squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C20 2.5 38 7 58 4.5 78 2 98 6.5 118 3.5' fill='none' stroke='%234648d4' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --chalk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C40 3.5 74 10 106 6.5 138 3 170 9 197 5' fill='none' stroke='%236063ee' stroke-width='5' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E");
 }
 
 .dark {
@@ -108,6 +116,13 @@
   --blur-accent-2: rgba(125, 39, 206, 0.1);
   --home-gradient-1: rgba(96, 99, 238, 0.15);
   --home-gradient-2: rgba(129, 39, 207, 0.1);
+  --ink-stamp: #e8705c;
+  --card-line: rgba(139, 141, 255, 0.16);
+  --card-margin: rgba(232, 112, 92, 0.4);
+  --tape: rgba(255, 224, 138, 0.16);
+  --grid-line: rgba(139, 141, 255, 0.06);
+  --squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C20 2.5 38 7 58 4.5 78 2 98 6.5 118 3.5' fill='none' stroke='%238b8dff' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --chalk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C40 3.5 74 10 106 6.5 138 3 170 9 197 5' fill='none' stroke='%238b8dff' stroke-width='5' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E");
 }
 
 * {
@@ -137,5 +152,97 @@ input {
 .home-background {
   background:
     radial-gradient(ellipse 80% 40% at 50% -10%, var(--home-gradient-1), transparent),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
     var(--page-background);
+  background-size: auto, 32px 32px, 32px 32px, auto;
+}
+
+/* ── design-signature layer ─────────────────────────────────────
+   The classroom motif: an editorial serif voice, chalk underlines,
+   index-card artifacts, and a graded-paper stamp. All theme-aware. */
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+::selection {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* Small-caps section label with wide tracking. */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+/* Hand-drawn chalk stroke under a hero word. */
+.chalk-underline {
+  background: var(--chalk) no-repeat bottom / 100% 0.14em;
+  padding-bottom: 0.16em;
+}
+
+/* Marker squiggle for active nav items. */
+.marker-active {
+  background: var(--squiggle) no-repeat bottom 4px center / 100% 5px;
+}
+
+/* Ruled index card with a red margin line and a piece of tape. */
+.index-card {
+  position: relative;
+  border-radius: 4px 10px 10px 4px;
+  background:
+    linear-gradient(to right, transparent 30px, var(--card-margin) 30px, var(--card-margin) 31.5px, transparent 31.5px),
+    repeating-linear-gradient(to bottom, transparent 0 27px, var(--card-line) 27px 28px),
+    var(--surface);
+}
+
+.index-card::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 92px;
+  height: 24px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: var(--tape);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.tilt-1 { transform: rotate(-1.1deg); }
+.tilt-2 { transform: rotate(0.9deg); }
+.tilt-3 { transform: rotate(-0.4deg); }
+.tilt-1, .tilt-2, .tilt-3 { transition: transform 220ms ease; }
+.tilt-1:hover, .tilt-2:hover, .tilt-3:hover { transform: rotate(0deg); }
+
+/* Circular red-ink grade stamp, slightly askew like a real marker. */
+.grade-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 3px solid var(--ink-stamp);
+  outline: 1.5px solid var(--ink-stamp);
+  outline-offset: 3px;
+  color: var(--ink-stamp);
+  transform: rotate(-8deg);
+  opacity: 0.92;
+  user-select: none;
+}
+
+/* Gentle lift for interactive cards — straightens tilt, adds air. */
+.card-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -8px var(--shadow-color);
 }

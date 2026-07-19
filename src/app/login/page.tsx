@@ -27,8 +27,8 @@ export default function LoginPage() {
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
         <section className="w-full max-w-[440px] rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-6 shadow-[0_4px_20px_var(--shadow-color)] sm:p-10" aria-labelledby="login-title">
           <div className="text-center">
-            <h1 id="login-title" className="font-heading text-3xl font-bold tracking-tight">Welcome Back</h1>
-            <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-[var(--text-secondary)] sm:text-base">Continue your teaching journey with Professor Me.</p>
+            <h1 id="login-title" className="font-display text-3xl font-semibold tracking-tight">Welcome back, Professor</h1>
+            <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-[var(--text-secondary)] sm:text-base">Your students kept asking where you went.</p>
           </div>
 
           <form action="/auth/login" method="GET" className="mt-8 space-y-4">
