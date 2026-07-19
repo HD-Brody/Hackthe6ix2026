@@ -171,7 +171,7 @@ function createTokenTee() {
       wake = null;
     },
     async *stream(): AsyncGenerator<string> {
-      for (;;) {
+      for (; ;) {
         if (queue.length > 0) {
           const token = queue.shift()!;
           if (token === null) return;
@@ -411,9 +411,9 @@ export function Classroom({
     const speaking =
       voiceRepliesRef.current && ttsRef.current
         ? ttsRef.current.speak(tee.stream()).catch(() => {
-            voiceRepliesRef.current = false;
-            setStudentState("listening");
-          })
+          voiceRepliesRef.current = false;
+          setStudentState("listening");
+        })
         : null;
 
     let firstToken = true;
@@ -485,7 +485,7 @@ export function Classroom({
         if (shouldPlayThinkingNoise(1500)) {
           const clip = new Audio(clipUrl);
           thinkingNoiseRef.current = clip;
-          clip.play().catch(() => {});
+          clip.play().catch(() => { });
         }
       }, 1500);
     }
@@ -510,10 +510,10 @@ export function Classroom({
     const speaking =
       voiceRepliesRef.current && ttsRef.current
         ? ttsRef.current.speak(tee.stream()).catch(() => {
-            // TTS failure (missing key, WS error) downgrades to text-only, silently.
-            voiceRepliesRef.current = false;
-            setStudentState("listening");
-          })
+          // TTS failure (missing key, WS error) downgrades to text-only, silently.
+          voiceRepliesRef.current = false;
+          setStudentState("listening");
+        })
         : null;
 
     let firstToken = true;
@@ -745,7 +745,7 @@ export function Classroom({
           />
         </aside>
 
-        <section className="flex min-h-[620px] flex-col overflow-hidden rounded-lg border border-[var(--card-border)] bg-[var(--surface)] shadow-[0_4px_20px_var(--shadow-color)] lg:h-[700px]" aria-label="Classroom conversation">
+        <section className="flex min-h-[555px] flex-col overflow-hidden rounded-lg border border-[var(--card-border)] bg-[var(--surface)] shadow-[0_4px_20px_var(--shadow-color)] lg:h-[535px]" aria-label="Classroom conversation">
           <div className="flex items-center justify-between gap-3 border-b border-[var(--card-border)] bg-[var(--surface)]/80 px-4 py-3 backdrop-blur-sm sm:px-5">
             <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] sm:text-base"><ChatIcon /> Conversation Flow</div>
             <button

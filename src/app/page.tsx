@@ -8,11 +8,6 @@ export default function TopicPickerPage() {
       <SiteHeader />
       <main className="home-background flex-1">
         <section className="mx-auto flex w-full max-w-7xl flex-col items-center px-5 pb-28 pt-14 sm:px-8 sm:pb-36 sm:pt-20 lg:px-10">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-white px-3.5 py-1.5 text-xs font-semibold tracking-wide text-[var(--text-secondary)] shadow-sm">
-            <span className="size-2 rounded-full bg-emerald-400" />
-            Teaching mode — pick a topic and start explaining
-          </div>
-
           <h1 className="font-heading max-w-3xl text-center text-[2.2rem] font-extrabold leading-[1.14] tracking-[-0.035em] text-[var(--text-primary)] sm:text-5xl lg:text-[3.4rem]">
             Teach it to learn it.
           </h1>

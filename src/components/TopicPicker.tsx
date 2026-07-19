@@ -340,10 +340,10 @@ export function TopicPicker() {
         ) : null}
 
         {notesFileName ? (
-          <div className="mt-5 rounded-xl border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-4 shadow-[0_0_0_4px_rgba(16,185,129,0.08)]">
+          <div className="mt-5 rounded-xl border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-4 shadow-[0_0_0_4px_rgba(16,185,129,0.08)] dark:border-emerald-800/60 dark:from-emerald-950/20 dark:to-teal-950/20 dark:shadow-[0_0_0_4px_rgba(16,185,129,0.04)]">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
                   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">
                     <path d="M8 3.5h5.2L18 8.3V20a1.5 1.5 0 0 1-1.5 1.5H7.5A1.5 1.5 0 0 1 6 20V5a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" strokeWidth="1.6" />
                     <path d="M13 3.5V9H18" stroke="currentColor" strokeWidth="1.6" />
@@ -351,13 +351,13 @@ export function TopicPicker() {
                   </svg>
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-emerald-800">
+                  <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
                     📎 Notes uploaded
                   </p>
-                  <p className="mt-0.5 max-w-xs truncate text-xs font-medium text-emerald-700">
+                  <p className="mt-0.5 max-w-xs truncate text-xs font-medium text-emerald-700 dark:text-emerald-400">
                     {notesFileName}
                     {extractedTopics.length > 0 && (
-                      <span className="ml-1.5 text-emerald-600">
+                      <span className="ml-1.5 text-emerald-600 dark:text-emerald-500">
                         — {extractedTopics.length} topic{extractedTopics.length === 1 ? "" : "s"} found
                       </span>
                     )}
@@ -368,15 +368,15 @@ export function TopicPicker() {
                 type="button"
                 onClick={clearNotes}
                 aria-label="Remove uploaded notes"
-                className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
               >
                 Remove
               </button>
             </div>
 
             {extractedTopics.length > 0 ? (
-              <div className="mt-3 border-t border-emerald-200 pt-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700">
+              <div className="mt-3 border-t border-emerald-200 pt-3 dark:border-emerald-800/40">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700 dark:text-emerald-400">
                   Suggested topics from your notes
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -391,7 +391,7 @@ export function TopicPicker() {
                         className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${
                           selected
                             ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand)]"
-                            : "border-emerald-300 bg-[var(--surface)] text-emerald-800 dark:text-emerald-300 hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                            : "border-emerald-300 bg-[var(--surface)] text-emerald-800 dark:border-emerald-800/60 dark:text-emerald-300 hover:border-[var(--brand)] hover:text-[var(--brand)]"
                         }`}
                       >
                         {suggestion}
