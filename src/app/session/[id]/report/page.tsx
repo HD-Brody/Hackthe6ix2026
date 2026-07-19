@@ -95,12 +95,12 @@ function ReportContent({
       <section className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
           <div>
-            <p className="eyebrow">Session report</p>
+            <p className="eyebrow">Report card — final</p>
             <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Your Understanding Map</h1>
             <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">{report.topic}</p>
           </div>
           {!isLive ? (
-            <div className="grade-stamp shrink-0" aria-label={`Grade: ${letterGrade(understandingScore)}`}>
+            <div className="grade-stamp stamp-in shrink-0" aria-label={`Grade: ${letterGrade(understandingScore)}`}>
               <span className="font-display text-4xl font-bold leading-none">{letterGrade(understandingScore)}</span>
               <span className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.22em]">Prof. Me</span>
             </div>
@@ -120,10 +120,11 @@ function ReportContent({
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_10px_30px_var(--shadow-color)] sm:p-7">
+        <article className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_10px_30px_var(--shadow-color)] sm:p-7">
+          <span className="marginalia" aria-hidden>Concept audit</span>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Knowledge Visualization</p>
+              <p className="eyebrow">01 · Coverage</p>
               <h2 className="mt-1 font-heading text-xl font-bold">What You Taught</h2>
             </div>
             <div className="flex flex-wrap gap-4 text-xs font-semibold text-[var(--text-secondary)]">
@@ -139,7 +140,7 @@ function ReportContent({
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
           <article className="rounded-2xl bg-gradient-to-br from-[#5755d8] to-[#7776df] p-6 text-white shadow-[0_12px_28px_rgba(87,85,216,0.24)]">
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/75">Professor Me Insight</p>
+            <p className="eyebrow text-white/80">02 · The verdict</p>
             <div className="mt-5 flex items-end gap-2">
               <strong className="font-heading text-5xl">
                 {understandingScore !== null ? `${understandingScore}%` : "—"}
@@ -162,7 +163,7 @@ function ReportContent({
 
           {!isLive ? (
             <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_var(--shadow-color)]">
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Questions Avoided</p>
+              <p className="eyebrow">03 · Questions avoided</p>
               <h2 className="mt-1 font-heading text-xl font-bold">Worth revisiting</h2>
               {report.dodged_questions.length > 0 ? (
                 <ol className="mt-5 space-y-4">
@@ -181,7 +182,7 @@ function ReportContent({
 
           {session?.feedback ? (
             <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_var(--shadow-color)]">
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Your Reflection</p>
+              <p className="eyebrow">04 · Your reflection</p>
               <h2 className="mt-1 font-heading text-xl font-bold">Session clarity</h2>
               <StarRating rating={session.feedback.rating} className="mt-3" />
               {session.feedback.comment ? (
@@ -202,7 +203,7 @@ function ReportContent({
 
       {!isLive ? (
         <section className="mt-10">
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Conversation Review</p>
+          <p className="eyebrow">05 · Conversation review</p>
           <h2 className="font-display mt-1 text-2xl font-semibold">Moments {studentName} got confused</h2>
           {report.vaguest_moments.length > 0 ? (
             <div className="mt-7 grid gap-5 md:grid-cols-3">

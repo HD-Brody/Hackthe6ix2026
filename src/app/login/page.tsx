@@ -50,7 +50,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[var(--chat-user)] text-base font-medium text-white shadow-[0_4px_10px_var(--shadow-color)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
+              className="btn-ink flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[var(--chat-user)] text-base font-medium text-white hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
             >
               Continue
             </button>

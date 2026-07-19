@@ -3,7 +3,7 @@
  */
 
 import type { Metadata } from "next";
-import { Fraunces, Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, IBM_Plex_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
@@ -24,6 +24,14 @@ const fraunces = Fraunces({
   axes: ["opsz", "SOFT", "WONK"],
 });
 
+/** Registrar mono — course codes, section numbers, timestamps, tickers.
+ * Named --font-mono so Tailwind's `font-mono` utility resolves to it. */
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
 export const metadata: Metadata = {
   title: "Professor Me — Teach it to learn it",
   description:
@@ -38,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${plusJakartaSans.variable} ${fraunces.variable} antialiased`}
+        className={`${inter.variable} ${plusJakartaSans.variable} ${fraunces.variable} ${plexMono.variable} antialiased`}
       >
         <ThemeProvider>{children}</ThemeProvider>
       </body>

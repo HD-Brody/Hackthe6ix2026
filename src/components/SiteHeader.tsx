@@ -36,7 +36,7 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
             />
           </Link>
 
-          <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-sm text-[var(--text-secondary)] md:flex lg:text-base">
+          <nav aria-label="Primary navigation" className="hidden items-center gap-6 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--text-secondary)] md:flex">
             {navigationItems.map((item) => {
               const active = activeItem === item.id;
               const studentQuery = `?student=${student}`;

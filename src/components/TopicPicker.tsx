@@ -99,7 +99,13 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`group card-lift flex w-full items-center gap-4 rounded-xl border bg-[var(--surface)] px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 hover:border-[var(--brand)] ${selected ? "border-[var(--brand)] shadow-sm" : "border-[var(--card-border)]"}`}
+      onMouseMove={(event) => {
+        // Feed the cursor position to the .spot-card radial highlight.
+        const rect = event.currentTarget.getBoundingClientRect();
+        event.currentTarget.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+        event.currentTarget.style.setProperty("--my", `${event.clientY - rect.top}px`);
+      }}
+      className={`group card-lift spot-card flex w-full items-center gap-4 rounded-xl border bg-[var(--surface)] px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 hover:border-[var(--brand)] ${selected ? "border-[var(--brand)] shadow-sm" : "border-[var(--card-border)]"}`}
     >
       <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${accentClasses[topic.accent]}`}>
         {topic.icon}
@@ -109,7 +115,7 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
           <span className="font-heading block text-sm font-semibold text-[var(--text-primary)]">
             {topic.title}
           </span>
-          <span className="font-display shrink-0 text-[10px] italic tracking-wide text-[var(--text-muted)]">
+          <span className="shrink-0 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
             {topic.code}
           </span>
         </span>
@@ -307,7 +313,7 @@ export function TopicPicker() {
           <button
             type="submit"
             disabled={!topic.trim() || isUploading}
-            className="absolute right-2 top-1/2 flex h-16 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[var(--chat-user)] px-5 font-semibold text-white transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:px-6"
+            className="btn-ink absolute right-3 top-1/2 flex h-14 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[var(--chat-user)] px-5 font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none sm:px-6"
           >
             <span className="hidden sm:inline">Start</span>
             <ArrowRightIcon />
