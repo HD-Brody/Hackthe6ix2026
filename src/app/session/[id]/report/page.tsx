@@ -8,38 +8,29 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSession } from "@/server/db/sessions";
 import { resolveSessionStudent } from "@/lib/studentProfiles";
-import type { GapMap } from "@/lib/types";
+import type { GapMap, Session } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-/** Demo fixture — shown only for local mock sessions (demo-* ids). */
-const DEMO_REPORT: GapMap = {
-  topic: "Quantum Computing Fundamentals",
-  nodes: [
-    { id: "qubits", name: "Qubits", state: "solid" },
-    { id: "superposition", name: "Superposition", state: "solid" },
-    { id: "entanglement", name: "Entanglement Logic", state: "vague" },
-    { id: "measurement", name: "Measurement Collapse", state: "vague" },
-    { id: "hadamard", name: "Hadamard Gate", state: "touched" },
-    { id: "decoherence", name: "Decoherence", state: "wrong" },
-    { id: "gates", name: "Quantum Gates", state: "unvisited" },
-    { id: "algorithms", name: "Quantum Algorithms", state: "unvisited" },
-    { id: "error_correction", name: "Error Correction", state: "unvisited" },
-    { id: "teleportation", name: "Quantum Teleportation", state: "unvisited" },
-  ],
-  vaguest_moments: [
-    { node_id: "entanglement", quote: "I think entanglement means the particles are communicating instantly... or maybe they just share the same state?" },
-    { node_id: "hadamard", quote: "The Hadamard gate creates superposition, but I couldn't explain what the matrix actually changes." },
-  ],
-  dodged_questions: [
-    "How does measurement affect entangled qubits?",
-    "What makes a quantum gate reversible?",
-  ],
-  reteach_order: ["decoherence", "entanglement", "measurement", "hadamard"],
-  one_liner: "You have a strong intuitive grasp of the core ideas. A few technical links need another pass.",
-};
-
 const momentAccents = ["border-l-[#e5bd45]", "border-l-[#7776df]", "border-l-[#b7b7c3]"];
+
+const LIVE_ONE_LINER =
+  "Session in progress — end the lesson for your full understanding map.";
+
+function liveGapMapFromSession(session: Session): GapMap {
+  return {
+    topic: session.topic,
+    nodes: session.graph.nodes.map(({ id, name, state }) => ({
+      id,
+      name,
+      state,
+    })),
+    vaguest_moments: [],
+    dodged_questions: [],
+    reteach_order: [],
+    one_liner: LIVE_ONE_LINER,
+  };
+}
 
 function EmptyState({
   title,
@@ -61,59 +52,33 @@ function EmptyState({
   );
 }
 
-export default async function ReportPage({
-  params,
-  searchParams,
+function ReportContent({
+  id,
+  report,
+  session,
+  selectedStudent,
+  studentName,
+  isLive,
 }: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ student?: string }>;
+  id: string;
+  report: GapMap;
+  session: Session | null;
+  selectedStudent: "sam" | "elena";
+  studentName: string;
+  isLive: boolean;
 }) {
-  const { id } = await params;
-  const { student } = await searchParams;
-  const isMock = id.startsWith("demo-");
-
-  const session = isMock ? null : await getSession(id).catch(() => null);
-  const selectedStudent = resolveSessionStudent(session?.student, student);
-  const studentName = selectedStudent === "elena" ? "Elena" : "Sam";
-
-  const shell = (children: React.ReactNode) => (
-    <div className="flex min-h-screen flex-col bg-[var(--page-background)] text-[var(--text-primary)]">
-      <SiteHeader activeItem="analytics" sessionId={id} student={selectedStudent} />
-      {children}
-      <SiteFooter />
-    </div>
-  );
-
-  if (!isMock && !session) {
-    return shell(
-      <EmptyState
-        title="Session not found"
-        body={`We couldn't find this teaching session. It may have expired — start a fresh one and teach ${studentName} something new.`}
-        cta="Back to topics"
-        href="/"
-      />
-    );
-  }
-
-  if (session && !session.gap_map) {
-    return shell(
-      <ReportLoader sessionId={id} studentName={studentName} />
-    );
-  }
-
-  const report: GapMap = session?.gap_map ?? DEMO_REPORT;
   const nodeName = (nodeId: string) =>
     report.nodes.find((n) => n.id === nodeId)?.name ?? nodeId;
   const comprehension = computeComprehensionStats(report.nodes);
   const understandingScore = comprehension.score;
   const reteachNames = report.reteach_order.map(nodeName);
-  const completedDate = new Intl.DateTimeFormat("en-US", {
+  const statusDate = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     timeZone: "America/Toronto",
   }).format(session?.ended_at ?? Date.now());
 
-  return shell(
+  return (
     <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
       <section className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -121,8 +86,15 @@ export default async function ReportPage({
           <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">Session Analysis: {report.topic}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {isMock ? <span className="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Demo data</span> : null}
-          <span className="rounded-full bg-[var(--brand-soft)] px-4 py-2 text-xs font-bold text-[var(--nav-active)]">Completed {completedDate}</span>
+          {isLive ? (
+            <span className="rounded-full bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+              Live session
+            </span>
+          ) : (
+            <span className="rounded-full bg-[var(--brand-soft)] px-4 py-2 text-xs font-bold text-[var(--nav-active)]">
+              Completed {statusDate}
+            </span>
+          )}
         </div>
       </section>
 
@@ -164,20 +136,27 @@ export default async function ReportPage({
                 among {comprehension.discussed} concept{comprehension.discussed === 1 ? "" : "s"} you explored · {formatBreakdown(comprehension)}
               </p>
             ) : null}
-            <p className="mt-5 text-sm leading-6 text-white/90">“{report.one_liner}”</p>
+            <p className="mt-5 text-sm leading-6 text-white/90">&ldquo;{report.one_liner}&rdquo;</p>
           </article>
 
-          <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_var(--shadow-color)]">
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Questions Avoided</p>
-            <h2 className="mt-1 font-heading text-xl font-bold">Worth revisiting</h2>
-            {report.dodged_questions.length > 0 ? (
-              <ol className="mt-5 space-y-4">
-                {report.dodged_questions.map((question, index) => <li key={question} className="flex gap-3 text-sm leading-5 text-[var(--text-secondary)]"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-xs font-bold text-[var(--nav-active)]">{index + 1}</span>{question}</li>)}
-              </ol>
-            ) : (
-              <p className="mt-5 text-sm leading-6 text-[var(--text-secondary)]">No dodged questions — you faced everything {studentName} threw at you.</p>
-            )}
-          </article>
+          {!isLive ? (
+            <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_var(--shadow-color)]">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Questions Avoided</p>
+              <h2 className="mt-1 font-heading text-xl font-bold">Worth revisiting</h2>
+              {report.dodged_questions.length > 0 ? (
+                <ol className="mt-5 space-y-4">
+                  {report.dodged_questions.map((question, index) => (
+                    <li key={question} className="flex gap-3 text-sm leading-5 text-[var(--text-secondary)]">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-xs font-bold text-[var(--nav-active)]">{index + 1}</span>
+                      {question}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="mt-5 text-sm leading-6 text-[var(--text-secondary)]">No dodged questions — you faced everything {studentName} threw at you.</p>
+              )}
+            </article>
+          ) : null}
 
           {session?.feedback ? (
             <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_var(--shadow-color)]">
@@ -185,7 +164,7 @@ export default async function ReportPage({
               <h2 className="mt-1 font-heading text-xl font-bold">Session clarity</h2>
               <StarRating rating={session.feedback.rating} className="mt-3" />
               {session.feedback.comment ? (
-                <p className="mt-3 text-sm italic leading-6 text-[var(--text-secondary)]">“{session.feedback.comment}”</p>
+                <p className="mt-3 text-sm italic leading-6 text-[var(--text-secondary)]">&ldquo;{session.feedback.comment}&rdquo;</p>
               ) : (
                 <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">You rated this session but left no written note.</p>
               )}
@@ -200,38 +179,120 @@ export default async function ReportPage({
         </div>
       </section>
 
-      <section className="mt-10">
-        <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Conversation Review</p>
-        <h2 className="mt-1 font-heading text-2xl font-extrabold">Moments {studentName} got confused</h2>
-        {report.vaguest_moments.length > 0 ? (
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {report.vaguest_moments.map((moment, index) => (
-              <article key={`${moment.node_id}-${index}`} className={`flex min-h-52 flex-col rounded-xl border border-[var(--border)] border-l-4 bg-[var(--surface)] p-5 shadow-sm ${momentAccents[index % momentAccents.length]}`}>
-                <span className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--brand)]">You said</span>
-                <blockquote className="my-4 flex-1 text-sm italic leading-6 text-[var(--text-secondary)]">“{moment.quote}”</blockquote>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--label-muted)]">{nodeName(moment.node_id)}</p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-5 text-sm leading-6 text-[var(--text-secondary)]">No vague moments captured — a remarkably crisp lesson.</p>
-        )}
-      </section>
+      {!isLive ? (
+        <section className="mt-10">
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Conversation Review</p>
+          <h2 className="mt-1 font-heading text-2xl font-extrabold">Moments {studentName} got confused</h2>
+          {report.vaguest_moments.length > 0 ? (
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {report.vaguest_moments.map((moment, index) => (
+                <article key={`${moment.node_id}-${index}`} className={`flex min-h-52 flex-col rounded-xl border border-[var(--border)] border-l-4 bg-[var(--surface)] p-5 shadow-sm ${momentAccents[index % momentAccents.length]}`}>
+                  <span className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--brand)]">You said</span>
+                  <blockquote className="my-4 flex-1 text-sm italic leading-6 text-[var(--text-secondary)]">&ldquo;{moment.quote}&rdquo;</blockquote>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--label-muted)]">{nodeName(moment.node_id)}</p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-5 text-sm leading-6 text-[var(--text-secondary)]">No vague moments captured — a remarkably crisp lesson.</p>
+          )}
+        </section>
+      ) : (
+        <section className="mt-10 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-6 py-8 text-center">
+          <p className="text-sm leading-6 text-[var(--text-secondary)]">
+            End the lesson to unlock dodged questions, vague moments, and a re-teach plan.
+          </p>
+          <Link
+            href={`/session/${encodeURIComponent(id)}?student=${selectedStudent}`}
+            className="mt-4 inline-block rounded-lg bg-[var(--chat-user)] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[var(--brand-strong)]"
+          >
+            Back to classroom
+          </Link>
+        </section>
+      )}
 
-      <section className="mt-10 rounded-2xl bg-[var(--accent-soft)] px-6 py-9 text-center sm:px-10">
-        <h2 className="font-heading text-2xl font-extrabold">Ready to close these gaps?</h2>
-        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
-          {reteachNames.length > 0
-            ? `Re-teach these in order: ${reteachNames.join(" → ")}.`
-            : "Nothing left to re-teach — pick a harder topic."}
-        </p>
-        <ReteachButton
-          sessionId={id}
-          student={selectedStudent}
-          hasGaps={reteachNames.length > 0}
-          isMock={isMock}
-        />
-      </section>
+      {!isLive ? (
+        <section className="mt-10 rounded-2xl bg-[var(--accent-soft)] px-6 py-9 text-center sm:px-10">
+          <h2 className="font-heading text-2xl font-extrabold">Ready to close these gaps?</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
+            {reteachNames.length > 0
+              ? `Re-teach these in order: ${reteachNames.join(" → ")}.`
+              : "Nothing left to re-teach — pick a harder topic."}
+          </p>
+          <ReteachButton
+            sessionId={id}
+            student={selectedStudent}
+            hasGaps={reteachNames.length > 0}
+            isMock={false}
+          />
+        </section>
+      ) : null}
     </main>
+  );
+}
+
+export default async function ReportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ student?: string }>;
+}) {
+  const { id } = await params;
+  const { student } = await searchParams;
+  const isMock = id.startsWith("demo-");
+
+  const session = isMock ? null : await getSession(id).catch(() => null);
+  const selectedStudent = resolveSessionStudent(session?.student, student);
+  const studentName = selectedStudent === "elena" ? "Elena" : "Sam";
+
+  const shell = (children: React.ReactNode) => (
+    <div className="flex min-h-screen flex-col bg-[var(--page-background)] text-[var(--text-primary)]">
+      <SiteHeader activeItem="analytics" sessionId={id} student={selectedStudent} />
+      {children}
+      <SiteFooter />
+    </div>
+  );
+
+  if (isMock) {
+    return shell(
+      <EmptyState
+        title="Analytics unavailable for demo sessions"
+        body="Local demo sessions don't persist concept data. Start a live session to get a real understanding map."
+        cta="Start teaching"
+        href="/"
+      />
+    );
+  }
+
+  if (!session) {
+    return shell(
+      <EmptyState
+        title="Session not found"
+        body={`We couldn't find this teaching session. It may have expired — start a fresh one and teach ${studentName} something new.`}
+        cta="Back to topics"
+        href="/"
+      />
+    );
+  }
+
+  if (!session.gap_map && session.status === "ended") {
+    return shell(
+      <ReportLoader sessionId={id} studentName={studentName} />
+    );
+  }
+
+  const isLive = !session.gap_map;
+  const report: GapMap = session.gap_map ?? liveGapMapFromSession(session);
+
+  return shell(
+    <ReportContent
+      id={id}
+      report={report}
+      session={session}
+      selectedStudent={selectedStudent}
+      studentName={studentName}
+      isLive={isLive}
+    />
   );
 }

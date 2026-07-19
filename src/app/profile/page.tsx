@@ -1,10 +1,6 @@
 import Link from "next/link";
-import { AttentionStrip } from "@/components/profile/AttentionStrip";
 import { ClarityNotes } from "@/components/profile/ClarityNotes";
 import { ProfileHero } from "@/components/profile/ProfileHero";
-import { SessionHistory } from "@/components/profile/SessionHistory";
-import { StudentBreakdown } from "@/components/profile/StudentBreakdown";
-import { TeachingOverview } from "@/components/profile/TeachingOverview";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getAuthUser, getUserId } from "@/lib/auth0";
@@ -73,13 +69,25 @@ export default async function ProfilePage() {
               </Link>
             </section>
           )}
-          <TeachingOverview
-            overview={stats.overview}
-            latestInsight={stats.latestInsight}
-          />
-          <AttentionStrip items={stats.attention} />
-          <SessionHistory sessions={sessions} />
-          <StudentBreakdown byStudent={stats.byStudent} />
+          <Link
+            href="/analytics"
+            className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--accent-soft)] p-5 transition hover:border-[var(--brand)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+          >
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
+                Teaching insights
+              </p>
+              <p className="mt-1 font-heading text-lg font-bold">
+                View full teaching analytics
+              </p>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                Session library, understanding trends, and recurring weak concepts.
+              </p>
+            </div>
+            <span className="shrink-0 text-sm font-semibold text-[var(--nav-active)]">
+              Open analytics →
+            </span>
+          </Link>
           <ClarityNotes entries={stats.diaryEntries} />
         </main>
       )}

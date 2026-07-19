@@ -80,7 +80,7 @@ function StudentCard({ stats }: { stats: StudentStats }) {
   );
 }
 
-export function StudentBreakdown({
+export function StudentComparison({
   byStudent,
 }: {
   byStudent: {
