@@ -8,7 +8,7 @@ function scoreTone(score: number | null): string {
   return "text-rose-100";
 }
 
-export function TeachingOverview({
+export function AnalyticsHero({
   overview,
   latestInsight,
 }: {
@@ -21,7 +21,7 @@ export function TeachingOverview({
     <section className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,1fr)]">
       <article className="rounded-2xl bg-gradient-to-br from-[#5755d8] to-[#7776df] p-6 text-white shadow-[0_12px_28px_rgba(87,85,216,0.24)] sm:p-7">
         <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/75">
-          Teaching insight
+          Teaching insights
         </p>
         <div className="mt-5 flex items-end gap-2">
           <strong className={`font-heading text-5xl ${scoreTone(avgScore)}`}>
@@ -55,7 +55,7 @@ export function TeachingOverview({
         ) : null}
         {latestInsight ? (
           <p className="mt-5 border-t border-white/20 pt-4 text-sm leading-6 text-white/90">
-            “{latestInsight}”
+            &ldquo;{latestInsight}&rdquo;
           </p>
         ) : null}
       </article>

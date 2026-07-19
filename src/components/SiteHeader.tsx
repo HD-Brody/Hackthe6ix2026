@@ -11,7 +11,7 @@ type SiteHeaderProps = {
 
 const navigationItems = [
   { id: "classroom", label: "Classroom", fallbackHref: "/" },
-  { id: "analytics", label: "Analytics", fallbackHref: "/session/demo-sample/report" },
+  { id: "analytics", label: "Analytics", fallbackHref: "/analytics" },
 ] as const;
 
 export async function SiteHeader({ activeItem, sessionId, student = "sam" }: SiteHeaderProps) {

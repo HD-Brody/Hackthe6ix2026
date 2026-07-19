@@ -35,9 +35,9 @@ export function ProfileHero({
             )}
           </div>
           <div className="text-center sm:text-left">
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
-              Teaching dashboard
-            </p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
+            Your profile
+          </p>
             <h1 className="mt-1 font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
               Welcome back, {firstName}
             </h1>
