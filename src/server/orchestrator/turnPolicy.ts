@@ -10,9 +10,11 @@
  *   4. Probed probeThreshold times already → ADVANCE to nextAdvanceTarget(graph).
  *   5. solid and !deepened[node] → DEEPEN(node). Caller sets flag. Already deepened → ADVANCE.
  *   6. nextAdvanceTarget null → WRAP_UP.
- *   7. Nothing actionable (empty verdicts / dodge-only / derail) → ADVANCE.
- *      Never honor recommended PROBE/DEEPEN on an empty turn — that creates
- *      probe loops after off-topic chatter. WRAP_UP only when no advance target.
+ *   7. Nothing actionable (empty verdicts / dodge-only / derail) → ADVANCE,
+ *      UNLESS the user has now dead-ended STALL_LIMIT turns in a row (closed
+ *      "yup"/"no", nothing left to add) → WRAP_UP. Never honor recommended
+ *      PROBE/DEEPEN on an empty turn — that creates probe loops after
+ *      off-topic chatter.
  *
  * Cheap to test, expensive to debug live — keep turnPolicy.test.ts green.
  */
@@ -34,6 +36,13 @@ export interface TurnPolicyOptions {
 }
 
 const DEFAULT_PROBE_THRESHOLD = 2;
+
+/**
+ * Consecutive dead-end turns (this one included) that trigger wind-down.
+ * 2 = one "yup" still earns a fresh question (ADVANCE to a new concept); a
+ * second dead-end in a row means the user is done → WRAP_UP.
+ */
+export const STALL_LIMIT = 2;
 
 const VERDICT_PRIORITY: Record<"wrong" | "vague" | "solid", number> = {
   wrong: 3,
@@ -138,11 +147,16 @@ export function turnPolicy(
 
   if (!primary) {
     // Empty / dodge-only / derail: never chase a PROBE/DEEPEN recommendation —
-    // the user didn't actually teach anything this turn. Steer back with ADVANCE.
+    // the user didn't actually teach anything this turn. Steer back with
+    // ADVANCE — unless they've now dead-ended STALL_LIMIT turns running, which
+    // means they're out of things to say → wind the lesson down.
     const onlyDodged =
       verdict.verdicts.length > 0 &&
       verdict.verdicts.every((v) => v.verdict === "dodged");
     if (verdict.verdicts.length === 0 || onlyDodged) {
+      if ((state.stalledTurns ?? 0) + 1 >= STALL_LIMIT) {
+        return { type: "WRAP_UP" };
+      }
       return advanceDirective(graph);
     }
 

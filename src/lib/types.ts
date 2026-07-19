@@ -107,6 +107,12 @@ export interface Utterance {
 export interface PolicyState {
   probeCounts: Record<string, number>;
   deepened: Record<string, boolean>;
+  /**
+   * Consecutive "dead-end" turns — the user taught nothing new (empty verdict,
+   * dodge-only, or a closed "yup"/"no"). Once this hits the wrap-up limit the
+   * policy winds the lesson down instead of marching through every node.
+   */
+  stalledTurns?: number;
 }
 
 export interface Session {
