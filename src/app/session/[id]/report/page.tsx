@@ -194,7 +194,7 @@ function ReportContent({
                 href={`/session/${encodeURIComponent(id)}/feedback?student=${selectedStudent}`}
                 className="mt-4 inline-block text-xs font-semibold text-[var(--nav-active)] hover:underline"
               >
-                View in student diary →
+                Update your rating →
               </Link>
             </article>
           ) : null}
@@ -234,19 +234,46 @@ function ReportContent({
       )}
 
       {!isLive ? (
-        <section className="mt-10 rounded-2xl bg-[var(--accent-soft)] px-6 py-9 text-center sm:px-10">
-          <h2 className="font-display text-2xl font-semibold">Ready to close these gaps?</h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
-            {reteachNames.length > 0
-              ? `Re-teach these in order: ${reteachNames.join(" → ")}.`
-              : "Nothing left to re-teach — pick a harder topic."}
-          </p>
-          <ReteachButton
-            sessionId={id}
-            student={selectedStudent}
-            hasGaps={reteachNames.length > 0}
-            isMock={false}
-          />
+        <section className="mt-10 rounded-2xl bg-[var(--accent-soft)] px-6 py-9 sm:px-10">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="eyebrow">Next lesson plan</p>
+            <h2 className="font-display mt-1 text-2xl font-semibold">Ready to close these gaps?</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
+              {reteachNames.length > 0
+                ? `Start your next lesson with ${reteachNames.length === 1 ? "this concept" : `these ${Math.min(reteachNames.length, 3)}`} — the highest-leverage ${reteachNames.length === 1 ? "gap" : "gaps"} to re-teach first.`
+                : "Nothing left to re-teach — pick a harder topic."}
+            </p>
+          </div>
+
+          {reteachNames.length > 0 ? (
+            <ol className="mx-auto mt-6 flex max-w-xl flex-col gap-2.5">
+              {reteachNames.slice(0, 3).map((name, index) => (
+                <li
+                  key={name}
+                  className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-left shadow-sm"
+                >
+                  <span className="font-display flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-sm font-bold text-[var(--nav-active)]">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]">{name}</span>
+                </li>
+              ))}
+              {reteachNames.length > 3 ? (
+                <li className="mt-0.5 text-center font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  + {reteachNames.length - 3} more in your re-teach plan
+                </li>
+              ) : null}
+            </ol>
+          ) : null}
+
+          <div className="mt-6 text-center">
+            <ReteachButton
+              sessionId={id}
+              student={selectedStudent}
+              hasGaps={reteachNames.length > 0}
+              isMock={false}
+            />
+          </div>
         </section>
       ) : null}
     </main>

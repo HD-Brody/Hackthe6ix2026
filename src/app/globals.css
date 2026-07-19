@@ -332,36 +332,6 @@ input {
   opacity: 1;
 }
 
-/* Syllabus ticker — hairline-framed infinite marquee. */
-.marquee {
-  overflow: hidden;
-  white-space: nowrap;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-}
-.marquee-track {
-  display: inline-flex;
-  align-items: center;
-  gap: 2.75rem;
-  padding: 0.65rem 1.375rem 0.65rem 0;
-  will-change: transform;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .marquee-track {
-    animation: marquee 36s linear infinite;
-  }
-  .marquee:hover .marquee-track {
-    animation-play-state: paused;
-  }
-}
-@keyframes marquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 /* The grade lands on the page like a real stamp. */
 @media (prefers-reduced-motion: no-preference) {
   .stamp-in {

@@ -11,7 +11,7 @@ const accents = [
   "border-l-[#57b98b]",
 ];
 
-function DiaryEntry({
+function ClarityNote({
   session,
   accent,
 }: {
@@ -95,7 +95,7 @@ export function ClarityNotes({ entries }: { entries: SessionSummary[] }) {
       {entries.length > 0 ? (
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {entries.map((session, index) => (
-            <DiaryEntry
+            <ClarityNote
               key={session.session_id}
               session={session}
               accent={accents[index % accents.length]}

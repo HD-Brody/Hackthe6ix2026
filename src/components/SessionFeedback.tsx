@@ -92,7 +92,7 @@ export function SessionFeedback({
               </blockquote>
             ) : null}
             <p className="mt-3 text-sm font-medium text-emerald-700" role="status">
-              Noted in {profile.name}&apos;s diary. Thanks!
+              Saved to your clarity notes. Thanks!
             </p>
           </div>
         ) : (
@@ -131,7 +131,7 @@ export function SessionFeedback({
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
           <Link href={`/session/${encodeURIComponent(sessionId)}/report?student=${profile.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--chat-user)] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><MapIcon /> View Understanding Map</Link>
-          <Link href="/profile" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm font-semibold text-[var(--nav-active)] transition hover:bg-[var(--surface-input)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><DashboardIcon /> View Student Diary</Link>
+          <Link href="/profile" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm font-semibold text-[var(--nav-active)] transition hover:bg-[var(--surface-input)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><DashboardIcon /> View Clarity Notes</Link>
         </div>
       </section>
     </main>
