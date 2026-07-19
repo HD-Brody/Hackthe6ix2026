@@ -194,7 +194,7 @@ function ReportContent({
                 href={`/session/${encodeURIComponent(id)}/feedback?student=${selectedStudent}`}
                 className="mt-4 inline-block text-xs font-semibold text-[var(--nav-active)] hover:underline"
               >
-                Update your rating →
+                View your reflection →
               </Link>
             </article>
           ) : null}
@@ -258,11 +258,6 @@ function ReportContent({
                   <span className="text-sm font-semibold text-[var(--text-primary)]">{name}</span>
                 </li>
               ))}
-              {reteachNames.length > 3 ? (
-                <li className="mt-0.5 text-center font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                  + {reteachNames.length - 3} more in your re-teach plan
-                </li>
-              ) : null}
             </ol>
           ) : null}
 
