@@ -129,8 +129,8 @@ function ClassroomComposer({
   }
 
   return (
-    <form onSubmit={submit} className="border-t border-[var(--card-border)] bg-white px-4 py-4 sm:px-6">
-      <div className="flex items-end gap-2 rounded-xl bg-[#eceef0] p-2">
+    <form onSubmit={submit} className="border-t border-[var(--card-border)] bg-[var(--surface)] px-4 py-4 sm:px-6">
+      <div className="flex items-end gap-2 rounded-xl bg-[var(--surface-input)] p-2">
         <textarea
           aria-label={`Explain this concept to ${profile.name}`}
           placeholder={
@@ -151,7 +151,7 @@ function ClassroomComposer({
             disabled={isSending || !micSupported}
             onClick={onMicToggle}
           />
-          <button type="submit" disabled={isSending || micActive || !value.trim()} aria-label="Send message" className="flex size-10 items-center justify-center rounded-lg bg-[#4648d4] text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"><SendIcon /></button>
+          <button type="submit" disabled={isSending || micActive || !value.trim()} aria-label="Send message" className="flex size-10 items-center justify-center rounded-lg bg-[var(--chat-user)] text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"><SendIcon /></button>
         </div>
       </div>
       {micActive ? (
@@ -656,14 +656,14 @@ export function Classroom({
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-12 text-center">
         <div className="relative mb-6">
-          <div className="rounded-full bg-[#e1e0ff] p-2 shadow-xl animate-pulse">
+          <div className="rounded-full bg-[var(--brand-soft)] p-2 shadow-xl animate-pulse">
             <Image
               src={profile.image}
               alt={profile.name}
               width={112}
               height={112}
               priority
-              className="size-24 rounded-full border-4 border-white object-cover"
+              className="size-24 rounded-full border-4 border-[var(--surface)] object-cover"
             />
           </div>
           <span className="absolute bottom-1 right-1 flex size-5">
@@ -710,7 +710,7 @@ export function Classroom({
         <div className="mt-6 flex gap-3">
           <button
             onClick={() => router.push("/")}
-            className="rounded-lg border border-[var(--card-border)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--text-primary)] hover:bg-[#f7f9fb]"
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--surface)] px-5 py-2.5 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
           >
             Go back
           </button>
@@ -735,7 +735,7 @@ export function Classroom({
         <div>
           <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-[var(--text-primary)] sm:text-4xl">Teaching Session</h1>
         </div>
-        <div className="flex w-fit items-center gap-2 rounded-lg bg-[#eceef0] px-4 py-2 text-sm font-semibold text-[var(--text-primary)]">
+        <div className="flex w-fit items-center gap-2 rounded-lg bg-[var(--surface-input)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)]">
           <span className={`size-3 rounded-full ${live ? "bg-emerald-500" : "bg-gray-400"}`} /> {live ? (sessionStatus === "wrapping" ? "Wrapping Up" : "Live Session") : "Session Ended"}
         </div>
       </div>
@@ -750,15 +750,15 @@ export function Classroom({
           />
         </aside>
 
-        <section className="flex min-h-[620px] flex-col overflow-hidden rounded-lg border border-[var(--card-border)] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] lg:h-[700px]" aria-label="Classroom conversation">
-          <div className="flex items-center justify-between gap-3 border-b border-[var(--card-border)] bg-white/80 px-4 py-3 backdrop-blur-sm sm:px-5">
+        <section className="flex min-h-[620px] flex-col overflow-hidden rounded-lg border border-[var(--card-border)] bg-[var(--surface)] shadow-[0_4px_20px_var(--shadow-color)] lg:h-[700px]" aria-label="Classroom conversation">
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--card-border)] bg-[var(--surface)]/80 px-4 py-3 backdrop-blur-sm sm:px-5">
             <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] sm:text-base"><ChatIcon /> Conversation Flow</div>
             <button
               type="button"
               onClick={endConversation}
               disabled={isEnding || isSending}
               aria-label={`End conversation and see ${profile.name}'s gap map`}
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[#df6b71] bg-[#fff5f5] px-3 py-2 text-xs font-bold text-[#b83d45] transition hover:bg-[#ffe8e9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c94c54] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[var(--danger-text)]/40 bg-[var(--danger-surface)] px-3 py-2 text-xs font-bold text-[var(--danger-text)] transition hover:bg-[var(--danger-surface)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger-text)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
             >
               <EndConversationIcon />
               <span className="hidden xs:inline sm:inline">{isEnding ? "Wrapping up..." : "End Conversation"}</span>
@@ -776,12 +776,12 @@ export function Classroom({
             studentTyping={studentState === "thinking"}
           />
           {sessionStatus === "ended" && !mockSession ? (
-            <div className="flex flex-col items-center gap-3 border-t border-[var(--card-border)] bg-white px-4 py-5 sm:flex-row sm:justify-between sm:px-6">
+            <div className="flex flex-col items-center gap-3 border-t border-[var(--card-border)] bg-[var(--surface)] px-4 py-5 sm:flex-row sm:justify-between sm:px-6">
               <p className="text-sm text-[var(--text-secondary)]">Class dismissed — {profile.name} went home to think about what you said.</p>
               <button
                 type="button"
                 onClick={() => router.push(`/session/${encodeURIComponent(sessionId)}/report?student=${student}`)}
-                className="rounded-lg bg-[#4648d4] px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
+                className="rounded-lg bg-[var(--chat-user)] px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
               >
                 View Understanding Map →
               </button>

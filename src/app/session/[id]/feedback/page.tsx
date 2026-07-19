@@ -20,7 +20,7 @@ export default async function FeedbackPage({
   const profile = getStudentProfile(studentId);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f8fafc] text-[var(--text-primary)]">
+    <div className="flex min-h-screen flex-col bg-[var(--page-background)] text-[var(--text-primary)]">
       <SiteHeader activeItem="classroom" sessionId={id} student={profile.id} />
       <SessionFeedback
         profile={profile}

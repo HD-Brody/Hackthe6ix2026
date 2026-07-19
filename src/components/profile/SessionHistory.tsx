@@ -13,26 +13,26 @@ function statusMeta(session: SessionSummary): {
   if (session.status === "ended") {
     return {
       label: "Completed",
-      className: "bg-emerald-100 text-emerald-800",
+      className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
     };
   }
   if (session.status === "wrapping") {
     return {
       label: "Wrapping up",
-      className: "bg-[#ecebff] text-[#5755d8]",
+      className: "bg-[var(--brand-soft)] text-[var(--nav-active)]",
     };
   }
   return {
     label: "In progress",
-    className: "bg-amber-100 text-amber-800",
+    className: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300",
   };
 }
 
 function scoreClass(score: number | null): string {
   if (score === null) return "text-[var(--text-secondary)]";
-  if (score >= 75) return "text-emerald-700";
-  if (score >= 50) return "text-amber-700";
-  return "text-rose-700";
+  if (score >= 75) return "text-emerald-700 dark:text-emerald-400";
+  if (score >= 50) return "text-amber-700 dark:text-amber-400";
+  return "text-rose-700 dark:text-rose-400";
 }
 
 export function SessionHistoryCard({ session }: { session: SessionSummary }) {
@@ -44,7 +44,7 @@ export function SessionHistoryCard({ session }: { session: SessionSummary }) {
   return (
     <Link
       href={href}
-      className="block rounded-2xl border border-[#e0dfeb] bg-white p-4 shadow-[0_10px_30px_rgba(56,50,110,0.04)] transition hover:border-[#c9c6ef] hover:shadow-[0_12px_28px_rgba(56,50,110,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+      className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_10px_30px_var(--shadow-color)] transition hover:border-[var(--brand)] hover:shadow-[0_12px_28px_var(--shadow-color)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
     >
       <div className="flex items-start gap-3">
         <Image
@@ -99,7 +99,7 @@ export function SessionHistory({ sessions }: { sessions: SessionSummary[] }) {
     <section>
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#7776df]">
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
             Session history
           </p>
           <h2 className="mt-1 font-heading text-2xl font-extrabold">
@@ -118,13 +118,13 @@ export function SessionHistory({ sessions }: { sessions: SessionSummary[] }) {
           ))}
         </div>
       ) : (
-        <div className="mt-4 rounded-2xl border border-dashed border-[#c7c4d7] bg-white p-8 text-center">
+        <div className="mt-4 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center">
           <p className="text-sm leading-6 text-[var(--text-secondary)]">
             No sessions yet — your students are getting restless.
           </p>
           <Link
             href="/"
-            className="mt-4 inline-block rounded-xl bg-[#5755d8] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#4846c5]"
+            className="mt-4 inline-block rounded-xl bg-[var(--chat-user)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--brand-strong)]"
           >
             Teach your first topic
           </Link>

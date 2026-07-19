@@ -93,10 +93,10 @@ const topics: Topic[] = [
 ];
 
 const accentClasses = {
-  green: "bg-emerald-50 text-emerald-500",
-  indigo: "bg-indigo-100 text-[var(--brand)]",
-  purple: "bg-purple-100 text-purple-600",
-  rose: "bg-rose-100 text-rose-600",
+  green: "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-400",
+  indigo: "bg-indigo-100 text-[var(--brand)] dark:bg-indigo-950/40 dark:text-indigo-300",
+  purple: "bg-purple-100 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300",
+  rose: "bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300",
 };
 
 function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: boolean; onSelect: () => void }) {
@@ -105,7 +105,7 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`group flex min-h-48 w-full flex-col items-start gap-2 rounded-xl border bg-white p-6 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 ${selected ? "border-[var(--brand)] shadow-md" : "border-[var(--card-border)]"}`}
+      className={`group flex min-h-48 w-full flex-col items-start gap-2 rounded-xl border bg-[var(--surface)] p-6 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 ${selected ? "border-[var(--brand)] shadow-md" : "border-[var(--card-border)]"}`}
     >
       <span className={`flex size-12 shrink-0 items-center justify-center rounded-lg ${accentClasses[topic.accent]}`}>
         {topic.icon}
@@ -283,7 +283,7 @@ export function TopicPicker() {
     <div className="mt-8 w-full max-w-6xl sm:mt-10">
       <div
         className={`relative mx-auto max-w-3xl rounded-xl transition ${
-          isDragOver ? "ring-4 ring-indigo-200 ring-offset-2" : ""
+          isDragOver ? "ring-4 ring-[var(--brand-soft)] ring-offset-2" : ""
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -300,12 +300,12 @@ export function TopicPicker() {
             value={topic}
             onChange={(event) => setTopic(event.target.value)}
             placeholder="What do you want to teach today?"
-            className="h-20 w-full rounded-xl border border-slate-500 bg-white/95 pl-16 pr-20 text-lg font-semibold text-[var(--text-primary)] shadow-[0_20px_25px_-5px_rgba(96,99,238,0.05),0_8px_10px_-6px_rgba(96,99,238,0.05)] outline-none transition placeholder:text-[#c7c4d7] focus:border-[var(--brand)] focus:ring-4 focus:ring-indigo-100 sm:pr-52 sm:text-2xl"
+            className="h-20 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)]/95 pl-16 pr-20 text-lg font-semibold text-[var(--text-primary)] shadow-[0_20px_25px_-5px_var(--shadow-color),0_8px_10px_-6px_var(--shadow-color)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--brand)] focus:ring-4 focus:ring-[var(--brand-soft)] sm:pr-52 sm:text-2xl"
           />
           <button
             type="submit"
             disabled={!topic.trim() || isUploading}
-            className="absolute right-2 top-1/2 flex h-16 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[#4648d4] px-5 font-semibold text-white transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:px-6"
+            className="absolute right-2 top-1/2 flex h-16 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[var(--chat-user)] px-5 font-semibold text-white transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:px-6"
           >
             <span className="hidden sm:inline">Start</span>
             <ArrowRightIcon />
@@ -346,14 +346,14 @@ export function TopicPicker() {
 
         {notesFileName ? (
           <div className="mt-4 flex flex-col items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-white px-3 py-1.5 text-sm text-[var(--text-secondary)] shadow-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--text-secondary)] shadow-sm">
               <DocumentIcon />
               <span>{notesFileName}</span>
               <button
                 type="button"
                 onClick={clearNotes}
                 aria-label="Remove uploaded notes"
-                className="rounded-full p-0.5 text-[var(--text-muted)] transition hover:bg-slate-100 hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                className="rounded-full p-0.5 text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
               >
                 <CloseIcon />
               </button>
@@ -375,8 +375,8 @@ export function TopicPicker() {
                         aria-pressed={selected}
                         className={`rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${
                           selected
-                            ? "border-[var(--brand)] bg-indigo-50 text-[var(--brand)]"
-                            : "border-[var(--card-border)] bg-white text-[var(--text-primary)] hover:border-[var(--brand)]"
+                            ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand)]"
+                            : "border-[var(--card-border)] bg-[var(--surface)] text-[var(--text-primary)] hover:border-[var(--brand)]"
                         }`}
                       >
                         {suggestion}

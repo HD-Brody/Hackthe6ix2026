@@ -10,7 +10,7 @@ export function StarRating({
   const starClass = size === "sm" ? "size-4" : "size-5";
   return (
     <div
-      className={`inline-flex gap-0.5 text-[#f1bd43] ${className}`}
+      className={`inline-flex gap-0.5 text-[var(--star)] ${className}`}
       aria-label={`${rating} out of 5 stars`}
     >
       {[1, 2, 3, 4, 5].map((value) => (
