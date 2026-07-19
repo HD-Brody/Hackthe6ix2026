@@ -8,6 +8,7 @@
 import * as realEvaluate from "@/llm/evaluate";
 import * as realPersona from "@/llm/personaReply";
 import * as realGapMap from "@/llm/generateGapMap";
+import * as realScreen from "@/llm/screenUserTurn";
 import verdictVague from "@/../fixtures/verdict-vague.json";
 import verdictSolid from "@/../fixtures/verdict-solid.json";
 import personaReplies from "@/../fixtures/persona-replies.json";
@@ -21,6 +22,8 @@ import type {
   VagueMoment,
   PriorGapContext,
 } from "@/lib/types";
+import type { PersonaPromptOptions } from "@/llm/personaReply";
+import type { ScreenResult } from "@/llm/screenUserTurn";
 
 const MOCK = process.env.LLM_MOCK === "true";
 
@@ -58,7 +61,9 @@ async function mockEvaluate(
 
 async function* mockPersonaReply(
   transcript: Utterance[],
-  _directive: Directive
+  _directive: Directive,
+  _student?: unknown,
+  _opts?: PersonaPromptOptions
 ): AsyncIterable<string> {
   await delay(MOCK_PERSONA_FIRST_TOKEN_MS);
   const index = transcript.length % personaReplies.replies.length;
@@ -92,9 +97,19 @@ async function mockGenerateGapMap(
   return { ...(gapmapTcp as GapMap), topic: graph.topic };
 }
 
+async function mockScreenUserTurn(
+  _userText: string,
+  _topic: string
+): Promise<ScreenResult> {
+  return { category: "ok" };
+}
+
 export const evaluate = MOCK ? mockEvaluate : realEvaluate.evaluate;
 export const personaReply = MOCK ? mockPersonaReply : realPersona.personaReply;
 export const bridgingPersonaReply = MOCK
   ? mockBridgingPersonaReply
   : realPersona.bridgingPersonaReply;
 export const generateGapMap = MOCK ? mockGenerateGapMap : realGapMap.generateGapMap;
+export const screenUserTurn = MOCK
+  ? mockScreenUserTurn
+  : realScreen.screenUserTurn;
