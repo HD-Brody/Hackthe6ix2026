@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GapMapGrid } from "@/components/GapMapGrid";
 import { StarRating } from "@/components/StarRating";
+import { ReportLoader } from "@/components/ReportLoader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSession } from "@/server/db/sessions";
@@ -87,12 +88,7 @@ export default async function ReportPage({
 
   if (session && !session.gap_map) {
     return shell(
-      <EmptyState
-        title="Class is still in session"
-        body={`${studentName} hasn't finished processing this lesson yet. End the conversation in the classroom to generate the understanding map.`}
-        cta="Back to the classroom"
-        href={`/session/${encodeURIComponent(id)}?student=${selectedStudent}`}
-      />
+      <ReportLoader sessionId={id} studentName={studentName} />
     );
   }
 

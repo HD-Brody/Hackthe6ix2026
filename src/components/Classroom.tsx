@@ -460,34 +460,10 @@ export function Classroom({
     }
     setIsEnding(true);
     setError(null);
-<<<<<<< HEAD
-    try {
-      const res = await fetch(`/api/session/${sessionId}/end`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "{}",
-      });
-      if (!res.ok) {
-        const payload = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(payload.error === "session has not started" ? ERROR_COPY.end(profile.name) : ERROR_COPY.end(profile.name));
-      }
-      router.push(feedbackUrl);
-    } catch (caught) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "Session end API failed; continuing to feedback in demo fallback mode.",
-          caught
-        );
-      }
-      router.push(feedbackUrl);
-    }
-=======
-
     // Fire the end API in the background — the feedback page doesn't need
     // the gap map (only the report page does). Navigate immediately so the
     // user isn't waiting on Gemini's gap-map generation just to see the
     // star-rating screen.
-    const feedbackUrl = `/session/${encodeURIComponent(sessionId)}/feedback?student=${student}`;
     router.prefetch(feedbackUrl);
 
     fetch(`/api/session/${sessionId}/end`, {
@@ -500,7 +476,6 @@ export function Classroom({
     });
 
     router.push(feedbackUrl);
->>>>>>> aa6b317 (Reduce load time for buttons)
   }
 
   const live = sessionStatus !== "ended";
