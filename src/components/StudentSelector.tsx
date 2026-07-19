@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  parseStudentId,
   studentProfiles,
   type StudentId,
 } from "@/lib/studentProfiles";
@@ -53,8 +54,16 @@ function StudentPortrait({ student }: { student: StudentId }) {
   );
 }
 
-export function StudentSelector({ topic }: { topic: string }) {
-  const [student, setStudent] = useState<StudentId>("sam");
+export function StudentSelector({
+  topic,
+  initialStudent,
+}: {
+  topic: string;
+  initialStudent?: string;
+}) {
+  const [student, setStudent] = useState<StudentId>(
+    () => parseStudentId(initialStudent)
+  );
   const [curiosity, setCuriosity] = useState<CuriosityLevel>("medium");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
