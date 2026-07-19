@@ -43,7 +43,22 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
                 ? `/session/${encodeURIComponent(sessionId)}${studentQuery}`
                 : sessionId && item.id === "analytics"
                   ? `/session/${encodeURIComponent(sessionId)}/report${studentQuery}`
-                  : item.fallbackHref;
+                  : item.id === "analytics" ? item.fallbackHref : null;
+
+              // Classroom tab with no active session: show dimmed with tooltip
+              if (!href) {
+                return (
+                  <span
+                    key={item.id}
+                    title="Start a session first"
+                    aria-disabled="true"
+                    className="cursor-not-allowed rounded-sm border-b-2 border-transparent px-1 py-2 opacity-40 select-none"
+                  >
+                    {item.label}
+                  </span>
+                );
+              }
+
               return (
                 <Link
                   key={item.id}
