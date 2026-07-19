@@ -5,6 +5,8 @@ export type StudentProfile = {
   name: string;
   image: string;
   learningNote: string;
+  /** ElevenLabs voice ID used for this student's TTS during sessions. */
+  voiceId: string;
 };
 
 export const studentProfiles: Record<StudentId, StudentProfile> = {
@@ -13,12 +15,14 @@ export const studentProfiles: Record<StudentId, StudentProfile> = {
     name: "Sam",
     image: "/students/sam.png",
     learningNote: "learns best from analogies and simple diagrams.",
+    voiceId: "bIHbv24MWmeRgasZH58o", // Will — Relaxed Optimist
   },
   elena: {
     id: "elena",
     name: "Elena",
     image: "/students/elena.png",
     learningNote: "learns best through examples and thoughtful questions.",
+    voiceId: "cgSgspJ2msm6clMCkdW9", // Jessica — Playful, Bright, Warm
   },
 };
 

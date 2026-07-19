@@ -54,12 +54,14 @@
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const VOICE_ID = "cgSgspJ2msm6clMCkdW9"; // Jessica — Playful, Bright, Warm
+// Default voice (Jessica — Playful, Bright, Warm). Overridden per-student via createTTSClient().
+const DEFAULT_VOICE_ID = "cgSgspJ2msm6clMCkdW9";
 
 // eleven_turbo_v2 = lowest-latency model. Don't use eleven_multilingual_v2 here —
 // it has noticeably higher TTFA (time-to-first-audio) which hurts the demo feel.
-const WS_ENDPOINT =
-  `wss://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream-input?model_id=eleven_turbo_v2`;
+function makeWsEndpoint(voiceId: string) {
+  return `wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input?model_id=eleven_turbo_v2`;
+}
 
 // MIME type for the SourceBuffer. ElevenLabs streams MP3 fragments.
 // 'audio/mpeg' is supported in Chrome, Edge, and Safari 15+.
@@ -102,7 +104,7 @@ export interface TTSClient {
  *   // to interrupt:
  *   tts.stop();
  */
-export function createTTSClient(): TTSClient {
+export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
   let playbackStartCb: (() => void) | null = null;
   let playbackEndCb: (() => void) | null = null;
 
@@ -193,7 +195,7 @@ export function createTTSClient(): TTSClient {
           });
 
           // ── Open the ElevenLabs WebSocket ──────────────────────────────────
-          const ws = new WebSocket(WS_ENDPOINT);
+          const ws = new WebSocket(makeWsEndpoint(voiceId));
           activeWs = ws;
 
           // Queue for messages sent before the socket is open.
