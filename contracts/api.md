@@ -3,11 +3,18 @@
 Frozen at hour 1. Changes after that require all four to agree.
 
 ```
-POST /api/session            {topic}          → {session_id, graph}
+POST /api/session            {topic, prior_session_id?} → {session_id, graph, bridging?}
 POST /api/session/:id/turn   {user_text}      → SSE stream (see below)
+POST /api/session/:id/opening {}               → SSE stream (re-teach bridging line; no user text)
 POST /api/session/:id/end    {}               → {gap_map}
 GET  /api/session/:id                         → full session state (refresh recovery)
 ```
+
+`prior_session_id` (optional): links a new session to a prior ended session's gap
+map. The server snapshots `reteach_order` and vague moments into
+`prior_gap_context` on the new session and sets `pending_directive` to probe
+the first gap. The client should call `/opening` once when the classroom loads
+with zero utterances.
 
 ## Turn endpoint SSE event format
 

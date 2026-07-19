@@ -6,13 +6,13 @@
  * The quote must be verbatim — test that it never paraphrases.
  */
 
-import type { ConceptGraph, Utterance } from "@/lib/types";
+import type { ConceptGraph, Utterance, PriorGapContext } from "@/lib/types";
 
 /** Bump whenever the wording/rubric below changes after the CP4 freeze —
  * this is the audit line: any saved fixture, transcript, or eval-harness
  * output should be read against the PROMPTS_VERSION that produced it, since
  * verdicts on borderline utterances can shift between wordings. */
-export const PROMPTS_VERSION = 1;
+export const PROMPTS_VERSION = 2;
 
 /** Recent-history window. Trimmed at CP3 (Block B3 step 12) from 10 to 6 turns
  * to keep the fast tier's per-turn prompt small — the node-state summary
@@ -34,14 +34,28 @@ function formatTranscript(transcript: Utterance[]): string {
   return recent.map((u) => `${u.role === "user" ? "User" : "Sam"}: ${u.text}`).join("\n");
 }
 
+function formatPriorContext(prior: PriorGapContext): string {
+  const focus = prior.reteach_names.join(", ");
+  const quote = prior.vaguest_moments[0]?.quote;
+  const quoteLine = quote
+    ? ` Prior vague moment: "${quote}".`
+    : "";
+  return `This is a **re-teach session**. Last time the user taught "${prior.topic}", they struggled with: ${focus}.${quoteLine} Grade whether they are now explaining these weak spots more clearly than before.`;
+}
+
 export function evaluatorPrompt(
   graph: ConceptGraph,
   transcript: Utterance[],
-  userText: string
+  userText: string,
+  priorGapContext?: PriorGapContext
 ): string {
+  const priorBlock = priorGapContext
+    ? `${formatPriorContext(priorGapContext)}\n\n`
+    : "";
+
   return `You are grading a student (the user) who is teaching YOU the topic "${graph.topic}", against this answer key. You never talk to the user — you only ever produce JSON for another program to read.
 
-Answer key (concept id, name, current state, ground truth — the user must never see this):
+${priorBlock}Answer key (concept id, name, current state, ground truth — the user must never see this):
 ${formatGraph(graph)}
 
 Conversation so far:

@@ -1,5 +1,5 @@
 /**
- * POST /api/session  {topic} → {session_id, graph}
+ * POST /api/session  {topic, prior_session_id?} → {session_id, graph, bridging?}
  *
  * Owner: A (Block A1 step 2, A2 step 6)
  * - Five demo topics → B's vetted graphs in fixtures/graphs/
@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   createSession,
   getSession,
+  loadPriorGapContext,
   MAX_SESSIONS_PER_USER,
   SessionCapError,
 } from "@/server/db/sessions";
@@ -19,6 +20,11 @@ import { getUserId } from "@/lib/auth0";
 import { parseCuriosityLevel } from "@/lib/curiosity";
 import { parseStudentId } from "@/lib/studentProfiles";
 import { truncateNotes } from "@/llm/extractTopics";
+import {
+  PriorSessionForbiddenError,
+  PriorSessionInvalidError,
+  PriorSessionNotFoundError,
+} from "@/server/reteach/priorGapContext";
 
 export async function POST(req: NextRequest) {
   let body: {
@@ -26,6 +32,7 @@ export async function POST(req: NextRequest) {
     student?: string;
     curiosity?: string;
     source_notes?: string;
+    prior_session_id?: string;
     session_id?: string;
   };
   try {
@@ -34,7 +41,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
 
-  const topic = body.topic?.trim();
+  const userId = await getUserId();
+  const priorSessionId = body.prior_session_id?.trim();
+
+  let priorGapContext;
+  let priorSession;
+  if (priorSessionId) {
+    try {
+      const loaded = await loadPriorGapContext(priorSessionId, userId);
+      priorGapContext = loaded.prior;
+      priorSession = loaded.session;
+    } catch (err) {
+      if (err instanceof PriorSessionNotFoundError) {
+        return NextResponse.json({ error: err.code }, { status: 404 });
+      }
+      if (err instanceof PriorSessionForbiddenError) {
+        return NextResponse.json({ error: err.code }, { status: 403 });
+      }
+      if (err instanceof PriorSessionInvalidError) {
+        return NextResponse.json(
+          { error: err.code, message: err.message },
+          { status: 400 }
+        );
+      }
+      throw err;
+    }
+  }
+
+  const topic = (body.topic?.trim() || priorSession?.topic || "").trim();
   if (!topic) {
     return NextResponse.json({ error: "topic is required" }, { status: 400 });
   }
@@ -43,15 +77,9 @@ export async function POST(req: NextRequest) {
     ? truncateNotes(body.source_notes.trim())
     : undefined;
 
+  const graph = await resolveGraph(topic, sourceNotes);
   const student = parseStudentId(body.student);
   const curiosity = parseCuriosityLevel(body.curiosity);
-
-  // resolveGraph and getUserId are fully independent — run them in parallel
-  // to save one full round-trip (Auth0 session cookie read + Atlas lookup).
-  const [graph, userId] = await Promise.all([
-    resolveGraph(topic, sourceNotes),
-    getUserId(),
-  ]);
 
   let session;
   try {
@@ -62,7 +90,8 @@ export async function POST(req: NextRequest) {
       student,
       curiosity,
       sourceNotes,
-      body.session_id
+      body.session_id,
+      priorGapContext
     );
   } catch (err: any) {
     if (err instanceof SessionCapError) {
@@ -94,6 +123,10 @@ export async function POST(req: NextRequest) {
     console.error("[session] created→teaching transition failed:", err);
   });
 
-  return NextResponse.json({ session_id: session._id, graph: session.graph });
+  return NextResponse.json({
+    session_id: session._id,
+    graph: session.graph,
+    ...(priorGapContext ? { bridging: true } : {}),
+  });
 }
 
