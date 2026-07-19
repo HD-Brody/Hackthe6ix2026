@@ -57,7 +57,7 @@ function oneLinerStings(line: string): boolean {
 }
 
 async function freeSessionSlots(): Promise<void> {
-  // Session cap is per user_id ("dev" until Auth0). If create fails with 429,
+  // Session cap is per user_id (Auth0 sub, or anon:<uuid> cookie when logged out).
   // raise MAX_SESSIONS_PER_USER in .env.local (drills create many sessions).
   log("→", "session cap: using user_id=dev (raise MAX_SESSIONS_PER_USER if 429)");
 }

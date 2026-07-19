@@ -1,9 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  ANON_COOKIE_NAME,
+  anonCookieOptions,
+  isValidAnonCookieValue,
+} from "./lib/anonIdentity";
 import { isAuthConfigured } from "./lib/authEnv";
 import { auth0 } from "./lib/auth0";
 
+/** Ensure every browser has a private anon id before pages/APIs read history. */
+function withAnonCookie(request: NextRequest, response: NextResponse): NextResponse {
+  const current = request.cookies.get(ANON_COOKIE_NAME)?.value;
+  if (isValidAnonCookieValue(current)) {
+    return response;
+  }
+  // Web Crypto — Edge middleware cannot import Node's `crypto` module.
+  response.cookies.set(
+    ANON_COOKIE_NAME,
+    crypto.randomUUID(),
+    anonCookieOptions(process.env.NODE_ENV === "production")
+  );
+  return response;
+}
+
+function skipAuth0Middleware(pathname: string): boolean {
+  // Session/notes APIs were historically excluded from Auth0 middleware so
+  // SSE/turn traffic isn't wrapped — still stamp the anon cookie on them.
+  return (
+    pathname.startsWith("/api/session") ||
+    pathname.startsWith("/api/sessions") ||
+    pathname.startsWith("/api/notes")
+  );
+}
+
 export async function middleware(request: NextRequest) {
+  if (skipAuth0Middleware(request.nextUrl.pathname)) {
+    return withAnonCookie(request, NextResponse.next());
+  }
+
   if (!isAuthConfigured()) {
     if (request.nextUrl.pathname.startsWith("/auth/")) {
       return new NextResponse(
@@ -11,12 +45,13 @@ export async function middleware(request: NextRequest) {
         { status: 503 },
       );
     }
-    return NextResponse.next();
+    return withAnonCookie(request, NextResponse.next());
   }
 
   try {
     // Delegate /auth/* routes and session handling to the Auth0 SDK middleware.
-    return await auth0.middleware(request);
+    const authResponse = await auth0.middleware(request);
+    return withAnonCookie(request, authResponse as NextResponse);
   } catch (error) {
     console.error("[auth middleware]", error);
     if (request.nextUrl.pathname.startsWith("/auth/")) {
@@ -25,13 +60,12 @@ export async function middleware(request: NextRequest) {
         { status: 500 },
       );
     }
-    return NextResponse.next();
+    return withAnonCookie(request, NextResponse.next());
   }
 }
 
 export const config = {
-  // Run middleware on all paths except static files, public folder files, images, favicon
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|audio/|images/|api/session|api/notes).*)",
+    "/((?!_next/static|_next/image|favicon.ico|audio/|images/).*)",
   ],
 };

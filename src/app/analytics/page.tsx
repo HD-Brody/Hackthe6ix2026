@@ -8,12 +8,13 @@ import { WeakConcepts } from "@/components/analytics/WeakConcepts";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { computeAnalyticsStats } from "@/lib/analyticsStats";
-import { getUserId } from "@/lib/auth0";
+import { getAuthUser, getUserId } from "@/lib/auth0";
 import { listSessionsByUser } from "@/server/db/sessions";
 
 export const dynamic = "force-dynamic";
 
 export default async function AnalyticsPage() {
+  const user = await getAuthUser();
   const userId = await getUserId();
   let sessions: Awaited<ReturnType<typeof listSessionsByUser>> = [];
   let loadError: string | null = null;
@@ -39,6 +40,15 @@ export default async function AnalyticsPage() {
             <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">
               Cross-session insights, trends, and your full session library.
             </p>
+            {!user ? (
+              <p className="mt-2 text-sm text-[var(--text-muted)]">
+                Browsing anonymously — only sessions from this browser are shown.{" "}
+                <Link href="/login" className="font-semibold text-[var(--nav-active)]">
+                  Log in
+                </Link>{" "}
+                to keep a permanent record.
+              </p>
+            ) : null}
           </div>
           <Link
             href="/"
