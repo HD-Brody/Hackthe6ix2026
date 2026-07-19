@@ -43,14 +43,6 @@ function ArrowRightIcon() {
   );
 }
 
-function SparklesIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-6 text-purple-600">
-      <path d="M12 2.75c.5 3.25 2 4.75 5.25 5.25C14 8.5 12.5 10 12 13.25 11.5 10 10 8.5 6.75 8 10 7.5 11.5 6 12 2.75Z" fill="currentColor" />
-      <path d="M5.5 12.5c.28 1.8 1.2 2.72 3 3-1.8.28-2.72 1.2-3 3-.28-1.8-1.2-2.72-3-3 1.8-.28 2.72-1.2 3-3Zm13 2c.23 1.47 1 2.23 2.5 2.5-1.5.27-2.27 1.03-2.5 2.5-.27-1.47-1.03-2.23-2.5-2.5 1.47-.27 2.23-1.03 2.5-2.5Z" fill="currentColor" />
-    </svg>
-  );
-}
 
 function LeafIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5"><path d="M19.5 4.5C12.2 4.6 6.5 6.8 6.5 12.2c0 3.1 2.2 5.3 5.1 5.3 4.9 0 7.5-5.1 7.9-13Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M5 19c2.8-4.2 6-6.8 10-8.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>;
@@ -86,10 +78,10 @@ function CloseIcon() {
 }
 
 const topics: Topic[] = [
-  { title: "Photosynthesis", description: "Explain how plants convert sunlight into chemical energy for Sam's biology quiz.", accent: "green", icon: <LeafIcon /> },
-  { title: "Machine Learning", description: "Help Sam understand neural networks without the heavy math jargon.", accent: "indigo", icon: <BrainIcon /> },
-  { title: "Quantum Physics", description: "Break down entanglement and superposition into simple, everyday analogies.", accent: "purple", icon: <AtomIcon /> },
-  { title: "Canadian History", description: "Narrate the key moments of Confederation for Sam's upcoming social studies project.", accent: "rose", icon: <BookIcon /> },
+  { title: "Photosynthesis", description: "Light energy to glucose — plants, chlorophyll, the Calvin cycle.", accent: "green", icon: <LeafIcon /> },
+  { title: "Machine Learning", description: "Neural networks, gradient descent, overfitting, the basics.", accent: "indigo", icon: <BrainIcon /> },
+  { title: "Quantum Physics", description: "Superposition, entanglement, wave-particle duality.", accent: "purple", icon: <AtomIcon /> },
+  { title: "Canadian History", description: "Confederation, the fur trade, key turning points.", accent: "rose", icon: <BookIcon /> },
 ];
 
 const accentClasses = {
@@ -105,18 +97,21 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`group flex min-h-48 w-full flex-col items-start gap-2 rounded-xl border bg-[var(--surface)] p-6 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 ${selected ? "border-[var(--brand)] shadow-md" : "border-[var(--card-border)]"}`}
+      className={`group flex w-full items-center gap-4 rounded-xl border bg-[var(--surface)] px-5 py-4 text-left transition hover:border-[var(--brand)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 ${selected ? "border-[var(--brand)] shadow-sm" : "border-[var(--card-border)]"}`}
     >
-      <span className={`flex size-12 shrink-0 items-center justify-center rounded-lg ${accentClasses[topic.accent]}`}>
+      <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${accentClasses[topic.accent]}`}>
         {topic.icon}
       </span>
-      <span className="mt-1">
-        <span className="font-heading block text-xl font-semibold leading-8 text-[var(--text-primary)] sm:text-2xl">
+      <span className="min-w-0 flex-1">
+        <span className="font-heading block text-sm font-semibold text-[var(--text-primary)]">
           {topic.title}
         </span>
-        <span className="mt-1 block text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
+        <span className="mt-0.5 block truncate text-xs text-[var(--text-secondary)]">
           {topic.description}
         </span>
+      </span>
+      <span className="shrink-0 text-[var(--text-muted)] opacity-0 transition group-hover:opacity-100">
+        <ArrowRightIcon />
       </span>
     </button>
   );
@@ -345,10 +340,10 @@ export function TopicPicker() {
         ) : null}
 
         {notesFileName ? (
-          <div className="mt-5 rounded-xl border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-4 shadow-[0_0_0_4px_rgba(16,185,129,0.08)]">
+          <div className="mt-5 rounded-xl border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-4 shadow-[0_0_0_4px_rgba(16,185,129,0.08)] dark:border-emerald-800/60 dark:from-emerald-950/20 dark:to-teal-950/20 dark:shadow-[0_0_0_4px_rgba(16,185,129,0.04)]">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
                   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">
                     <path d="M8 3.5h5.2L18 8.3V20a1.5 1.5 0 0 1-1.5 1.5H7.5A1.5 1.5 0 0 1 6 20V5a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" strokeWidth="1.6" />
                     <path d="M13 3.5V9H18" stroke="currentColor" strokeWidth="1.6" />
@@ -356,13 +351,13 @@ export function TopicPicker() {
                   </svg>
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-emerald-800">
+                  <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
                     📎 Notes uploaded
                   </p>
-                  <p className="mt-0.5 max-w-xs truncate text-xs font-medium text-emerald-700">
+                  <p className="mt-0.5 max-w-xs truncate text-xs font-medium text-emerald-700 dark:text-emerald-400">
                     {notesFileName}
                     {extractedTopics.length > 0 && (
-                      <span className="ml-1.5 text-emerald-600">
+                      <span className="ml-1.5 text-emerald-600 dark:text-emerald-500">
                         — {extractedTopics.length} topic{extractedTopics.length === 1 ? "" : "s"} found
                       </span>
                     )}
@@ -373,15 +368,15 @@ export function TopicPicker() {
                 type="button"
                 onClick={clearNotes}
                 aria-label="Remove uploaded notes"
-                className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
               >
                 Remove
               </button>
             </div>
 
             {extractedTopics.length > 0 ? (
-              <div className="mt-3 border-t border-emerald-200 pt-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700">
+              <div className="mt-3 border-t border-emerald-200 pt-3 dark:border-emerald-800/40">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700 dark:text-emerald-400">
                   Suggested topics from your notes
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -396,7 +391,7 @@ export function TopicPicker() {
                         className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${
                           selected
                             ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand)]"
-                            : "border-emerald-300 bg-[var(--surface)] text-emerald-800 dark:text-emerald-300 hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                            : "border-emerald-300 bg-[var(--surface)] text-emerald-800 dark:border-emerald-800/60 dark:text-emerald-300 hover:border-[var(--brand)] hover:text-[var(--brand)]"
                         }`}
                       >
                         {suggestion}
@@ -410,15 +405,12 @@ export function TopicPicker() {
         ) : null}
       </div>
 
-      <section className="mt-20 sm:mt-24" aria-labelledby="popular-topics-heading">
-        <div className="flex items-center gap-2">
-          <SparklesIcon />
-          <h2 id="popular-topics-heading" className="font-heading text-2xl font-bold tracking-[-0.02em] text-[var(--text-primary)] sm:text-3xl">
-            Popular with Professors
-          </h2>
-        </div>
+      <section className="mt-12 sm:mt-14" aria-labelledby="popular-topics-heading">
+        <p id="popular-topics-heading" className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+          Or try one of these
+        </p>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:mt-8 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {topics.map((item) => (
             <TopicCard
               key={item.title}
