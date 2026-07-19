@@ -12,7 +12,7 @@ import type { ConceptGraph, Utterance, PriorGapContext } from "@/lib/types";
  * this is the audit line: any saved fixture, transcript, or eval-harness
  * output should be read against the PROMPTS_VERSION that produced it, since
  * verdicts on borderline utterances can shift between wordings. */
-export const PROMPTS_VERSION = 2;
+export const PROMPTS_VERSION = 3;
 
 /** Recent-history window. Trimmed at CP3 (Block B3 step 12) from 10 to 6 turns
  * to keep the fast tier's per-turn prompt small — the node-state summary
@@ -79,5 +79,5 @@ Finally, recommend one next move as "recommended_directive" — this is only a s
 - "PROBE" node_id: something was vague or wrong and is worth pushing on again.
 - "DEEPEN" node_id: something was solid — ask "why" one level deeper on it.
 - "ADVANCE" node_id (or omit node_id): time to move to a new, not-yet-covered concept — also use this to steer an off-topic/derailing utterance back toward the topic.
-- "WRAP_UP": use only if essentially everything in the answer key has already been touched across the whole conversation.`;
+- "WRAP_UP": use if either (a) essentially everything in the answer key has already been touched across the whole conversation, OR (b) the user just explicitly declared they're finished teaching for the whole session — a clear, unambiguous statement like "that's everything I wanted to cover", "I think that's all for today", "I'm done teaching this", or "I don't have anything else to add", with no sign they're about to move on to a new sub-topic. Do NOT use this for the ordinary "I'm done explaining X, let's move on to Y" pattern — that is an ADVANCE, not a WRAP_UP; only use WRAP_UP when they are clearly ending the whole lesson, not just one point within it.`;
 }

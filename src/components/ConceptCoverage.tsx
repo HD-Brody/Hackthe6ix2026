@@ -90,7 +90,7 @@ export function ConceptCoverage({ gapMap }: { gapMap: GapMap }) {
             aria-expanded={showUnexplored}
           >
             <span
-              className="inline-block text-xs transition-transform"
+              className="inline-block text-2xl transition-transform"
               style={{ transform: showUnexplored ? "rotate(90deg)" : "rotate(0deg)" }}
               aria-hidden
             >
