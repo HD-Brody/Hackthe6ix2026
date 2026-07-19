@@ -74,6 +74,12 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/support"
+            className="hidden rounded-sm px-1 py-2 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--text-secondary)] transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] sm:inline"
+          >
+            Support
+          </Link>
           <ThemeToggle />
           {user ? (
             <>

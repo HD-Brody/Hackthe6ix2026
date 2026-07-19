@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--surface-muted)]">
@@ -9,6 +11,12 @@ export function SiteFooter() {
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           <span>Built at Hack the 6ix 2026</span>
+          <Link
+            href="/support"
+            className="transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+          >
+            Support
+          </Link>
           <a
             href="https://github.com/HD-Brody/Hackthe6ix2026"
             target="_blank"

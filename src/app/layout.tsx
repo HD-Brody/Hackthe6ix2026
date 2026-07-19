@@ -5,6 +5,7 @@
 import type { Metadata } from "next";
 import { Fraunces, IBM_Plex_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { UnifoldClientProvider } from "@/components/billing/UnifoldClientProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -43,12 +44,18 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const publishableKey = process.env.NEXT_PUBLIC_UNIFOLD_PUBLISHABLE_KEY;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} ${fraunces.variable} ${plexMono.variable} antialiased`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <UnifoldClientProvider publishableKey={publishableKey}>
+            {children}
+          </UnifoldClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

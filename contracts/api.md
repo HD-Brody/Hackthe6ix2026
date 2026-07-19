@@ -1,4 +1,4 @@
-# API surface — CP0 contract
+﻿# API surface — CP0 contract
 
 Frozen at hour 1. Changes after that require all four to agree.
 
@@ -8,13 +8,20 @@ POST /api/session/:id/turn   {user_text}      → SSE stream (see below)
 POST /api/session/:id/opening {}               → SSE stream (re-teach bridging line; no user text)
 POST /api/session/:id/end    {}               → {gap_map}
 GET  /api/session/:id                         → full session state (refresh recovery)
+
+GET  /api/billing/status                      → {billingMock, canCheckout, tipAmounts, defaultTipUsdc}
+POST /api/billing/checkout   {amountUsdc?}    → {clientSecret, paymentIntentId} | mock thanks
+POST /api/billing/confirm    {paymentIntentId}→ {thanks, pending?}
+POST /api/billing/webhook                     → Unifold payment_intent.succeeded (record tip)
 ```
 
-`prior_session_id` (optional): links a new session to a prior ended session's gap
+`prior_session_id` (optional): links a new session to a prior ended session''s gap
 map. The server snapshots `reteach_order` and vague moments into
 `prior_gap_context` on the new session and sets `pending_directive` to probe
 the first gap. The client should call `/opening` once when the classroom loads
 with zero utterances.
+
+Tips are voluntary — there is no trial/Pro paywall on session create.
 
 ## Turn endpoint SSE event format
 
