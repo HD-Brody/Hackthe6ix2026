@@ -56,7 +56,7 @@ const PREVIEWS = [
   {
     filename: "sam-preview.mp3",
     voiceId: "bIHbv24MWmeRgasZH58o", // Will — Relaxed Optimist (Sam's voice)
-    text: "Oh, that's actually really cool! Wait — can you explain that part with an analogy? I think I almost get it.",
+    text: "Hey, I'm Sam — sharp, curious, and I know absolutely nothing about whatever you're teaching. You decide how relentless I get.",
     description: "Sam — curious, analogy-driven learner",
     stability: 0.45,
     similarity_boost: 0.75,
@@ -64,7 +64,7 @@ const PREVIEWS = [
   {
     filename: "elena-preview.mp3",
     voiceId: "cgSgspJ2msm6clMCkdW9", // Jessica — Playful, Bright, Warm (Elena's voice)
-    text: "Interesting. So if I'm understanding correctly, you're saying that... could you walk me through a specific example? I want to make sure my reasoning is solid.",
+    text: "I'm Elena — thoughtful, curious, and I know nothing about your topic until you teach me. You decide how hard I push back.",
     description: "Elena — thoughtful, example-driven learner",
     stability: 0.55,
     similarity_boost: 0.75,
