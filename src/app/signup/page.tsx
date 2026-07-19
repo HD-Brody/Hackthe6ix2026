@@ -43,7 +43,7 @@ export default function SignUpPage() {
               <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">Empower your students with AI-driven insights today.</p>
 
               <div className="mt-5 flex justify-center">
-                <a href="/auth/login?screen_hint=signup&connection=google-oauth2" aria-label="Sign up with Google" className="flex h-12 w-full items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] transition hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">
+                <a href="/auth/login?screen_hint=signup&connection=google-oauth2" aria-label="Sign up with Google" className="flex h-12 w-full items-center justify-center rounded-lg border border-[var(--border)] bg-transparent transition hover:bg-transparent dark:hover:bg-[var(--surface-elevated)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">
                   <Image src="/google-signin.svg" alt="Continue with Google" width={180} height={40} className="h-10 w-auto dark:hidden" />
                   <Image src="/googel-signin-dark.svg" alt="Continue with Google" width={180} height={40} className="hidden h-10 w-auto dark:block" />
                 </a>
