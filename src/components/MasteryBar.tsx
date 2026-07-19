@@ -2,12 +2,12 @@ import type { NodeState } from "@/lib/types";
 import type { CoverageNode } from "@/lib/comprehension";
 
 const segmentColors: Record<NodeState, string> = {
-  solid: "bg-[#57b98b]",
-  vague: "bg-[#e4bf53]",
+  solid: "bg-[var(--mastery-solid)]",
+  vague: "bg-[var(--mastery-vague)]",
   wrong: "bg-[var(--state-wrong)]",
   dodged: "bg-[var(--state-dodged)]",
   touched: "bg-[var(--state-touched)]",
-  unvisited: "bg-[#c7c7d2]",
+  unvisited: "bg-[var(--mastery-empty)]",
 };
 
 const stateLabels: Record<NodeState, string> = {
@@ -26,7 +26,7 @@ export function MasteryBar({ nodes }: { nodes: CoverageNode[] }) {
   if (nodes.length === 0) {
     return (
       <div
-        className="h-3 w-full rounded-full bg-[#eceef0]"
+        className="h-3 w-full rounded-full bg-[var(--mastery-track)]"
         aria-label="No concepts explored yet"
       />
     );
@@ -38,7 +38,7 @@ export function MasteryBar({ nodes }: { nodes: CoverageNode[] }) {
 
   return (
     <div
-      className="flex h-3 w-full overflow-hidden rounded-full bg-[#eceef0]"
+      className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--mastery-track)]"
       role="img"
       aria-label={`Mastery bar: ${sorted.map((n) => `${n.name} (${stateLabels[n.state]})`).join(", ")}`}
     >

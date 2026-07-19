@@ -9,12 +9,12 @@ import {
 import { MasteryBar } from "@/components/MasteryBar";
 
 const chipStyles: Record<NodeState, string> = {
-  solid: "border-[#57b98b] bg-[#effbf5] text-[#19704d]",
-  vague: "border-[#e4bf53] bg-[#fff9e8] text-[#745b13]",
-  wrong: "border-[var(--state-wrong)] bg-red-50 text-red-800",
-  dodged: "border-[var(--state-dodged)] bg-purple-50 text-purple-800",
-  touched: "border-[var(--state-touched)] bg-blue-50 text-blue-800",
-  unvisited: "border-[#d4d4dc] bg-[#f7f7fa] text-[#696978]",
+  solid: "border-[var(--chip-solid-border)] bg-[var(--chip-solid-bg)] text-[var(--chip-solid-text)]",
+  vague: "border-[var(--chip-vague-border)] bg-[var(--chip-vague-bg)] text-[var(--chip-vague-text)]",
+  wrong: "border-[var(--chip-wrong-border)] bg-[var(--chip-wrong-bg)] text-[var(--chip-wrong-text)]",
+  dodged: "border-[var(--chip-dodged-border)] bg-[var(--chip-dodged-bg)] text-[var(--chip-dodged-text)]",
+  touched: "border-[var(--chip-touched-border)] bg-[var(--chip-touched-bg)] text-[var(--chip-touched-text)]",
+  unvisited: "border-[var(--chip-unvisited-border)] bg-[var(--chip-unvisited-bg)] text-[var(--chip-unvisited-text)]",
 };
 
 interface LaneProps {
@@ -26,7 +26,7 @@ function ConceptLane({ title, nodes }: LaneProps) {
   if (nodes.length === 0) return null;
   return (
     <div>
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#858393]">
+      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--label-muted)]">
         {title} ({nodes.length})
       </p>
       <ul className="mt-2 flex flex-wrap gap-2">
@@ -82,7 +82,7 @@ export function ConceptCoverage({ gapMap }: { gapMap: GapMap }) {
       ) : null}
 
       {stats.unexplored > 0 ? (
-        <div className="mt-6 border-t border-[#e8e6ef] pt-5">
+        <div className="mt-6 border-t border-[var(--border)] pt-5">
           <button
             type="button"
             onClick={() => setShowUnexplored((v) => !v)}

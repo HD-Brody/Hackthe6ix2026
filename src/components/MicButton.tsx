@@ -23,8 +23,8 @@ export function MicButton({
       aria-label={active ? "Stop listening" : "Explain out loud with your microphone"}
       className={`flex size-10 items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-40 ${
         active
-          ? "animate-pulse bg-[#4648d4] text-white shadow-md"
-          : "text-[var(--text-secondary)] hover:bg-white hover:text-[var(--brand)]"
+          ? "animate-pulse bg-[var(--chat-user)] text-white shadow-md"
+          : "text-[var(--text-secondary)] hover:bg-[var(--surface)] hover:text-[var(--brand)]"
       }`}
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">

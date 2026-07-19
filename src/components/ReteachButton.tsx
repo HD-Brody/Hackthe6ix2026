@@ -21,7 +21,7 @@ export function ReteachButton({
   const [error, setError] = useState<string | null>(null);
 
   const buttonClass =
-    "mt-5 inline-block rounded-lg bg-[#5755d8] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#4846c5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70";
+    "mt-5 inline-block rounded-lg bg-[var(--chat-user)] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70";
 
   if (!hasGaps || isMock) {
     return (

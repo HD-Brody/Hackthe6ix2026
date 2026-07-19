@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Owner: C. Node-state colors are the gap map's visual language — define
    once here, use everywhere (classroom indicators + gap map grid). */
 :root {
@@ -7,17 +9,105 @@
   --brand-strong: #2f2ebe;
   --brand-soft: #e1e0ff;
   --page-background: #f7f9fb;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
   --surface-muted: #f2f4f6;
+  --surface-input: #eceef0;
   --text-primary: #191c1e;
   --text-secondary: #464554;
   --text-muted: #6b7280;
+  --border: #e0dfeb;
+  --border-subtle: #f1f5f9;
   --card-border: rgba(199, 196, 215, 0.3);
+  --shadow-color: rgba(99, 102, 241, 0.08);
+  --header-bg: #ffffff;
+  --accent-soft: #f7f6ff;
+  --nav-active: #4648d4;
+  --chat-user: #4648d4;
+  --chat-student: #eceef0;
+  --danger-surface: #fff5f5;
+  --danger-text: #b83d45;
+  --star: #f1bd43;
+  --mastery-track: #eceef0;
+  --mastery-solid: #57b98b;
+  --mastery-vague: #e4bf53;
+  --mastery-empty: #c7c7d2;
+  --label-muted: #858393;
   --state-solid: #22c55e;
   --state-vague: #eab308;
   --state-wrong: #ef4444;
   --state-dodged: #a855f7;
   --state-touched: #38bdf8;
   --state-unvisited: #6b7280;
+  --chip-solid-bg: #effbf5;
+  --chip-solid-border: #57b98b;
+  --chip-solid-text: #19704d;
+  --chip-vague-bg: #fff9e8;
+  --chip-vague-border: #e4bf53;
+  --chip-vague-text: #745b13;
+  --chip-wrong-bg: #fef2f2;
+  --chip-wrong-border: var(--state-wrong);
+  --chip-wrong-text: #991b1b;
+  --chip-dodged-bg: #faf5ff;
+  --chip-dodged-border: var(--state-dodged);
+  --chip-dodged-text: #6b21a8;
+  --chip-touched-bg: #eff6ff;
+  --chip-touched-border: var(--state-touched);
+  --chip-touched-text: #1e40af;
+  --chip-unvisited-bg: #f7f7fa;
+  --chip-unvisited-border: #d4d4dc;
+  --chip-unvisited-text: #696978;
+  --skeleton: #e5e7eb;
+  --blur-accent-1: rgba(67, 72, 214, 0.07);
+  --blur-accent-2: rgba(125, 39, 206, 0.06);
+  --home-gradient-1: rgba(96, 99, 238, 0.09);
+  --home-gradient-2: rgba(129, 39, 207, 0.055);
+}
+
+.dark {
+  color-scheme: dark;
+  --brand-soft: #2a2850;
+  --page-background: #0f1117;
+  --surface: #1a1d27;
+  --surface-elevated: #22263a;
+  --surface-muted: #141720;
+  --surface-input: #2a2e3d;
+  --text-primary: #f0f1f5;
+  --text-secondary: #b8bac8;
+  --text-muted: #8b8d9a;
+  --border: #2e3348;
+  --border-subtle: #252a3a;
+  --card-border: rgba(46, 51, 72, 0.6);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --header-bg: #141720;
+  --accent-soft: #2a2850;
+  --nav-active: #8b8dff;
+  --chat-user: #6063ee;
+  --chat-student: #2a2e3d;
+  --danger-surface: #3a1f22;
+  --danger-text: #f87171;
+  --mastery-track: #2a2e3d;
+  --label-muted: #8b8d9a;
+  --chip-solid-bg: #0f2a1f;
+  --chip-solid-border: #57b98b;
+  --chip-solid-text: #6ee7a0;
+  --chip-vague-bg: #2a2410;
+  --chip-vague-border: #e4bf53;
+  --chip-vague-text: #fbbf24;
+  --chip-wrong-bg: #2a1515;
+  --chip-wrong-text: #fca5a5;
+  --chip-dodged-bg: #1f1530;
+  --chip-dodged-text: #d8b4fe;
+  --chip-touched-bg: #0f1f2e;
+  --chip-touched-text: #7dd3fc;
+  --chip-unvisited-bg: #1e1f28;
+  --chip-unvisited-border: #3a3b48;
+  --chip-unvisited-text: #9ca3af;
+  --skeleton: #2e3348;
+  --blur-accent-1: rgba(67, 72, 214, 0.12);
+  --blur-accent-2: rgba(125, 39, 206, 0.1);
+  --home-gradient-1: rgba(96, 99, 238, 0.15);
+  --home-gradient-2: rgba(129, 39, 207, 0.1);
 }
 
 * {
@@ -46,7 +136,7 @@ input {
 
 .home-background {
   background:
-    radial-gradient(circle at 100% 0%, rgba(96, 99, 238, 0.09), transparent 28rem),
-    radial-gradient(circle at 0% 100%, rgba(129, 39, 207, 0.055), transparent 30rem),
+    radial-gradient(circle at 100% 0%, var(--home-gradient-1), transparent 28rem),
+    radial-gradient(circle at 0% 100%, var(--home-gradient-2), transparent 30rem),
     var(--page-background);
 }

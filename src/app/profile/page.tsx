@@ -30,7 +30,7 @@ export default async function ProfilePage() {
   const showDashboard = Boolean(user) || sessions.length > 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f9f9fc] text-[var(--text-primary)]">
+    <div className="flex min-h-screen flex-col bg-[var(--page-background)] text-[var(--text-primary)]">
       <SiteHeader />
       {!showDashboard ? (
         <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-20 text-center">
@@ -43,7 +43,7 @@ export default async function ProfilePage() {
           </p>
           <Link
             href="/login"
-            className="mt-6 inline-block rounded-xl bg-[#5755d8] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#4846c5]"
+            className="mt-6 inline-block rounded-xl bg-[var(--chat-user)] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)]"
           >
             Log in
           </Link>
@@ -58,7 +58,7 @@ export default async function ProfilePage() {
           {user ? (
             <ProfileHero user={user} resumeSession={stats.resumeSession} />
           ) : (
-            <section className="rounded-2xl border border-[#e0dfeb] bg-white p-5 shadow-sm sm:p-7">
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-7">
               <h1 className="font-heading text-3xl font-extrabold tracking-tight">
                 Your teaching history
               </h1>
@@ -67,7 +67,7 @@ export default async function ProfilePage() {
               </p>
               <Link
                 href="/login"
-                className="mt-4 inline-block rounded-xl bg-[#5755d8] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#4846c5]"
+                className="mt-4 inline-block rounded-xl bg-[var(--chat-user)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--brand-strong)]"
               >
                 Log in to keep your record
               </Link>

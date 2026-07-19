@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getAuthUser } from "@/lib/auth0";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type SiteHeaderProps = {
   activeItem?: "classroom" | "analytics";
@@ -17,7 +18,7 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
   const user = await getAuthUser();
 
   return (
-    <header className="relative z-10 h-16 border-b border-indigo-50 bg-white shadow-[0_4px_10px_rgba(99,102,241,0.05)]">
+    <header className="sticky top-0 z-50 h-16 border-b border-[var(--border-subtle)] bg-[var(--header-bg)] shadow-[0_4px_10px_var(--shadow-color)]">
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
         <div className="flex items-center gap-8 lg:gap-10">
           <Link
@@ -45,7 +46,6 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
                   ? `/session/${encodeURIComponent(sessionId)}/report${studentQuery}`
                   : item.id === "analytics" ? item.fallbackHref : null;
 
-              // Classroom tab with no active session: show dimmed with tooltip
               if (!href) {
                 return (
                   <span
@@ -64,7 +64,7 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
                   key={item.id}
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className={`rounded-sm border-b-2 px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${active ? "border-[#4648d4] font-bold text-[#4648d4]" : "border-transparent"}`}
+                  className={`rounded-sm border-b-2 px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${active ? "border-[var(--nav-active)] font-bold text-[var(--nav-active)]" : "border-transparent"}`}
                 >
                   {item.label}
                 </Link>
@@ -73,29 +73,31 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
           </nav>
         </div>
 
-        {user ? (
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm font-medium text-[var(--text-secondary)] sm:inline">{user.name}</span>
-            <Link href="/profile" aria-label="Open my profile" className="rounded-full border-2 border-[#c7c4d7] p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
-              {user.picture ? (
-                // Auth0 avatar hosts vary (Google, Gravatar) — plain img avoids next/image domain config.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.picture} alt="" className="size-8 rounded-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                <span className="flex size-8 items-center justify-center rounded-full bg-[#e1e0ff] text-sm font-bold text-[#4648d4]">
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
-              )}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
+          {user ? (
+            <>
+              <span className="hidden text-sm font-medium text-[var(--text-secondary)] sm:inline">{user.name}</span>
+              <Link href="/profile" aria-label="Open my profile" className="rounded-full border-2 border-[var(--border)] p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
+                {user.picture ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.picture} alt="" className="size-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <span className="flex size-8 items-center justify-center rounded-full bg-[var(--brand-soft)] text-sm font-bold text-[var(--nav-active)]">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </Link>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg bg-[var(--chat-user)] px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
+            >
+              Log in
             </Link>
-          </div>
-        ) : (
-          <Link
-            href="/login"
-            className="rounded-lg bg-[#4648d4] px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
-          >
-            Log in
-          </Link>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );

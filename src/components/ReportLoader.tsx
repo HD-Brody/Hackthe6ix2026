@@ -27,7 +27,7 @@ function SpinnerIcon() {
   return (
     <svg
       aria-hidden="true"
-      className="size-10 animate-spin text-[#7776df]"
+      className="size-10 animate-spin text-[var(--brand)]"
       viewBox="0 0 24 24"
       fill="none"
     >
