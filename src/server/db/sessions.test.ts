@@ -8,6 +8,8 @@ import {
   isTurnCapReached,
   MAX_SESSIONS_PER_USER,
   MAX_TURNS_PER_SESSION,
+  summaryNodesForSession,
+  toSessionSummary,
   TURN_LOCK_STALE_MS,
 } from "./sessions";
 import type { ConceptGraph, Utterance, Verdict } from "@/lib/types";
@@ -161,5 +163,67 @@ describe("session cap", () => {
     expect(isSessionCapReached(MAX_SESSIONS_PER_USER - 1)).toBe(false);
     expect(isSessionCapReached(MAX_SESSIONS_PER_USER)).toBe(true);
     expect(isSessionCapReached(MAX_SESSIONS_PER_USER + 1)).toBe(true);
+  });
+});
+
+describe("toSessionSummary", () => {
+  it("prefers gap_map nodes over graph nodes for ended sessions", () => {
+    const summary = toSessionSummary({
+      _id: "s1",
+      topic: "Photosynthesis",
+      status: "ended",
+      started_at: 1_000,
+      ended_at: 2_000,
+      graph: {
+        topic: "Photosynthesis",
+        nodes: [
+          {
+            id: "n1",
+            name: "Equation",
+            truth: "x",
+            difficulty: 1,
+            prereqs: [],
+            probes: ["ask-why"],
+            state: "unvisited",
+            vague_quotes: [],
+          },
+        ],
+      },
+      gap_map: {
+        topic: "Photosynthesis",
+        nodes: [{ id: "n1", name: "Equation", state: "vague" }],
+        vaguest_moments: [],
+        dodged_questions: [],
+        reteach_order: ["n1"],
+        one_liner: "Needs another pass.",
+      },
+    });
+
+    expect(summary.discussed).toBe(1);
+    expect(summary.score).toBe(50);
+    expect(summary.one_liner).toBe("Needs another pass.");
+    expect(summary.duration_ms).toBe(1_000);
+  });
+
+  it("falls back to graph nodes when no gap map exists", () => {
+    const nodes = summaryNodesForSession({
+      graph: {
+        topic: "Test",
+        nodes: [
+          {
+            id: "n1",
+            name: "A",
+            truth: "x",
+            difficulty: 1,
+            prereqs: [],
+            probes: ["ask-why"],
+            state: "solid",
+            vague_quotes: [],
+          },
+        ],
+      },
+    });
+
+    expect(nodes).toEqual([{ id: "n1", name: "A", state: "solid" }]);
   });
 });

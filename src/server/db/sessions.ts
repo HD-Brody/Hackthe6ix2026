@@ -13,7 +13,10 @@ import type {
   StudentId,
   PriorGapContext,
 } from "@/lib/types";
-import { computeComprehensionStats } from "../../lib/comprehension";
+import {
+  computeComprehensionStats,
+  type CoverageNode,
+} from "../../lib/comprehension";
 import {
   buildPriorGapContext,
   PriorSessionForbiddenError,
@@ -294,14 +297,80 @@ export interface SessionSummary {
   started_at: number;
   ended_at?: number;
   solid: number;
+  vague: number;
+  wrong: number;
+  dodged: number;
+  touched: number;
   total: number;
   discussed: number;
+  coveragePct: number;
   /** Weighted understanding score among discussed concepts (0–100), or null. */
   score: number | null;
+  coverage_nodes: CoverageNode[];
   has_gap_map: boolean;
+  one_liner?: string;
+  duration_ms?: number;
   feedback_rating?: number;
   feedback_comment?: string;
   feedback_ts?: number;
+}
+
+/** Pick concept nodes for profile summaries — gap map is authoritative after /end. */
+export function summaryNodesForSession(
+  doc: Pick<Session, "graph" | "gap_map">
+): CoverageNode[] {
+  if (doc.gap_map?.nodes?.length) {
+    return doc.gap_map.nodes;
+  }
+  return (doc.graph?.nodes ?? []).map((node) => ({
+    id: node.id,
+    name: node.name,
+    state: node.state,
+  }));
+}
+
+export function toSessionSummary(
+  doc: Pick<
+    Session,
+    | "_id"
+    | "topic"
+    | "student"
+    | "status"
+    | "started_at"
+    | "ended_at"
+    | "graph"
+    | "gap_map"
+    | "feedback"
+  >
+): SessionSummary {
+  const nodes = summaryNodesForSession(doc);
+  const stats = computeComprehensionStats(nodes);
+  const duration_ms =
+    doc.ended_at != null ? doc.ended_at - doc.started_at : undefined;
+  return {
+    session_id: doc._id,
+    topic: doc.topic,
+    student: doc.student,
+    status: doc.status,
+    started_at: doc.started_at,
+    ended_at: doc.ended_at,
+    solid: stats.solid,
+    vague: stats.vague,
+    wrong: stats.wrong,
+    dodged: stats.dodged,
+    touched: stats.touched,
+    total: stats.total,
+    discussed: stats.discussed,
+    coveragePct: stats.coveragePct,
+    score: stats.score,
+    coverage_nodes: stats.discussedNodes,
+    has_gap_map: !!doc.gap_map,
+    one_liner: doc.gap_map?.one_liner,
+    duration_ms,
+    feedback_rating: doc.feedback?.rating,
+    feedback_comment: doc.feedback?.comment,
+    feedback_ts: doc.feedback?.ts,
+  };
 }
 
 export async function listSessionsByUser(
@@ -319,8 +388,9 @@ export async function listSessionsByUser(
           status: 1,
           started_at: 1,
           ended_at: 1,
-          "graph.nodes.state": 1,
-          gap_map: 1,
+          "graph.nodes": 1,
+          "gap_map.nodes": 1,
+          "gap_map.one_liner": 1,
           "feedback.rating": 1,
           "feedback.comment": 1,
           "feedback.ts": 1,
@@ -331,26 +401,7 @@ export async function listSessionsByUser(
     )
     .toArray();
 
-  return docs.map((doc) => {
-    const nodes = doc.graph?.nodes ?? [];
-    const stats = computeComprehensionStats(nodes);
-    return {
-      session_id: doc._id,
-      topic: doc.topic,
-      student: doc.student,
-      status: doc.status,
-      started_at: doc.started_at,
-      ended_at: doc.ended_at,
-      solid: stats.solid,
-      total: stats.total,
-      discussed: stats.discussed,
-      score: stats.score,
-      has_gap_map: !!doc.gap_map,
-      feedback_rating: doc.feedback?.rating,
-      feedback_comment: doc.feedback?.comment,
-      feedback_ts: doc.feedback?.ts,
-    };
-  });
+  return docs.map((doc) => toSessionSummary(doc));
 }
 
 export async function setFeedback(
