@@ -1,4 +1,4 @@
-import type { GapMap, PriorGapContext } from "@/lib/types";
+import type { ConceptGraph, GapMap, PriorGapContext } from "@/lib/types";
 
 export class PriorSessionNotFoundError extends Error {
   readonly code = "prior_session_not_found" as const;
@@ -26,6 +26,23 @@ export class PriorSessionInvalidError extends Error {
 
 function nodeName(gapMap: GapMap, nodeId: string): string {
   return gapMap.nodes.find((n) => n.id === nodeId)?.name ?? nodeId;
+}
+
+/** Reuse the prior session's concept graph without a live generateGraph call. */
+export function cloneGraphForReteach(
+  graph: ConceptGraph,
+  topic: string
+): ConceptGraph {
+  return {
+    topic,
+    nodes: graph.nodes.map((node) => ({
+      ...node,
+      state: "unvisited",
+      vague_quotes: [],
+      prereqs: [...node.prereqs],
+      probes: [...node.probes],
+    })),
+  };
 }
 
 /** Build a compact prior-gap snapshot from an ended session's gap map. */

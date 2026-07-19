@@ -21,6 +21,7 @@ import { parseCuriosityLevel } from "@/lib/curiosity";
 import { parseStudentId } from "@/lib/studentProfiles";
 import { truncateNotes } from "@/llm/extractTopics";
 import {
+  cloneGraphForReteach,
   PriorSessionForbiddenError,
   PriorSessionInvalidError,
   PriorSessionNotFoundError,
@@ -77,7 +78,9 @@ export async function POST(req: NextRequest) {
     ? truncateNotes(body.source_notes.trim())
     : undefined;
 
-  const graph = await resolveGraph(topic, sourceNotes);
+  const graph = priorSession
+    ? cloneGraphForReteach(priorSession.graph, topic)
+    : await resolveGraph(topic, sourceNotes);
   const student = parseStudentId(body.student);
   const curiosity = parseCuriosityLevel(body.curiosity);
 
