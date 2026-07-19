@@ -37,6 +37,21 @@ describe("personaPrompt", () => {
     expect(prompt).toContain('Whoa, let\'s stick to');
   });
 
+  it("ADVANCE names the next concept aspect when a topicHint is given", () => {
+    const prompt = personaPrompt([], { type: "ADVANCE", node_id: "n7" }, "sam", {
+      topicHint: "Race nutrition and fueling",
+    });
+    // The persona knows nothing about the topic — it must be handed the next
+    // aspect by name so it can ask a genuinely new question about it.
+    expect(prompt).toContain("Race nutrition and fueling");
+    expect(prompt).toContain("DIFFERENT part of the topic");
+  });
+
+  it("ADVANCE without a topicHint falls back to the generic move-on instruction", () => {
+    const prompt = personaPrompt([], { type: "ADVANCE" });
+    expect(prompt).toContain("moves on to something the user HASN'T mentioned");
+  });
+
   it("PROBE asks for a concrete missing piece, not a hollow what-happens loop", () => {
     const prompt = personaPrompt([], { type: "PROBE", node_id: "n1" });
     expect(prompt).toContain("so they do stuff?");
