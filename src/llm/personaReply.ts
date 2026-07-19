@@ -26,18 +26,43 @@ import {
 
 export type { PersonaPromptOptions };
 
+/**
+ * Models still slip markdown emphasis into spoken replies (*make*, _food_).
+ * Strip those markers from streamed tokens so TTS never reads them aloud.
+ * Exported for unit tests.
+ */
+export function stripSpokenArtifacts(text: string): string {
+  return text
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/[*_]/g, "");
+}
+
+async function* streamSpoken(
+  tokens: AsyncIterable<string>
+): AsyncIterable<string> {
+  for await (const token of tokens) {
+    const cleaned = stripSpokenArtifacts(token);
+    if (cleaned) yield cleaned;
+  }
+}
+
 export async function* personaReply(
   transcript: Utterance[],
   directive: Directive,
   student: StudentId = "sam",
   opts: PersonaPromptOptions = {}
 ): AsyncIterable<string> {
-  yield* streamPersona(personaPrompt(transcript, directive, student, opts));
+  yield* streamSpoken(
+    streamPersona(personaPrompt(transcript, directive, student, opts))
+  );
 }
 
 export async function* bridgingPersonaReply(
   priorGapContext: PriorGapContext,
   student: StudentId = "sam"
 ): AsyncIterable<string> {
-  yield* streamPersona(bridgingPersonaPrompt(priorGapContext, student));
+  yield* streamSpoken(
+    streamPersona(bridgingPersonaPrompt(priorGapContext, student))
+  );
 }
