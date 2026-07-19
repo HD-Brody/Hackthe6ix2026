@@ -31,7 +31,7 @@ export function StudentAvatar({
   const profile = studentProfiles[student];
 
   return (
-    <section className="rounded-lg border border-[var(--card-border)] bg-white px-5 py-6 shadow-[0_4px_10px_rgba(0,0,0,0.05)]">
+    <section className="rounded-lg border border-[var(--card-border)] bg-[var(--surface)] px-5 py-6 shadow-[0_4px_10px_var(--shadow-color)]">
       <div className="flex flex-col items-center text-center">
         <div className="relative">
           <Image
@@ -40,9 +40,9 @@ export function StudentAvatar({
             width={128}
             height={128}
             priority
-            className="size-28 rounded-full border-4 border-white object-cover shadow-lg sm:size-32"
+            className="size-28 rounded-full border-4 border-[var(--surface-elevated)] object-cover shadow-lg sm:size-32"
           />
-          <span className="absolute bottom-1 right-1 size-6 rounded-full border-4 border-white bg-emerald-500" aria-label="Online" />
+          <span className="absolute bottom-1 right-1 size-6 rounded-full border-4 border-[var(--surface)] bg-emerald-500" aria-label="Online" />
         </div>
         <h2 className="font-heading mt-3 text-2xl font-semibold text-[var(--text-primary)]">{profile.name}</h2>
         <p className="mt-1 text-sm text-[var(--text-secondary)] sm:text-base">AI Learning Companion</p>

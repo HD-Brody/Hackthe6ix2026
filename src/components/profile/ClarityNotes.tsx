@@ -29,7 +29,7 @@ function DiaryEntry({
   return (
     <Link
       href={sessionLink(session)}
-      className={`flex min-h-40 flex-col rounded-xl border border-[#e0dfeb] border-l-4 bg-white p-5 shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${accent}`}
+      className={`flex min-h-40 flex-col rounded-xl border border-[var(--border)] border-l-4 bg-[var(--surface)] p-5 shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${accent}`}
     >
       <div className="flex items-start gap-3">
         <Image
@@ -46,7 +46,7 @@ function DiaryEntry({
               {date}
             </span>
           </div>
-          <p className="mt-0.5 text-xs font-medium text-[#5755d8]">
+          <p className="mt-0.5 text-xs font-medium text-[var(--nav-active)]">
             {session.topic}
           </p>
           {session.feedback_rating ? (
@@ -76,7 +76,7 @@ export function ClarityNotes({ entries }: { entries: SessionSummary[] }) {
     <section>
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#7776df]">
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
             Student feedback
           </p>
           <h2 className="mt-1 font-heading text-2xl font-extrabold">
@@ -103,14 +103,14 @@ export function ClarityNotes({ entries }: { entries: SessionSummary[] }) {
           ))}
         </div>
       ) : (
-        <div className="mt-4 rounded-2xl border border-dashed border-[#c7c4d7] bg-white p-8 text-center">
+        <div className="mt-4 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center">
           <p className="text-sm leading-6 text-[var(--text-secondary)]">
             No clarity notes yet. Finish a session and rate how clear it felt —
             your student will leave a note here.
           </p>
           <Link
             href="/"
-            className="mt-4 inline-block rounded-xl bg-[#5755d8] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#4846c5]"
+            className="mt-4 inline-block rounded-xl bg-[var(--chat-user)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--brand-strong)]"
           >
             Teach a topic
           </Link>

@@ -67,27 +67,27 @@ export function SessionFeedback({
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center px-5 py-6 sm:px-8 sm:py-7">
       <section className="flex flex-col items-center text-center">
         <div className="relative">
-          <div className="rounded-full bg-[#e1e0ff] p-1.5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.12),0_8px_10px_-6px_rgba(0,0,0,0.1)]">
-            <Image src={profile.image} alt={profile.name} width={160} height={160} priority className="size-32 rounded-full border-4 border-white object-cover sm:size-36" />
+          <div className="rounded-full bg-[var(--brand-soft)] p-1.5 shadow-[0_20px_25px_-5px_var(--shadow-color),0_8px_10px_-6px_var(--shadow-color)]">
+            <Image src={profile.image} alt={profile.name} width={160} height={160} priority className="size-32 rounded-full border-4 border-[var(--surface)] object-cover sm:size-36" />
           </div>
-          <span className="absolute bottom-3 right-3 size-7 rounded-full border-4 border-white bg-emerald-500" aria-label={`${profile.name} is online`} />
+          <span className="absolute bottom-3 right-3 size-7 rounded-full border-4 border-[var(--surface)] bg-emerald-500" aria-label={`${profile.name} is online`} />
         </div>
         <h1 className="font-heading mt-4 max-w-2xl text-xl font-extrabold tracking-tight sm:text-2xl sm:leading-8">
           Great Session! How was {profile.name}&apos;s learning today?
         </h1>
         {/* Never confirm correctness — only the gap map renders verdicts. */}
-        <p className="mt-1.5 text-sm font-medium italic text-[#8127cf] sm:text-base">
+        <p className="mt-1.5 text-sm font-medium italic text-[var(--state-dodged)] sm:text-base">
           “Whew, that was a lot — I need a minute to let it all sink in.” — {profile.name}
         </p>
       </section>
 
-      <section className="mt-5 w-full rounded-2xl border border-[#e6e8ea] bg-white p-5 shadow-[0_4px_10px_rgba(0,0,0,0.05)] sm:p-6" aria-label="Session feedback form">
+      <section className="mt-5 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_4px_10px_var(--shadow-color)] sm:p-6" aria-label="Session feedback form">
         {submitState === "saved" ? (
           <div className="flex flex-col items-center text-center">
-            <p className="text-sm font-semibold text-[#464554]">Your clarity rating</p>
+            <p className="text-sm font-semibold text-[var(--text-secondary)]">Your clarity rating</p>
             <StarRating rating={rating} className="mt-2" />
             {comment.trim() ? (
-              <blockquote className="mt-4 w-full rounded-xl bg-[#f2f4f6] px-4 py-3 text-left text-sm italic leading-6 text-[var(--text-secondary)]">
+              <blockquote className="mt-4 w-full rounded-xl bg-[var(--surface-input)] px-4 py-3 text-left text-sm italic leading-6 text-[var(--text-secondary)]">
                 “{comment.trim()}”
               </blockquote>
             ) : null}
@@ -98,10 +98,10 @@ export function SessionFeedback({
         ) : (
           <>
             <fieldset className="flex flex-col items-center">
-              <legend className="w-full text-center text-sm font-semibold text-[#464554]">Rate the session clarity</legend>
-              <div className="mt-2 flex gap-1 text-[#c7c4d7]" role="radiogroup" aria-label="Session clarity rating">
+              <legend className="w-full text-center text-sm font-semibold text-[var(--text-secondary)]">Rate the session clarity</legend>
+              <div className="mt-2 flex gap-1 text-[var(--text-muted)]" role="radiogroup" aria-label="Session clarity rating">
                 {[1, 2, 3, 4, 5].map((value) => (
-                  <button key={value} type="button" role="radio" aria-checked={rating === value} aria-label={`${value} out of 5 stars`} onClick={() => setRating(value)} className={`rounded p-0.5 transition hover:scale-110 hover:text-[#f1bd43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${value <= rating ? "text-[#f1bd43]" : ""}`}>
+                  <button key={value} type="button" role="radio" aria-checked={rating === value} aria-label={`${value} out of 5 stars`} onClick={() => setRating(value)} className={`rounded p-0.5 transition hover:scale-110 hover:text-[var(--star)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${value <= rating ? "text-[var(--star)]" : ""}`}>
                     <StarIcon filled={value <= rating} />
                   </button>
                 ))}
@@ -115,14 +115,14 @@ export function SessionFeedback({
               value={comment}
               onChange={(event) => setComment(event.target.value)}
               placeholder="How can I improve my teaching?"
-              className="mt-2 min-h-20 w-full resize-y rounded-xl border-0 bg-[#f2f4f6] px-4 py-3 text-sm outline-none placeholder:text-[#6b7280] focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+              className="mt-2 min-h-20 w-full resize-y rounded-xl border-0 bg-[var(--surface-input)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
             />
 
             <button
               type="button"
               onClick={submitFeedback}
               disabled={rating === 0 || submitState === "saving"}
-              className="mt-3 w-full rounded-xl border border-[#c7c4d7] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[#f7f9fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitState === "saving" ? "Saving..." : submitState === "failed" ? "Couldn't save — try again" : rating === 0 ? "Pick a star rating first" : "Submit feedback"}
             </button>
@@ -130,8 +130,8 @@ export function SessionFeedback({
         )}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
-          <Link href={`/session/${encodeURIComponent(sessionId)}/report?student=${profile.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4648d4] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><MapIcon /> View Understanding Map</Link>
-          <Link href="/profile" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c7c4d7] bg-[#f2f4f6] px-4 py-3 text-sm font-semibold text-[#4648d4] transition hover:bg-[#e8e9ee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><DashboardIcon /> View Student Diary</Link>
+          <Link href={`/session/${encodeURIComponent(sessionId)}/report?student=${profile.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--chat-user)] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><MapIcon /> View Understanding Map</Link>
+          <Link href="/profile" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm font-semibold text-[var(--nav-active)] transition hover:bg-[var(--surface-input)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><DashboardIcon /> View Student Diary</Link>
         </div>
       </section>
     </main>

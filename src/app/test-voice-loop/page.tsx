@@ -5,6 +5,7 @@ import { createSTTClient, type STTClient } from "@/voice/sttClient";
 import { createTTSClient, type TTSClient } from "@/voice/ttsClient";
 import { consumeTurnStream } from "@/lib/sse";
 import { shouldPlayThinkingNoise, pickThinkingNoise } from "@/voice/latencyMask";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function TestVoiceLoopPage() {
   const [topic, setTopic] = useState("TCP congestion control");
@@ -313,219 +314,108 @@ export default function TestVoiceLoopPage() {
     setStatus("Idle");
   };
 
+
   const statusColor =
-    status.startsWith("Listening") ? "#7aa2f7" :
-    status === "AI is speaking..." ? "#9ece6a" :
-    status === "Thinking..." ? "#e0af68" :
-    status.startsWith("Thinking... (thinking") ? "#bb9af3" : "#bb9af3";
+    status.startsWith("Listening") ? "text-blue-500 dark:text-blue-400" :
+    status === "AI is speaking..." ? "text-emerald-600 dark:text-emerald-400" :
+    status === "Thinking..." ? "text-amber-600 dark:text-amber-400" :
+    "text-purple-600 dark:text-purple-400";
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "radial-gradient(circle at top left, #0d0e15, #161824)",
-      color: "#c0caf5",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      padding: "40px 20px",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center"
-    }}>
-      <div style={{
-        maxWidth: "640px",
-        width: "100%",
-        backgroundColor: "rgba(30, 32, 48, 0.75)",
-        backdropFilter: "blur(16px)",
-        borderRadius: "20px",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
-        padding: "36px",
-        boxShadow: "0 24px 48px rgba(0, 0, 0, 0.5)"
-      }}>
-        <h1 style={{
-          fontSize: "26px",
-          fontWeight: 800,
-          color: "#7aa2f7",
-          marginTop: 0,
-          marginBottom: "6px",
-          letterSpacing: "-0.5px"
-        }}>
-          End-to-End Voice Loop Test
-        </h1>
-        <p style={{
-          color: "#9ece6a",
-          fontSize: "14px",
-          marginBottom: "28px"
-        }}>
-          Test Web Speech API STT, Next.js API turns, and ElevenLabs client WebSockets together
-        </p>
+    <div className="flex min-h-screen flex-col bg-[var(--page-background)] text-[var(--text-primary)]">
+      <header className="flex items-center justify-end px-5 py-4 sm:px-8">
+        <ThemeToggle />
+      </header>
+      <main className="flex flex-1 items-center justify-center px-5 py-10">
+        <div className="w-full max-w-xl rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-[0_24px_48px_var(--shadow-color)] sm:p-9">
+          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-[var(--brand)]">
+            End-to-End Voice Loop Test
+          </h1>
+          <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
+            Test Web Speech API STT, Next.js API turns, and ElevenLabs client WebSockets together
+          </p>
 
-        {/* Topic Input */}
-        <div style={{ marginBottom: "24px" }}>
-          <label style={{
-            display: "block",
-            fontSize: "12px",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-            color: "#565f89",
-            marginBottom: "8px"
-          }}>
-            Demo Topic
-          </label>
-          <input
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            disabled={status !== "Idle" && status !== "Done"}
-            style={{
-              width: "100%",
-              backgroundColor: "#1a1b26",
-              color: "#c0caf5",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "8px",
-              padding: "12px",
-              fontSize: "15px",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-
-        {/* Actions */}
-        <div style={{ display: "flex", gap: "12px", marginBottom: "32px" }}>
-          <button
-            onClick={startListening}
-            style={{
-              flex: 2,
-              backgroundColor: "#7aa2f7",
-              color: "#1a1b26",
-              fontWeight: 700,
-              fontSize: "15px",
-              padding: "14px 28px",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(122, 162, 247, 0.25)"
-            }}
-          >
-            Start Listening / Talk
-          </button>
-          <button
-            onClick={handleStopAll}
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(247, 118, 142, 0.15)",
-              color: "#f7768e",
-              fontWeight: 600,
-              fontSize: "15px",
-              padding: "14px 28px",
-              border: "1px solid rgba(247, 118, 142, 0.3)",
-              borderRadius: "8px",
-              cursor: "pointer"
-            }}
-          >
-            Stop / Reset
-          </button>
-        </div>
-
-        {/* Stopwatch & Latency */}
-        {(liveTimer !== null || latencyMs !== null) && (
-          <div style={{
-            backgroundColor: "rgba(224, 175, 104, 0.08)",
-            border: "1px solid rgba(224, 175, 104, 0.2)",
-            borderRadius: "10px",
-            padding: "16px",
-            marginBottom: "24px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}>
-            <span style={{ fontSize: "14px", color: "#e0af68", fontWeight: 600 }}>
-              ⏱️ Latency (STT End → AI Speech Start):
-            </span>
-            <span style={{ fontSize: "16px", fontWeight: 700, fontFamily: "monospace", color: "#e0af68" }}>
-              {latencyMs !== null
-                ? `${(latencyMs / 1000).toFixed(2)}s (Final)`
-                : `${((liveTimer ?? 0) / 1000).toFixed(2)}s`}
-            </span>
-          </div>
-        )}
-
-        {/* Transcript panels */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px" }}>
-          <div style={{
-            backgroundColor: "#16161e",
-            borderRadius: "10px",
-            padding: "18px",
-            border: "1px solid rgba(255, 255, 255, 0.04)"
-          }}>
-            <span style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#565f89", textTransform: "uppercase", marginBottom: "8px" }}>
-              Your Speech (Microphone)
-            </span>
-            <p style={{ fontSize: "15px", margin: 0, color: transcript ? "#c0caf5" : "#565f89", fontStyle: transcript ? "normal" : "italic" }}>
-              {transcript || "Waiting for you to speak..."}
-            </p>
+          <div className="mt-6">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              Demo Topic
+            </label>
+            <input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              disabled={status !== "Idle" && status !== "Done"}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-input)] px-3 py-3 text-[var(--text-primary)] outline-none focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)] disabled:opacity-60"
+            />
           </div>
 
-          <div style={{
-            backgroundColor: "#16161e",
-            borderRadius: "10px",
-            padding: "18px",
-            border: "1px solid rgba(255, 255, 255, 0.04)"
-          }}>
-            <span style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#565f89", textTransform: "uppercase", marginBottom: "8px" }}>
-              AI Student Reply (Speaker)
-            </span>
-            <p style={{ fontSize: "15px", margin: 0, color: aiText ? "#9ece6a" : "#565f89", fontStyle: aiText ? "normal" : "italic" }}>
-              {aiText || "Waiting for AI response..."}
-            </p>
-          </div>
-        </div>
-
-        {/* Status panel */}
-        <div style={{
-          backgroundColor: "#16161e",
-          borderRadius: "8px",
-          padding: "16px",
-          border: "1px solid rgba(255, 255, 255, 0.05)"
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "14px", color: "#565f89" }}>System Status:</span>
-            <strong style={{ fontSize: "14px", color: statusColor }}>
-              {status}
-            </strong>
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={startListening}
+              className="flex-[2] rounded-lg bg-[var(--chat-user)] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)]"
+            >
+              Start Listening / Talk
+            </button>
+            <button
+              onClick={handleStopAll}
+              className="flex-1 rounded-lg border border-red-500/30 bg-red-500/10 px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-500/20 dark:text-red-400"
+            >
+              Stop / Reset
+            </button>
           </div>
 
-          {status === "Thinking... (thinking sound played)" && (
-            <div style={{
-              marginTop: "10px",
-              paddingTop: "10px",
-              borderTop: "1px solid rgba(187, 154, 243, 0.15)",
-              fontSize: "12px",
-              color: "#bb9af3",
-              opacity: 0.8,
-            }}>
-              🎵 Latency mask triggered (&gt;1500ms silence) — playing filler clip:
-              <br />
-              <span style={{ opacity: 0.8, fontWeight: "bold" }}>
-                confused-hmm.mp3 (&quot;hmm?&quot; thinking sound)
+          {(liveTimer !== null || latencyMs !== null) && (
+            <div className="mt-6 flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+              <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                Latency (STT End to AI Speech Start):
+              </span>
+              <span className="font-mono text-base font-bold text-amber-700 dark:text-amber-300">
+                {latencyMs !== null
+                  ? `${(latencyMs / 1000).toFixed(2)}s (Final)`
+                  : `${((liveTimer ?? 0) / 1000).toFixed(2)}s`}
               </span>
             </div>
           )}
 
-          {error && (
-            <div style={{
-              marginTop: "12px",
-              paddingTop: "12px",
-              borderTop: "1px solid rgba(247, 118, 142, 0.2)",
-              color: "#f7768e",
-              fontSize: "13px",
-              lineHeight: "1.4"
-            }}>
-              <strong>System Error:</strong> {error}
+          <div className="mt-6 flex flex-col gap-4">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                Your Speech (Microphone)
+              </span>
+              <p className={`mt-2 text-sm ${transcript ? "text-[var(--text-primary)]" : "italic text-[var(--text-muted)]"}`}>
+                {transcript || "Waiting for you to speak..."}
+              </p>
             </div>
-          )}
+
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                AI Student Reply (Speaker)
+              </span>
+              <p className={`mt-2 text-sm ${aiText ? "text-emerald-600 dark:text-emerald-400" : "italic text-[var(--text-muted)]"}`}>
+                {aiText || "Waiting for AI response..."}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-[var(--text-secondary)]">System Status:</span>
+              <strong className={`text-sm ${statusColor}`}>{status}</strong>
+            </div>
+
+            {status === "Thinking... (thinking sound played)" && (
+              <div className="mt-3 border-t border-purple-500/20 pt-3 text-xs text-purple-600 dark:text-purple-400">
+                Latency mask triggered (&gt;1500ms silence) — playing confused-hmm.mp3
+              </div>
+            )}
+
+            {error && (
+              <div className="mt-3 border-t border-red-500/20 pt-3 text-sm text-red-600 dark:text-red-400">
+                <strong>System Error:</strong> {error}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

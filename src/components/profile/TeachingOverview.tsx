@@ -29,9 +29,9 @@ export function TeachingOverview({
           </strong>
           <span className="pb-1 text-sm text-white/75">avg understanding</span>
         </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/25">
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--surface)]/25">
           <div
-            className="h-full rounded-full bg-white transition-all"
+            className="h-full rounded-full bg-[var(--surface)] transition-all"
             style={{ width: `${avgScore ?? 0}%` }}
           />
         </div>
@@ -65,27 +65,27 @@ export function TeachingOverview({
           {
             value: String(overview.totalSessions),
             label: "Sessions taught",
-            tone: "text-[#5755d8]",
+            tone: "text-[var(--nav-active)]",
           },
           {
             value: String(overview.totalDiscussed),
             label: "Concepts explored",
-            tone: "text-[#8127cf]",
+            tone: "text-[var(--state-dodged)]",
           },
           {
             value: `${overview.completionRate}%`,
             label: "Completion rate",
-            tone: "text-[#19704d]",
+            tone: "text-[var(--chip-solid-text)]",
           },
           {
             value: formatDuration(overview.totalDurationMs),
             label: "Teaching time",
-            tone: "text-[#b76a00]",
+            tone: "text-amber-600 dark:text-amber-400",
           },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border border-[#e0dfeb] bg-white p-4 shadow-[0_10px_30px_rgba(56,50,110,0.05)]"
+            className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_10px_30px_var(--shadow-color)]"
           >
             <strong className={`block font-heading text-2xl ${stat.tone}`}>
               {stat.value}

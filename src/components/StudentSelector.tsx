@@ -120,11 +120,11 @@ export function StudentSelector({
           {students.map((item) => {
             const selected = student === item.id;
             return (
-              <div key={item.id} className={`relative flex min-h-[218px] flex-col items-center justify-center rounded-xl border-2 bg-white p-5 transition ${selected ? "border-[#4648d4] shadow-[0_0_0_4px_rgba(70,72,212,0.1)]" : "border-[var(--card-border)]"}`}>
+              <div key={item.id} className={`relative flex min-h-[218px] flex-col items-center justify-center rounded-xl border-2 bg-[var(--surface)] p-5 transition ${selected ? "border-[var(--nav-active)] shadow-[0_0_0_4px_rgba(70,72,212,0.1)]" : "border-[var(--card-border)]"}`}>
                 <label className="flex cursor-pointer flex-col items-center focus-within:outline-none">
                   <input type="radio" name="student" value={item.id} checked={selected} onChange={() => setStudent(item.id)} className="peer sr-only" />
                   <StudentPortrait student={item.id} />
-                  <span className={`font-heading relative z-10 mt-2 text-sm font-semibold sm:text-base ${selected ? "text-[#4648d4]" : "text-[var(--text-primary)]"}`}>{item.name}</span>
+                  <span className={`font-heading relative z-10 mt-2 text-sm font-semibold sm:text-base ${selected ? "text-[var(--nav-active)]" : "text-[var(--text-primary)]"}`}>{item.name}</span>
                   <span className="absolute inset-0 rounded-xl peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--brand)] peer-focus-visible:ring-offset-2" aria-hidden="true" />
                 </label>
                 <button
@@ -152,14 +152,14 @@ export function StudentSelector({
         </div>
       </fieldset>
 
-      <fieldset className="mt-7 w-full rounded-xl border border-[var(--card-border)] bg-white p-5 shadow-[0_1px_1px_rgba(0,0,0,0.05)] sm:mt-8">
+      <fieldset className="mt-7 w-full rounded-xl border border-[var(--card-border)] bg-[var(--surface)] p-5 shadow-[0_1px_1px_var(--shadow-color)] sm:mt-8">
         <legend className="sr-only">Curiosity level</legend>
         <p aria-hidden="true" className="text-center text-sm font-semibold tracking-[0.05em] text-[var(--text-secondary)]">CURIOSITY LEVEL</p>
         <div className="mt-2.5 grid grid-cols-3 rounded-xl bg-[var(--surface-muted)] p-1.5">
           {curiosityLevels.map((level) => {
             const selected = curiosity === level.id;
             return (
-              <label key={level.id} className={`cursor-pointer rounded-lg px-2 py-2.5 text-center text-sm font-semibold transition focus-within:ring-2 focus-within:ring-[var(--brand)] ${selected ? "bg-white font-bold text-[#4648d4] shadow-[0_1px_1px_rgba(0,0,0,0.05)]" : "text-[var(--text-primary)] hover:bg-white/60"}`}>
+              <label key={level.id} className={`cursor-pointer rounded-lg px-2 py-2.5 text-center text-sm font-semibold transition focus-within:ring-2 focus-within:ring-[var(--brand)] ${selected ? "bg-[var(--surface)] font-bold text-[var(--nav-active)] shadow-[0_1px_1px_var(--shadow-color)]" : "text-[var(--text-primary)] hover:bg-[var(--surface)]/60"}`}>
                 <input type="radio" name="curiosity" value={level.id} checked={selected} onChange={() => setCuriosity(level.id)} className="sr-only" />
                 {level.label}
               </label>
@@ -174,7 +174,7 @@ export function StudentSelector({
         onClick={startTeaching}
         disabled={isCreating}
         aria-describedby="confirm-help"
-        className="font-heading mt-7 flex items-center gap-3 rounded-xl bg-[#4648d4] px-9 py-4 font-semibold text-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70 sm:mt-8 sm:px-11"
+        className="font-heading mt-7 flex items-center gap-3 rounded-xl bg-[var(--chat-user)] px-9 py-4 font-semibold text-white shadow-[0_10px_15px_-3px_var(--shadow-color),0_4px_6px_-4px_var(--shadow-color)] transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70 sm:mt-8 sm:px-11"
       >
         {isCreating ? "Creating Classroom..." : "Confirm & Start Teaching"}
         {!isCreating ? <ArrowRightIcon /> : null}

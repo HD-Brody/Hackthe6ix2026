@@ -8,18 +8,18 @@ const kindStyles: Record<
   { badge: string; accent: string; description: string }
 > = {
   in_progress: {
-    badge: "bg-amber-100 text-amber-800",
-    accent: "border-amber-200 bg-amber-50/60",
+    badge: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300",
+    accent: "border-amber-200 bg-amber-50/60 dark:border-amber-800/40 dark:bg-amber-950/25",
     description: "Pick up where you left off.",
   },
   needs_feedback: {
-    badge: "bg-[#ecebff] text-[#5755d8]",
-    accent: "border-[#d9d7ff] bg-[#f7f6ff]",
+    badge: "bg-[var(--brand-soft)] text-[var(--nav-active)]",
+    accent: "border-[var(--border)] bg-[var(--accent-soft)]",
     description: "How clear did this lesson feel?",
   },
   low_score: {
-    badge: "bg-rose-100 text-rose-800",
-    accent: "border-rose-200 bg-rose-50/60",
+    badge: "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300",
+    accent: "border-rose-200 bg-rose-50/60 dark:border-rose-800/40 dark:bg-rose-950/25",
     description: "Understanding dipped below 60%.",
   },
 };
@@ -35,7 +35,7 @@ export function AttentionStrip({ items }: { items: AttentionItem[] }) {
 
   return (
     <section>
-      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#7776df]">
+      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
         Needs attention
       </p>
       <h2 className="mt-1 font-heading text-2xl font-extrabold">
@@ -72,7 +72,7 @@ export function AttentionStrip({ items }: { items: AttentionItem[] }) {
                 <p className="mt-1 text-sm text-[var(--text-secondary)]">
                   {style.description}
                 </p>
-                <p className="mt-2 text-xs font-semibold text-[#5755d8]">
+                <p className="mt-2 text-xs font-semibold text-[var(--nav-active)]">
                   {item.label} →
                 </p>
               </div>

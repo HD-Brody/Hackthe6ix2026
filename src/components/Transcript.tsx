@@ -20,8 +20,8 @@ function formatTime(timestamp: number) {
 function TypingIndicator({ image }: { image: string }) {
   return (
     <div className="flex gap-3">
-      <Image src={image} alt="" width={40} height={40} className="size-9 shrink-0 rounded-full border-2 border-white object-cover shadow-sm sm:size-10" />
-      <div className="flex items-center gap-1 rounded-xl bg-[#eceef0] px-4 py-3 shadow-sm" aria-label="Student is thinking">
+      <Image src={image} alt="" width={40} height={40} className="size-9 shrink-0 rounded-full border-2 border-[var(--surface)] object-cover shadow-sm sm:size-10" />
+      <div className="flex items-center gap-1 rounded-xl bg-[var(--chat-student)] px-4 py-3 shadow-sm" aria-label="Student is thinking">
         {[0, 150, 300].map((delay) => (
           <span
             key={delay}
@@ -59,10 +59,10 @@ export function Transcript({
         return (
           <div key={`${utterance.ts}-${index}`} className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
             {!isUser ? (
-              <Image src={profile.image} alt="" width={40} height={40} className="size-9 shrink-0 rounded-full border-2 border-white object-cover shadow-sm sm:size-10" />
+              <Image src={profile.image} alt="" width={40} height={40} className="size-9 shrink-0 rounded-full border-2 border-[var(--surface)] object-cover shadow-sm sm:size-10" />
             ) : null}
             <div className={`flex max-w-[86%] flex-col ${isUser ? "items-end" : "items-start"}`}>
-              <div className={`rounded-xl px-4 py-3 text-sm leading-6 shadow-sm sm:text-base ${isUser ? "bg-[#4648d4] text-white" : "bg-[#eceef0] italic text-[var(--text-secondary)]"}`}>
+              <div className={`rounded-xl px-4 py-3 text-sm leading-6 shadow-sm sm:text-base ${isUser ? "bg-[var(--chat-user)] text-white" : "bg-[var(--chat-student)] italic text-[var(--text-secondary)]"}`}>
                 {utterance.text}
               </div>
               <time className="mt-1 px-1 text-[10px] text-[var(--text-secondary)]" dateTime={new Date(utterance.ts).toISOString()}>
