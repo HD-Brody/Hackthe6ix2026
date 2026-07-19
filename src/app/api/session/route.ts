@@ -17,9 +17,15 @@ import { transition } from "@/server/orchestrator/stateMachine";
 import { getUserId } from "@/lib/auth0";
 import { parseCuriosityLevel } from "@/lib/curiosity";
 import { parseStudentId } from "@/lib/studentProfiles";
+import { truncateNotes } from "@/llm/extractTopics";
 
 export async function POST(req: NextRequest) {
-  let body: { topic?: string; student?: string; curiosity?: string };
+  let body: {
+    topic?: string;
+    student?: string;
+    curiosity?: string;
+    source_notes?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -31,7 +37,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "topic is required" }, { status: 400 });
   }
 
-  const graph = await resolveGraph(topic);
+  const sourceNotes = body.source_notes?.trim()
+    ? truncateNotes(body.source_notes.trim())
+    : undefined;
+
+  const graph = await resolveGraph(topic, sourceNotes);
   const student = parseStudentId(body.student);
   const curiosity = parseCuriosityLevel(body.curiosity);
   // Auth0 sub when logged in; anonymous "dev" pool otherwise (demo-safe).
@@ -39,7 +49,14 @@ export async function POST(req: NextRequest) {
 
   let session;
   try {
-    session = await createSession(userId, topic, graph, student, curiosity);
+    session = await createSession(
+      userId,
+      topic,
+      graph,
+      student,
+      curiosity,
+      sourceNotes
+    );
   } catch (err) {
     if (err instanceof SessionCapError) {
       return NextResponse.json(

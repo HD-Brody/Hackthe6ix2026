@@ -10,6 +10,7 @@ import graphPhotosynthesis from "@/../fixtures/graphs/graph-photosynthesis.json"
 import graphTcpCongestionControl from "@/../fixtures/graphs/graph-tcp-congestion-control.json";
 import { generateGraph } from "@/llm/generateGraph";
 import type { ConceptGraph } from "@/lib/types";
+import { shouldUseDemoGraphCache } from "./demoGraphCache";
 
 /** Case-insensitive topic → B's vetted CP1 demo cache. */
 const DEMO_GRAPHS: Record<string, ConceptGraph> = {
@@ -45,12 +46,17 @@ function cloneGraph(graph: ConceptGraph, topic: string): ConceptGraph {
 }
 
 /** Demo topic → cached graph; unknown → generateGraph with retry; total failure → TCP cache. */
-export async function resolveGraph(topic: string): Promise<ConceptGraph> {
-  const cached = DEMO_GRAPHS[normalizeTopic(topic)];
-  if (cached) return cloneGraph(cached, topic);
+export async function resolveGraph(
+  topic: string,
+  sourceNotes?: string
+): Promise<ConceptGraph> {
+  if (shouldUseDemoGraphCache(sourceNotes)) {
+    const cached = DEMO_GRAPHS[normalizeTopic(topic)];
+    if (cached) return cloneGraph(cached, topic);
+  }
 
   try {
-    return await retryOnce(() => generateGraph(topic));
+    return await retryOnce(() => generateGraph(topic, sourceNotes));
   } catch (err) {
     console.error(
       `[resolveGraph] generateGraph failed for "${topic}", using TCP fallback:`,

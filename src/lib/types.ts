@@ -102,6 +102,8 @@ export interface Session {
   _id: string;
   user_id: string;
   topic: string;
+  /** Professor's uploaded lecture notes used to ground the concept graph. */
+  source_notes?: string;
   /** AI student persona for this session (optional — added post-CP0). */
   student?: StudentId;
   /** How often the student probes vague explanations (optional — added post-CP0). */

@@ -2,13 +2,17 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   studentProfiles,
   type StudentId,
 } from "@/lib/studentProfiles";
 import type { CuriosityLevel } from "@/lib/types";
 import { createMockSession, isForcedMockMode } from "@/lib/mockSession";
+import {
+  clearPendingNotes,
+  readPendingNotes,
+} from "@/lib/sessionNotes";
 
 const curiosityLevels: Array<{ id: CuriosityLevel; label: string }> = [
   { id: "low", label: "Low" },
@@ -48,7 +52,12 @@ export function StudentSelector({ topic }: { topic: string }) {
   const [curiosity, setCuriosity] = useState<CuriosityLevel>("medium");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasNotes, setHasNotes] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setHasNotes(Boolean(readPendingNotes()));
+  }, []);
 
   async function startTeaching() {
     if (isCreating) return;
@@ -69,10 +78,16 @@ export function StudentSelector({ topic }: { topic: string }) {
     }
 
     try {
+      const sourceNotes = readPendingNotes();
       const response = await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: selectedTopic, student, curiosity }),
+        body: JSON.stringify({
+          topic: selectedTopic,
+          student,
+          curiosity,
+          ...(sourceNotes ? { source_notes: sourceNotes } : {}),
+        }),
       });
       const payload = (await response.json().catch(() => ({}))) as {
         session_id?: string;
@@ -83,6 +98,7 @@ export function StudentSelector({ topic }: { topic: string }) {
         throw new Error(payload.error || "Unable to create a teaching session.");
       }
 
+      clearPendingNotes();
       router.push(`/session/${payload.session_id}?student=${student}`);
     } catch (caught) {
       // No silent mock fallback: a failed session must LOOK failed, or a demo
@@ -102,6 +118,11 @@ export function StudentSelector({ topic }: { topic: string }) {
         <h1 className="font-heading text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">Choose Your AI Student</h1>
         <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">Customize your learning companion to match your teaching style.</p>
         {topic ? <p className="sr-only">Selected topic: {topic}</p> : null}
+        {hasNotes ? (
+          <p className="mt-2 text-sm font-medium text-[var(--brand)]">
+            Teaching from your uploaded notes
+          </p>
+        ) : null}
       </div>
 
       <fieldset className="mt-7 w-full sm:mt-8">

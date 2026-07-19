@@ -1,11 +1,20 @@
 /**
- * Topic input + five demo-topic cards + Sam intro card. Owner: C (Block C1 step 2).
+ * Topic input + five demo-topic cards + notes drop zone. Owner: C (Block C1 step 2).
  */
 
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { storePendingNotes } from "@/lib/sessionNotes";
 
 type Topic = {
   title: string;
@@ -13,6 +22,9 @@ type Topic = {
   accent: "green" | "indigo" | "purple" | "rose";
   icon: ReactNode;
 };
+
+const ACCEPTED_EXTENSIONS = [".txt", ".md", ".pdf"];
+const MAX_TEXT_BYTES = 80 * 1024;
 
 function SearchIcon() {
   return (
@@ -56,6 +68,23 @@ function BookIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5"><path d="M4 5.5h6.3c1 0 1.7.7 1.7 1.7v11.3c0-1.1-.9-2-2-2H4V5.5Zm16 0h-6.3c-1 0-1.7.7-1.7 1.7v11.3c0-1.1.9-2 2-2h6V5.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="m6.5 8 3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 }
 
+function DocumentIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-4">
+      <path d="M8 3.5h5.2L18 8.3V20a1.5 1.5 0 0 1-1.5 1.5H7.5A1.5 1.5 0 0 1 6 20V5a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M13 3.5V9H18" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-3.5">
+      <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const topics: Topic[] = [
   { title: "Photosynthesis", description: "Explain how plants convert sunlight into chemical energy for Sam's biology quiz.", accent: "green", icon: <LeafIcon /> },
   { title: "Machine Learning", description: "Help Sam understand neural networks without the heavy math jargon.", accent: "indigo", icon: <BrainIcon /> },
@@ -93,48 +122,273 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
   );
 }
 
+function isAcceptedFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
+}
+
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsText(file);
+  });
+}
+
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result ?? "");
+      const base64 = result.split(",")[1];
+      if (!base64) {
+        reject(new Error("Failed to read PDF"));
+        return;
+      }
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error("Failed to read PDF"));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function TopicPicker() {
   const [topic, setTopic] = useState("");
+  const [notesText, setNotesText] = useState<string | null>(null);
+  const [notesFileName, setNotesFileName] = useState<string | null>(null);
+  const [extractedTopics, setExtractedTopics] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  function navigateToStudent(selectedTopic: string) {
+    const trimmed = selectedTopic.trim();
+    if (!trimmed) return;
+
+    if (notesText) {
+      storePendingNotes(notesText);
+    }
+
+    router.push(`/student?topic=${encodeURIComponent(trimmed)}`);
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    const selectedTopic = topic.trim();
-    if (!selectedTopic) return;
-
-    router.push(`/student?topic=${encodeURIComponent(selectedTopic)}`);
+    navigateToStudent(topic);
   }
 
   function selectRecommendedTopic(selectedTopic: string) {
     setTopic(selectedTopic);
-    router.push(`/student?topic=${encodeURIComponent(selectedTopic)}`);
+    navigateToStudent(selectedTopic);
+  }
+
+  function clearNotes() {
+    setNotesText(null);
+    setNotesFileName(null);
+    setExtractedTopics([]);
+    setUploadError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  const processFile = useCallback(async (file: File) => {
+    if (!isAcceptedFile(file)) {
+      setUploadError("Please upload a .txt, .md, or .pdf file.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+    setExtractedTopics([]);
+
+    try {
+      const isPdf = file.name.toLowerCase().endsWith(".pdf");
+      let response: Response;
+
+      if (isPdf) {
+        const data = await readFileAsBase64(file);
+        response = await fetch("/api/notes/extract-topics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            file: { mimeType: "application/pdf", data },
+          }),
+        });
+      } else {
+        const text = await readFileAsText(file);
+        if (text.length > MAX_TEXT_BYTES) {
+          throw new Error("Notes file is too large (max 80 KB).");
+        }
+        response = await fetch("/api/notes/extract-topics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+      }
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        topics?: string[];
+        notes_text?: string;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Failed to read your notes.");
+      }
+
+      if (!payload.topics?.length || !payload.notes_text) {
+        throw new Error("Could not find teachable topics in those notes.");
+      }
+
+      setNotesText(payload.notes_text);
+      setNotesFileName(file.name);
+      setExtractedTopics(payload.topics);
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : "Failed to read your notes.";
+      setUploadError(message);
+      clearNotes();
+    } finally {
+      setIsUploading(false);
+    }
+  }, []);
+
+  function handleDragOver(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDragOver(true);
+  }
+
+  function handleDragLeave(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDragOver(false);
+  }
+
+  function handleDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDragOver(false);
+    const file = event.dataTransfer.files[0];
+    if (file) void processFile(file);
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) void processFile(file);
   }
 
   return (
     <div className="mt-8 w-full max-w-6xl sm:mt-10">
-      <form onSubmit={handleSubmit} className="relative mx-auto max-w-3xl">
-        <label htmlFor="topic-input" className="sr-only">What do you want to teach today?</label>
-        <span className="pointer-events-none absolute inset-y-0 left-6 flex items-center text-[var(--text-muted)]">
-          <SearchIcon />
-        </span>
+      <div
+        className={`relative mx-auto max-w-3xl rounded-xl transition ${
+          isDragOver ? "ring-4 ring-indigo-200 ring-offset-2" : ""
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <form onSubmit={handleSubmit} className="relative">
+          <label htmlFor="topic-input" className="sr-only">What do you want to teach today?</label>
+          <span className="pointer-events-none absolute inset-y-0 left-6 flex items-center text-[var(--text-muted)]">
+            <SearchIcon />
+          </span>
+          <input
+            id="topic-input"
+            name="topic"
+            value={topic}
+            onChange={(event) => setTopic(event.target.value)}
+            placeholder="What do you want to teach today?"
+            className="h-20 w-full rounded-xl border border-slate-500 bg-white/95 pl-16 pr-20 text-lg font-semibold text-[var(--text-primary)] shadow-[0_20px_25px_-5px_rgba(96,99,238,0.05),0_8px_10px_-6px_rgba(96,99,238,0.05)] outline-none transition placeholder:text-[#c7c4d7] focus:border-[var(--brand)] focus:ring-4 focus:ring-indigo-100 sm:pr-52 sm:text-2xl"
+          />
+          <button
+            type="submit"
+            disabled={!topic.trim() || isUploading}
+            className="absolute right-2 top-1/2 flex h-16 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[#4648d4] px-5 font-semibold text-white transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:px-6"
+          >
+            <span className="hidden sm:inline">Start</span>
+            <ArrowRightIcon />
+          </button>
+        </form>
+
         <input
-          id="topic-input"
-          name="topic"
-          value={topic}
-          onChange={(event) => setTopic(event.target.value)}
-          placeholder="What do you want to teach today?"
-          className="h-20 w-full rounded-xl border border-slate-500 bg-white/95 pl-16 pr-20 text-lg font-semibold text-[var(--text-primary)] shadow-[0_20px_25px_-5px_rgba(96,99,238,0.05),0_8px_10px_-6px_rgba(96,99,238,0.05)] outline-none transition placeholder:text-[#c7c4d7] focus:border-[var(--brand)] focus:ring-4 focus:ring-indigo-100 sm:pr-52 sm:text-2xl"
+          ref={fileInputRef}
+          type="file"
+          accept=".txt,.md,.pdf"
+          className="sr-only"
+          onChange={handleFileChange}
         />
-        <button
-          type="submit"
-          disabled={!topic.trim()}
-          className="absolute right-2 top-1/2 flex h-16 -translate-y-1/2 items-center justify-center gap-2 rounded-lg bg-[#4648d4] px-5 font-semibold text-white transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed sm:px-6"
-        >
-          <span className="hidden sm:inline">Start</span>
-          <ArrowRightIcon />
-        </button>
-      </form>
+
+        <p className="mt-3 text-center text-sm text-[var(--text-secondary)]">
+          {isUploading ? (
+            <span className="font-medium text-[var(--brand)]">Reading your notes…</span>
+          ) : (
+            <>
+              or{" "}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="font-semibold text-[var(--brand)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+              >
+                drop your lecture notes
+              </button>{" "}
+              (.txt, .md, .pdf)
+            </>
+          )}
+        </p>
+
+        {uploadError ? (
+          <p role="alert" className="mt-2 text-center text-sm font-medium text-red-600">
+            {uploadError}
+          </p>
+        ) : null}
+
+        {notesFileName ? (
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-white px-3 py-1.5 text-sm text-[var(--text-secondary)] shadow-sm">
+              <DocumentIcon />
+              <span>{notesFileName}</span>
+              <button
+                type="button"
+                onClick={clearNotes}
+                aria-label="Remove uploaded notes"
+                className="rounded-full p-0.5 text-[var(--text-muted)] transition hover:bg-slate-100 hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+
+            {extractedTopics.length > 0 ? (
+              <div className="w-full">
+                <p className="text-center text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                  Topics from your notes
+                </p>
+                <div className="mt-2 flex flex-wrap justify-center gap-2">
+                  {extractedTopics.map((suggestion) => {
+                    const selected = topic === suggestion;
+                    return (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => setTopic(suggestion)}
+                        aria-pressed={selected}
+                        className={`rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${
+                          selected
+                            ? "border-[var(--brand)] bg-indigo-50 text-[var(--brand)]"
+                            : "border-[var(--card-border)] bg-white text-[var(--text-primary)] hover:border-[var(--brand)]"
+                        }`}
+                      >
+                        {suggestion}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
       <section className="mt-20 sm:mt-24" aria-labelledby="popular-topics-heading">
         <div className="flex items-center gap-2">

@@ -62,13 +62,13 @@ function retryDelayMs(err: ApiError): number | null {
 
 async function callJSON<T>(
   model: string,
-  prompt: string,
+  contents: string | object,
   responseSchema: object
 ): Promise<T> {
   const response = await withRetry(() =>
     ai.models.generateContent({
       model,
-      contents: prompt,
+      contents,
       config: {
         responseMimeType: "application/json",
         responseSchema,
@@ -81,9 +81,25 @@ async function callJSON<T>(
   return JSON.parse(text) as T;
 }
 
+export type GeminiPart =
+  | { text: string }
+  | { inlineData: { mimeType: string; data: string } };
+
 /** Strong tier — graph generation, gap map. Quality over speed. */
 export function callStrong<T>(prompt: string, responseSchema: object): Promise<T> {
   return callJSON<T>(requireModel("GEMINI_MODEL_STRONG"), prompt, responseSchema);
+}
+
+/** Strong tier with multimodal parts (e.g. PDF inline data + text prompt). */
+export function callStrongMultimodal<T>(
+  parts: GeminiPart[],
+  responseSchema: object
+): Promise<T> {
+  return callJSON<T>(
+    requireModel("GEMINI_MODEL_STRONG"),
+    { role: "user", parts },
+    responseSchema
+  );
 }
 
 /** Fast tier — Evaluator per-turn scoring. Speed over quality (Block B2). */
