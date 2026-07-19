@@ -1,7 +1,7 @@
 import { SessionFeedback } from "@/components/SessionFeedback";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getStudentProfile } from "@/lib/studentProfiles";
+import { getStudentProfile, resolveSessionStudent } from "@/lib/studentProfiles";
 import { getSession } from "@/server/db/sessions";
 
 export const dynamic = "force-dynamic";
@@ -15,8 +15,9 @@ export default async function FeedbackPage({
 }) {
   const { id } = await params;
   const { student } = await searchParams;
-  const profile = getStudentProfile(student);
   const session = id.startsWith("demo-") ? null : await getSession(id).catch(() => null);
+  const studentId = resolveSessionStudent(session?.student, student);
+  const profile = getStudentProfile(studentId);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f8fafc] text-[var(--text-primary)]">

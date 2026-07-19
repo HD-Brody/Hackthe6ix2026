@@ -34,3 +34,14 @@ export function getStudentProfile(value?: string): StudentProfile {
 export function parseStudentId(value: unknown): StudentId {
   return value === "elena" ? "elena" : "sam";
 }
+
+/** Prefer the student stored on the session; fall back to the URL query param. */
+export function resolveSessionStudent(
+  sessionStudent?: StudentId | null,
+  queryStudent?: string | null
+): StudentId {
+  if (sessionStudent === "elena" || sessionStudent === "sam") {
+    return sessionStudent;
+  }
+  return parseStudentId(queryStudent);
+}

@@ -13,6 +13,7 @@ import type {
   StudentId,
   PriorGapContext,
 } from "@/lib/types";
+import { computeComprehensionStats } from "../../lib/comprehension";
 import {
   buildPriorGapContext,
   PriorSessionForbiddenError,
@@ -293,6 +294,9 @@ export interface SessionSummary {
   ended_at?: number;
   solid: number;
   total: number;
+  discussed: number;
+  /** Weighted understanding score among discussed concepts (0–100), or null. */
+  score: number | null;
   has_gap_map: boolean;
   feedback_rating?: number;
   feedback_comment?: string;
@@ -326,20 +330,26 @@ export async function listSessionsByUser(
     )
     .toArray();
 
-  return docs.map((doc) => ({
-    session_id: doc._id,
-    topic: doc.topic,
-    student: doc.student,
-    status: doc.status,
-    started_at: doc.started_at,
-    ended_at: doc.ended_at,
-    solid: doc.graph?.nodes?.filter((n) => n.state === "solid").length ?? 0,
-    total: doc.graph?.nodes?.length ?? 0,
-    has_gap_map: !!doc.gap_map,
-    feedback_rating: doc.feedback?.rating,
-    feedback_comment: doc.feedback?.comment,
-    feedback_ts: doc.feedback?.ts,
-  }));
+  return docs.map((doc) => {
+    const nodes = doc.graph?.nodes ?? [];
+    const stats = computeComprehensionStats(nodes);
+    return {
+      session_id: doc._id,
+      topic: doc.topic,
+      student: doc.student,
+      status: doc.status,
+      started_at: doc.started_at,
+      ended_at: doc.ended_at,
+      solid: stats.solid,
+      total: stats.total,
+      discussed: stats.discussed,
+      score: stats.score,
+      has_gap_map: !!doc.gap_map,
+      feedback_rating: doc.feedback?.rating,
+      feedback_comment: doc.feedback?.comment,
+      feedback_ts: doc.feedback?.ts,
+    };
+  });
 }
 
 export async function setFeedback(

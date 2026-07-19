@@ -11,6 +11,10 @@ import {
 import { useRouter } from "next/navigation";
 import type { Directive, Session, SessionStatus, Utterance } from "@/lib/types";
 import { studentProfiles, type StudentId } from "@/lib/studentProfiles";
+import {
+  computeComprehensionStats,
+  type ComprehensionStats,
+} from "@/lib/comprehension";
 import { MicButton } from "@/components/MicButton";
 import { StudentAvatar } from "@/components/StudentAvatar";
 import { Transcript } from "@/components/Transcript";
@@ -47,27 +51,30 @@ const ERROR_COPY = {
 
 function ComprehensionCard({
   student,
-  solid,
-  total,
+  stats,
   focusName,
 }: {
   student: StudentId;
-  solid: number;
-  total: number;
+  stats: ComprehensionStats;
   focusName: string | null;
 }) {
   const profile = studentProfiles[student];
-  const pct = total > 0 ? Math.round((solid / total) * 100) : 0;
+  const pct = stats.score;
   return (
     <section className="rounded-lg bg-[var(--brand)] p-5 text-white shadow-lg">
-      <p className="text-sm font-semibold text-white/80">Comprehension Level</p>
-      <p className="font-heading mt-1 text-3xl font-bold">{pct}%</p>
+      <p className="text-sm font-semibold text-white/80">Understanding</p>
+      <p className="font-heading mt-1 text-3xl font-bold">
+        {pct !== null ? `${pct}%` : "—"}
+      </p>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/20">
-        <div className="h-full rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-700" style={{ width: `${pct}%` }} />
+        <div
+          className="h-full rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-700"
+          style={{ width: `${pct ?? 0}%` }}
+        />
       </div>
       <p className="mt-4 text-xs leading-5 text-white/90">
-        {total > 0
-          ? `${solid} of ${total} concepts solid${focusName ? ` — ${profile.name} is currently curious about ${focusName}.` : "."}`
+        {stats.discussed > 0
+          ? `${stats.discussed} explored · ${stats.solid} solid${focusName ? ` — ${profile.name} is currently curious about ${focusName}.` : "."}`
           : `${profile.name} is waiting for you to start teaching.`}
       </p>
     </section>
@@ -190,7 +197,9 @@ export function Classroom({
   const [isEnding, setIsEnding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("teaching");
-  const [graphStats, setGraphStats] = useState<{ solid: number; total: number }>({ solid: 0, total: 0 });
+  const [comprehensionStats, setComprehensionStats] = useState<ComprehensionStats>(
+    computeComprehensionStats([])
+  );
   const [focusName, setFocusName] = useState<string | null>(null);
   const [mockHydrated, setMockHydrated] = useState(!mockSession);
   const [micActive, setMicActive] = useState(false);
@@ -241,10 +250,7 @@ export function Classroom({
     setUtterances(session.utterances);
     setSessionStatus(session.status);
     graphNodesRef.current = session.graph.nodes;
-    setGraphStats({
-      solid: session.graph.nodes.filter((n) => n.state === "solid").length,
-      total: session.graph.nodes.length,
-    });
+    setComprehensionStats(computeComprehensionStats(session.graph.nodes));
     setNeedsOpening(
       !!session.prior_gap_context && session.utterances.length === 0
     );
@@ -307,10 +313,7 @@ export function Classroom({
       const session = (await res.json()) as Session;
       setSessionStatus(session.status);
       graphNodesRef.current = session.graph.nodes;
-      setGraphStats({
-        solid: session.graph.nodes.filter((n) => n.state === "solid").length,
-        total: session.graph.nodes.length,
-      });
+      setComprehensionStats(computeComprehensionStats(session.graph.nodes));
     } catch {
       // Non-fatal: the stats card just stays a turn behind.
     }
@@ -578,8 +581,7 @@ export function Classroom({
           <StudentAvatar student={student} state={studentState} />
           <ComprehensionCard
             student={student}
-            solid={graphStats.solid}
-            total={graphStats.total}
+            stats={comprehensionStats}
             focusName={focusName}
           />
         </aside>

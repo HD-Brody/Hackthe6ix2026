@@ -32,17 +32,21 @@ function statusLabel(s: SessionSummary): string {
 
 function SessionRow({ session, index }: { session: SessionSummary; index: number }) {
   const color = topicColors[index % topicColors.length];
-  const pct = session.total > 0 ? Math.round((session.solid / session.total) * 100) : 0;
+  const pct = session.score ?? 0;
   const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(session.started_at);
+  const studentParam = session.student ?? "sam";
   const href = session.has_gap_map
-    ? `/session/${encodeURIComponent(session.session_id)}/report`
-    : `/session/${encodeURIComponent(session.session_id)}`;
+    ? `/session/${encodeURIComponent(session.session_id)}/report?student=${studentParam}`
+    : `/session/${encodeURIComponent(session.session_id)}?student=${studentParam}`;
   return (
     <Link href={href} className="flex items-center gap-3 rounded-xl border border-[#e8e6ef] p-3 transition hover:border-[var(--brand)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
       <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#e5e3ff] font-bold" style={{ color }}>{session.topic.charAt(0).toUpperCase()}</span>
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-sm font-medium">{session.topic}</h3>
-        <p className="text-[10px] text-[var(--text-secondary)]">{date} • {statusLabel(session)} • {session.solid}/{session.total} concepts solid</p>
+        <p className="text-[10px] text-[var(--text-secondary)]">
+          {date} • {statusLabel(session)} • {session.discussed}/{session.total} explored
+          {session.score !== null ? ` · ${session.score}% understanding` : ""}
+        </p>
         {session.feedback_rating ? (
           <div className="mt-1">
             <StarRating rating={session.feedback_rating} size="sm" />
