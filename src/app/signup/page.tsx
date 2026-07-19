@@ -44,7 +44,8 @@ export default function SignUpPage() {
 
               <div className="mt-5 flex justify-center">
                 <a href="/auth/login?screen_hint=signup&connection=google-oauth2" aria-label="Sign up with Google" className="flex h-12 w-full items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] transition hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">
-                  <Image src="/google-signin.svg" alt="Continue with Google" width={180} height={40} className="h-10 w-auto" />
+                  <Image src="/google-signin.svg" alt="Continue with Google" width={180} height={40} className="h-10 w-auto dark:hidden" />
+                  <Image src="/googel-signin-dark.svg" alt="Continue with Google" width={180} height={40} className="hidden h-10 w-auto dark:block" />
                 </a>
               </div>
               <div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-[var(--border)]"/><span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-secondary)] sm:text-xs">Or continue with email</span><span className="h-px flex-1 bg-[var(--border)]"/></div>
