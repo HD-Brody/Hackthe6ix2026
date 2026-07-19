@@ -18,7 +18,7 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
   const user = await getAuthUser();
 
   return (
-    <header className="relative z-10 h-16 border-b border-[var(--border-subtle)] bg-[var(--header-bg)] shadow-[0_4px_10px_var(--shadow-color)]">
+    <header className="sticky top-0 z-50 h-16 border-b border-[var(--border-subtle)] bg-[var(--header-bg)] shadow-[0_4px_10px_var(--shadow-color)]">
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
         <div className="flex items-center gap-8 lg:gap-10">
           <Link
