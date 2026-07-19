@@ -63,6 +63,16 @@ export interface STTClient {
   onError(cb: (message: string) => void): void;
 }
 
+// How long to wait, after the last bit of speech activity, before treating an
+// utterance as complete and firing onFinal. The browser's own SpeechRecognition
+// engine finalizes individual *segments* much sooner than this (after ~1-2s of
+// silence) — that's a voice-activity-detection quirk, not the user being done
+// talking. Without this grace period, a normal thinking/breathing pause while
+// explaining something gets misread as "the user is finished" and cuts them
+// off mid-sentence. This value only has to outlast that per-segment pause, not
+// feel instant, so it's deliberately longer than 1-2s.
+const SILENCE_GRACE_MS = 3500;
+
 /**
  * Creates a Web Speech API STT client implementing the STTClient interface.
  *
@@ -83,6 +93,26 @@ export function createSTTClient(): STTClient {
 
   // The active SpeechRecognition instance. Null when not listening.
   let recognition: any = null;
+
+  // Segments the browser has already marked isFinal, accumulated across
+  // however many pauses happen before the user is *actually* done — see
+  // SILENCE_GRACE_MS above. Flushed to finalCb (and cleared) by
+  // scheduleFinalize()'s timeout, or discarded by stop().
+  let finalBuffer = "";
+  let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Any new speech activity (interim or final) pushes the finalize decision
+  // back out by SILENCE_GRACE_MS. Only fires (and clears the buffer) once that
+  // long has passed with no further activity at all.
+  function scheduleFinalize() {
+    if (silenceTimer) clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => {
+      silenceTimer = null;
+      const text = finalBuffer.trim();
+      finalBuffer = "";
+      if (text) finalCb?.(text);
+    }, SILENCE_GRACE_MS);
+  }
 
   // Human-readable error messages matching the browser's error codes.
   const ERROR_MESSAGES: Record<string, string> = {
@@ -123,21 +153,34 @@ export function createSTTClient(): STTClient {
 
       recognition.onresult = (event: any) => {
         let interimText = "";
-        let finalText = "";
+        let newFinalText = "";
 
         // event.resultIndex is the index of the first new result in this event.
         // Results before it have already been processed.
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalText += transcript;
+            newFinalText += transcript;
           } else {
             interimText += transcript;
           }
         }
 
-        if (interimText) partialCb?.(interimText);
-        if (finalText)   finalCb?.(finalText.trim());
+        if (newFinalText) {
+          // Merge into the running buffer rather than firing onFinal right
+          // away — the browser just closed out one segment, not necessarily
+          // the whole utterance. See SILENCE_GRACE_MS.
+          finalBuffer = finalBuffer ? `${finalBuffer} ${newFinalText}` : newFinalText;
+        }
+
+        if (newFinalText || interimText) {
+          // Report the full picture so far (already-finalized text plus
+          // whatever's still being recognized) so the live caption keeps
+          // growing instead of jumping back to just the newest fragment.
+          partialCb?.(interimText ? `${finalBuffer} ${interimText}`.trim() : finalBuffer);
+          // Any activity — final or interim — means the user is still going.
+          scheduleFinalize();
+        }
       };
 
       recognition.onerror = (event: any) => {
@@ -160,6 +203,14 @@ export function createSTTClient(): STTClient {
     },
 
     stop() {
+      // Cancel any pending finalize — without this, a finalize scheduled just
+      // before stop() would still fire afterward with stale buffered text.
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+      finalBuffer = "";
+
       if (recognition) {
         recognition.onend = null; // Prevent the auto-restart above
         recognition.abort();
