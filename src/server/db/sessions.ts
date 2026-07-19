@@ -11,7 +11,15 @@ import type {
   Directive,
   CuriosityLevel,
   StudentId,
+  PriorGapContext,
 } from "@/lib/types";
+import { computeComprehensionStats } from "../../lib/comprehension";
+import {
+  buildPriorGapContext,
+  PriorSessionForbiddenError,
+  PriorSessionInvalidError,
+  PriorSessionNotFoundError,
+} from "../reteach/priorGapContext";
 
 async function sessions() {
   return (await getDb()).collection<Session>("sessions");
@@ -50,12 +58,18 @@ export async function createSession(
   graph: ConceptGraph,
   student: StudentId = "sam",
   curiosity: CuriosityLevel = "medium",
-  sourceNotes?: string
+  sourceNotes?: string,
+  priorGapContext?: PriorGapContext
 ): Promise<Session> {
   const count = await countSessionsForUser(userId);
   if (isSessionCapReached(count)) {
     throw new SessionCapError(userId, count);
   }
+
+  const pendingDirective: Directive | undefined =
+    priorGapContext && priorGapContext.reteach_order.length > 0
+      ? { type: "PROBE", node_id: priorGapContext.reteach_order[0] }
+      : undefined;
 
   const session: Session = {
     _id: randomUUID(),
@@ -68,6 +82,8 @@ export async function createSession(
     utterances: [],
     started_at: Date.now(),
     ...(sourceNotes?.trim() ? { source_notes: sourceNotes.trim() } : {}),
+    ...(priorGapContext ? { prior_gap_context: priorGapContext } : {}),
+    ...(pendingDirective ? { pending_directive: pendingDirective } : {}),
   };
   await (await sessions()).insertOne(session);
   return session;
@@ -75,6 +91,29 @@ export async function createSession(
 
 export async function getSession(id: string): Promise<Session | null> {
   return (await sessions()).findOne({ _id: id });
+}
+
+/** Load and validate a prior session's gap map for re-teach memory. */
+export async function loadPriorGapContext(
+  priorSessionId: string,
+  userId: string
+): Promise<{ prior: PriorGapContext; session: Session }> {
+  const session = await getSession(priorSessionId);
+  if (!session) {
+    throw new PriorSessionNotFoundError(priorSessionId);
+  }
+  if (session.user_id !== userId) {
+    throw new PriorSessionForbiddenError();
+  }
+  if (session.status !== "ended") {
+    throw new PriorSessionInvalidError("prior session has not ended yet");
+  }
+  if (!session.gap_map) {
+    throw new PriorSessionInvalidError("prior session has no gap map");
+  }
+
+  const prior = buildPriorGapContext(priorSessionId, session.gap_map);
+  return { prior, session };
 }
 
 export async function appendUtterance(
@@ -255,6 +294,9 @@ export interface SessionSummary {
   ended_at?: number;
   solid: number;
   total: number;
+  discussed: number;
+  /** Weighted understanding score among discussed concepts (0–100), or null. */
+  score: number | null;
   has_gap_map: boolean;
   feedback_rating?: number;
   feedback_comment?: string;
@@ -288,20 +330,26 @@ export async function listSessionsByUser(
     )
     .toArray();
 
-  return docs.map((doc) => ({
-    session_id: doc._id,
-    topic: doc.topic,
-    student: doc.student,
-    status: doc.status,
-    started_at: doc.started_at,
-    ended_at: doc.ended_at,
-    solid: doc.graph?.nodes?.filter((n) => n.state === "solid").length ?? 0,
-    total: doc.graph?.nodes?.length ?? 0,
-    has_gap_map: !!doc.gap_map,
-    feedback_rating: doc.feedback?.rating,
-    feedback_comment: doc.feedback?.comment,
-    feedback_ts: doc.feedback?.ts,
-  }));
+  return docs.map((doc) => {
+    const nodes = doc.graph?.nodes ?? [];
+    const stats = computeComprehensionStats(nodes);
+    return {
+      session_id: doc._id,
+      topic: doc.topic,
+      student: doc.student,
+      status: doc.status,
+      started_at: doc.started_at,
+      ended_at: doc.ended_at,
+      solid: stats.solid,
+      total: stats.total,
+      discussed: stats.discussed,
+      score: stats.score,
+      has_gap_map: !!doc.gap_map,
+      feedback_rating: doc.feedback?.rating,
+      feedback_comment: doc.feedback?.comment,
+      feedback_ts: doc.feedback?.ts,
+    };
+  });
 }
 
 export async function setFeedback(

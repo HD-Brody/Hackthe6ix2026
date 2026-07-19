@@ -19,6 +19,7 @@ import type {
   Directive,
   GapMap,
   VagueMoment,
+  PriorGapContext,
 } from "@/lib/types";
 
 const MOCK = process.env.LLM_MOCK === "true";
@@ -70,6 +71,19 @@ async function* mockPersonaReply(
   }
 }
 
+async function* mockBridgingPersonaReply(
+  priorGapContext: PriorGapContext
+): AsyncIterable<string> {
+  await delay(MOCK_PERSONA_FIRST_TOKEN_MS);
+  const focus = priorGapContext.reteach_names[0] ?? "that part";
+  const line = `Okay so last time I still didn't get ${focus} — can you walk me through that again?`;
+  const words = line.split(" ");
+  for (let i = 0; i < words.length; i++) {
+    yield i < words.length - 1 ? `${words[i]} ` : words[i];
+    if (i < words.length - 1) await delay(MOCK_TOKEN_MS);
+  }
+}
+
 async function mockGenerateGapMap(
   graph: ConceptGraph,
   _quotes: VagueMoment[],
@@ -80,4 +94,7 @@ async function mockGenerateGapMap(
 
 export const evaluate = MOCK ? mockEvaluate : realEvaluate.evaluate;
 export const personaReply = MOCK ? mockPersonaReply : realPersona.personaReply;
+export const bridgingPersonaReply = MOCK
+  ? mockBridgingPersonaReply
+  : realPersona.bridgingPersonaReply;
 export const generateGapMap = MOCK ? mockGenerateGapMap : realGapMap.generateGapMap;

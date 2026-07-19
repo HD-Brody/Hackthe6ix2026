@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { GapMapGrid } from "@/components/GapMapGrid";
+import { ConceptCoverage } from "@/components/ConceptCoverage";
+import { ReteachButton } from "@/components/ReteachButton";
+import { computeComprehensionStats, formatBreakdown } from "@/lib/comprehension";
 import { StarRating } from "@/components/StarRating";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSession } from "@/server/db/sessions";
+import { resolveSessionStudent } from "@/lib/studentProfiles";
 import type { GapMap } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -15,17 +18,23 @@ const DEMO_REPORT: GapMap = {
     { id: "qubits", name: "Qubits", state: "solid" },
     { id: "superposition", name: "Superposition", state: "solid" },
     { id: "entanglement", name: "Entanglement Logic", state: "vague" },
+    { id: "measurement", name: "Measurement Collapse", state: "vague" },
+    { id: "hadamard", name: "Hadamard Gate", state: "touched" },
+    { id: "decoherence", name: "Decoherence", state: "wrong" },
     { id: "gates", name: "Quantum Gates", state: "unvisited" },
+    { id: "algorithms", name: "Quantum Algorithms", state: "unvisited" },
+    { id: "error_correction", name: "Error Correction", state: "unvisited" },
+    { id: "teleportation", name: "Quantum Teleportation", state: "unvisited" },
   ],
   vaguest_moments: [
     { node_id: "entanglement", quote: "I think entanglement means the particles are communicating instantly... or maybe they just share the same state?" },
-    { node_id: "gates", quote: "The Hadamard gate creates superposition, but I couldn't explain what the matrix actually changes." },
+    { node_id: "hadamard", quote: "The Hadamard gate creates superposition, but I couldn't explain what the matrix actually changes." },
   ],
   dodged_questions: [
     "How does measurement affect entangled qubits?",
     "What makes a quantum gate reversible?",
   ],
-  reteach_order: ["gates", "entanglement"],
+  reteach_order: ["decoherence", "entanglement", "measurement", "hadamard"],
   one_liner: "You have a strong intuitive grasp of the core ideas. A few technical links need another pass.",
 };
 
@@ -60,11 +69,11 @@ export default async function ReportPage({
 }) {
   const { id } = await params;
   const { student } = await searchParams;
-  const selectedStudent = student === "elena" ? "elena" : "sam";
-  const studentName = selectedStudent === "elena" ? "Elena" : "Sam";
   const isMock = id.startsWith("demo-");
 
   const session = isMock ? null : await getSession(id).catch(() => null);
+  const selectedStudent = resolveSessionStudent(session?.student, student);
+  const studentName = selectedStudent === "elena" ? "Elena" : "Sam";
 
   const shell = (children: React.ReactNode) => (
     <div className="flex min-h-screen flex-col bg-[#f9f9fc] text-[var(--text-primary)]">
@@ -99,8 +108,8 @@ export default async function ReportPage({
   const report: GapMap = session?.gap_map ?? DEMO_REPORT;
   const nodeName = (nodeId: string) =>
     report.nodes.find((n) => n.id === nodeId)?.name ?? nodeId;
-  const solid = report.nodes.filter((n) => n.state === "solid").length;
-  const clarity = report.nodes.length > 0 ? Math.round((solid / report.nodes.length) * 100) : 0;
+  const comprehension = computeComprehensionStats(report.nodes);
+  const understandingScore = comprehension.score;
   const reteachNames = report.reteach_order.map(nodeName);
   const completedDate = new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -126,24 +135,39 @@ export default async function ReportPage({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#7776df]">Knowledge Visualization</p>
-              <h2 className="mt-1 font-heading text-xl font-bold">Concept Coverage</h2>
+              <h2 className="mt-1 font-heading text-xl font-bold">What You Taught</h2>
             </div>
             <div className="flex flex-wrap gap-4 text-xs font-semibold text-[var(--text-secondary)]">
               <span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#57b98b]" />Solid</span>
               <span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#e4bf53]" />Hand-waved</span>
               <span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[var(--state-wrong)]" />Wrong</span>
               <span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[var(--state-dodged)]" />Dodged</span>
-              <span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#b7b7c3]" />Not covered</span>
+              <span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[var(--state-touched)]" />Mentioned</span>
             </div>
           </div>
-          <GapMapGrid gapMap={report} />
+          <ConceptCoverage gapMap={report} />
         </article>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
           <article className="rounded-2xl bg-gradient-to-br from-[#5755d8] to-[#7776df] p-6 text-white shadow-[0_12px_28px_rgba(87,85,216,0.24)]">
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/75">Professor Me Insight</p>
-            <div className="mt-5 flex items-end gap-2"><strong className="font-heading text-5xl">{clarity}%</strong><span className="pb-1 text-sm text-white/75">solid</span></div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full rounded-full bg-white" style={{ width: `${clarity}%` }} /></div>
+            <div className="mt-5 flex items-end gap-2">
+              <strong className="font-heading text-5xl">
+                {understandingScore !== null ? `${understandingScore}%` : "—"}
+              </strong>
+              <span className="pb-1 text-sm text-white/75">understanding</span>
+            </div>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/25">
+              <div
+                className="h-full rounded-full bg-white transition-all"
+                style={{ width: `${understandingScore ?? 0}%` }}
+              />
+            </div>
+            {comprehension.discussed > 0 ? (
+              <p className="mt-3 text-xs text-white/75">
+                among {comprehension.discussed} concept{comprehension.discussed === 1 ? "" : "s"} you explored · {formatBreakdown(comprehension)}
+              </p>
+            ) : null}
             <p className="mt-5 text-sm leading-6 text-white/90">“{report.one_liner}”</p>
           </article>
 
@@ -205,7 +229,12 @@ export default async function ReportPage({
             ? `Re-teach these in order: ${reteachNames.join(" → ")}.`
             : "Nothing left to re-teach — pick a harder topic."}
         </p>
-        <Link href="/" className="mt-5 inline-block rounded-lg bg-[#5755d8] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#4846c5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">Teach it again</Link>
+        <ReteachButton
+          sessionId={id}
+          student={selectedStudent}
+          hasGaps={reteachNames.length > 0}
+          isMock={isMock}
+        />
       </section>
     </main>
   );
