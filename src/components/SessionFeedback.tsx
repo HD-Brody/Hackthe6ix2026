@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { StarRating } from "@/components/StarRating";
 import type { StudentProfile } from "@/lib/studentProfiles";
 
 function StarIcon({ filled }: { filled: boolean }) {
@@ -21,10 +22,26 @@ function DashboardIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-[18px]"><rect x="3.5" y="3.5" width="6.5" height="6.5" stroke="currentColor" strokeWidth="1.7"/><rect x="14" y="3.5" width="6.5" height="6.5" stroke="currentColor" strokeWidth="1.7"/><rect x="3.5" y="14" width="6.5" height="6.5" stroke="currentColor" strokeWidth="1.7"/><rect x="14" y="14" width="6.5" height="6.5" stroke="currentColor" strokeWidth="1.7"/></svg>;
 }
 
-export function SessionFeedback({ profile, sessionId }: { profile: StudentProfile; sessionId: string }) {
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [submitState, setSubmitState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+export type SessionFeedbackData = {
+  rating: number;
+  comment?: string;
+  ts: number;
+};
+
+export function SessionFeedback({
+  profile,
+  sessionId,
+  initialFeedback = null,
+}: {
+  profile: StudentProfile;
+  sessionId: string;
+  initialFeedback?: SessionFeedbackData | null;
+}) {
+  const [rating, setRating] = useState(initialFeedback?.rating ?? 0);
+  const [comment, setComment] = useState(initialFeedback?.comment ?? "");
+  const [submitState, setSubmitState] = useState<"idle" | "saving" | "saved" | "failed">(
+    initialFeedback ? "saved" : "idle"
+  );
 
   async function submitFeedback() {
     if (rating === 0 || submitState === "saving" || submitState === "saved") return;
@@ -65,44 +82,56 @@ export function SessionFeedback({ profile, sessionId }: { profile: StudentProfil
       </section>
 
       <section className="mt-5 w-full rounded-2xl border border-[#e6e8ea] bg-white p-5 shadow-[0_4px_10px_rgba(0,0,0,0.05)] sm:p-6" aria-label="Session feedback form">
-        <fieldset className="flex flex-col items-center">
-          <legend className="w-full text-center text-sm font-semibold text-[#464554]">Rate the session clarity</legend>
-          <div className="mt-2 flex gap-1 text-[#c7c4d7]" role="radiogroup" aria-label="Session clarity rating">
-            {[1, 2, 3, 4, 5].map((value) => (
-              <button key={value} type="button" role="radio" aria-checked={rating === value} aria-label={`${value} out of 5 stars`} onClick={() => setRating(value)} className={`rounded p-0.5 transition hover:scale-110 hover:text-[#f1bd43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${value <= rating ? "text-[#f1bd43]" : ""}`}>
-                <StarIcon filled={value <= rating} />
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        <label className="mt-4 block text-sm font-semibold text-[var(--text-primary)]" htmlFor="session-feedback">Any additional feedback? (optional)</label>
-        <textarea
-          id="session-feedback"
-          rows={2}
-          value={comment}
-          onChange={(event) => setComment(event.target.value)}
-          disabled={submitState === "saved"}
-          placeholder="How can I improve my teaching?"
-          className="mt-2 min-h-20 w-full resize-y rounded-xl border-0 bg-[#f2f4f6] px-4 py-3 text-sm outline-none placeholder:text-[#6b7280] focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:opacity-60"
-        />
-
         {submitState === "saved" ? (
-          <p className="mt-3 text-center text-sm font-medium text-emerald-700" role="status">Noted in {profile.name}&apos;s diary. Thanks!</p>
+          <div className="flex flex-col items-center text-center">
+            <p className="text-sm font-semibold text-[#464554]">Your clarity rating</p>
+            <StarRating rating={rating} className="mt-2" />
+            {comment.trim() ? (
+              <blockquote className="mt-4 w-full rounded-xl bg-[#f2f4f6] px-4 py-3 text-left text-sm italic leading-6 text-[var(--text-secondary)]">
+                “{comment.trim()}”
+              </blockquote>
+            ) : null}
+            <p className="mt-3 text-sm font-medium text-emerald-700" role="status">
+              Noted in {profile.name}&apos;s diary. Thanks!
+            </p>
+          </div>
         ) : (
-          <button
-            type="button"
-            onClick={submitFeedback}
-            disabled={rating === 0 || submitState === "saving"}
-            className="mt-3 w-full rounded-xl border border-[#c7c4d7] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[#f7f9fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {submitState === "saving" ? "Saving..." : submitState === "failed" ? "Couldn't save — try again" : rating === 0 ? "Pick a star rating first" : "Submit feedback"}
-          </button>
+          <>
+            <fieldset className="flex flex-col items-center">
+              <legend className="w-full text-center text-sm font-semibold text-[#464554]">Rate the session clarity</legend>
+              <div className="mt-2 flex gap-1 text-[#c7c4d7]" role="radiogroup" aria-label="Session clarity rating">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button key={value} type="button" role="radio" aria-checked={rating === value} aria-label={`${value} out of 5 stars`} onClick={() => setRating(value)} className={`rounded p-0.5 transition hover:scale-110 hover:text-[#f1bd43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${value <= rating ? "text-[#f1bd43]" : ""}`}>
+                    <StarIcon filled={value <= rating} />
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <label className="mt-4 block text-sm font-semibold text-[var(--text-primary)]" htmlFor="session-feedback">Any additional feedback? (optional)</label>
+            <textarea
+              id="session-feedback"
+              rows={2}
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder="How can I improve my teaching?"
+              className="mt-2 min-h-20 w-full resize-y rounded-xl border-0 bg-[#f2f4f6] px-4 py-3 text-sm outline-none placeholder:text-[#6b7280] focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+            />
+
+            <button
+              type="button"
+              onClick={submitFeedback}
+              disabled={rating === 0 || submitState === "saving"}
+              className="mt-3 w-full rounded-xl border border-[#c7c4d7] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[#f7f9fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {submitState === "saving" ? "Saving..." : submitState === "failed" ? "Couldn't save — try again" : rating === 0 ? "Pick a star rating first" : "Submit feedback"}
+            </button>
+          </>
         )}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
           <Link href={`/session/${encodeURIComponent(sessionId)}/report?student=${profile.id}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4648d4] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><MapIcon /> View Understanding Map</Link>
-          <Link href="/" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c7c4d7] bg-[#f2f4f6] px-4 py-3 text-sm font-semibold text-[#4648d4] transition hover:bg-[#e8e9ee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><DashboardIcon /> Return to Main</Link>
+          <Link href="/profile" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c7c4d7] bg-[#f2f4f6] px-4 py-3 text-sm font-semibold text-[#4648d4] transition hover:bg-[#e8e9ee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"><DashboardIcon /> View Student Diary</Link>
         </div>
       </section>
     </main>

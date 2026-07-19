@@ -177,4 +177,22 @@ describe("turnPolicy", () => {
       turnPolicy(g, wrong, { probeCounts: { n3: 2 }, deepened: {} })
     ).toEqual({ type: "ADVANCE", node_id: "n1" });
   });
+
+  it("low curiosity (probeThreshold 1) advances after one probe", () => {
+    const g = withNodeStates(graph, { n1: "vague" });
+    expect(
+      turnPolicy(g, verdictVague as Verdict, { probeCounts: { n1: 1 }, deepened: {} }, {
+        probeThreshold: 1,
+      })
+    ).toEqual({ type: "ADVANCE", node_id: "n2" });
+  });
+
+  it("high curiosity (probeThreshold 3) keeps probing after two attempts", () => {
+    const g = withNodeStates(graph, { n1: "vague" });
+    expect(
+      turnPolicy(g, verdictVague as Verdict, { probeCounts: { n1: 2 }, deepened: {} }, {
+        probeThreshold: 3,
+      })
+    ).toEqual({ type: "PROBE", node_id: "n1" });
+  });
 });

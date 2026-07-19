@@ -5,9 +5,9 @@
  *   1. Pick one thread when a verdict touches multiple nodes (rambler case):
  *      wrong > vague > solid, tie-break lowest prereq depth (foundations first),
  *      then graph order.
- *   2. wrong behaves like vague for probing (probe once, twice max, then advance).
- *   3. vague/wrong and probeCounts[node] < 2 → PROBE(node). Caller increments count.
- *   4. Probed twice already → ADVANCE to nextAdvanceTarget(graph).
+ *   2. wrong behaves like vague for probing (probe up to probeThreshold, then advance).
+ *   3. vague/wrong and probeCounts[node] < probeThreshold → PROBE(node). Caller increments count.
+ *   4. Probed probeThreshold times already → ADVANCE to nextAdvanceTarget(graph).
  *   5. solid and !deepened[node] → DEEPEN(node). Caller sets flag. Already deepened → ADVANCE.
  *   6. nextAdvanceTarget null → WRAP_UP.
  *   7. Nothing actionable (empty verdicts / dodge-only / derail) → ADVANCE.
@@ -27,6 +27,13 @@ import type {
 } from "@/lib/types";
 
 export type { PolicyState };
+
+export interface TurnPolicyOptions {
+  /** Max PROBE attempts per node on vague/wrong (default 2 = medium curiosity). */
+  probeThreshold?: number;
+}
+
+const DEFAULT_PROBE_THRESHOLD = 2;
 
 const VERDICT_PRIORITY: Record<"wrong" | "vague" | "solid", number> = {
   wrong: 3,
@@ -112,8 +119,10 @@ function advanceDirective(graph: ConceptGraph): Directive {
 export function turnPolicy(
   graph: ConceptGraph,
   verdict: Verdict,
-  state: PolicyState
+  state: PolicyState,
+  opts: TurnPolicyOptions = {}
 ): Directive {
+  const probeThreshold = opts.probeThreshold ?? DEFAULT_PROBE_THRESHOLD;
   const primary = pickPrimaryVerdict(graph, verdict.verdicts);
 
   if (!primary) {
@@ -143,10 +152,10 @@ export function turnPolicy(
   const probeCount = state.probeCounts[node_id] ?? 0;
 
   if (label === "vague" || label === "wrong") {
-    if (probeCount < 2) {
+    if (probeCount < probeThreshold) {
       return { type: "PROBE", node_id };
     }
-    // Twice probed and still a mess — leave it terminal, move on (don't loop).
+    // Hit probe cap and still a mess — leave it terminal, move on (don't loop).
     return advanceDirective(graph);
   }
 

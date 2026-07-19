@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GapMapGrid } from "@/components/GapMapGrid";
+import { StarRating } from "@/components/StarRating";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSession } from "@/server/db/sessions";
@@ -157,6 +158,25 @@ export default async function ReportPage({
               <p className="mt-5 text-sm leading-6 text-[var(--text-secondary)]">No dodged questions — you faced everything {studentName} threw at you.</p>
             )}
           </article>
+
+          {session?.feedback ? (
+            <article className="rounded-2xl border border-[#e0dfeb] bg-white p-6 shadow-[0_10px_30px_rgba(56,50,110,0.05)]">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#7776df]">Your Reflection</p>
+              <h2 className="mt-1 font-heading text-xl font-bold">Session clarity</h2>
+              <StarRating rating={session.feedback.rating} className="mt-3" />
+              {session.feedback.comment ? (
+                <p className="mt-3 text-sm italic leading-6 text-[var(--text-secondary)]">“{session.feedback.comment}”</p>
+              ) : (
+                <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">You rated this session but left no written note.</p>
+              )}
+              <Link
+                href={`/session/${encodeURIComponent(id)}/feedback?student=${selectedStudent}`}
+                className="mt-4 inline-block text-xs font-semibold text-[#5755d8] hover:underline"
+              >
+                View in student diary →
+              </Link>
+            </article>
+          ) : null}
         </div>
       </section>
 

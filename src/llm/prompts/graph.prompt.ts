@@ -9,8 +9,8 @@
 
 export const PROMPTS_VERSION = "1"; // bump on any prompt change after freeze (hour 19)
 
-export function graphPrompt(topic: string): string {
-  return `You are designing an oral-exam blueprint for the topic "${topic}", at the level of a strong undergraduate who has taken one course on it.
+export function graphPrompt(topic: string, sourceNotes?: string): string {
+  const base = `You are designing an oral-exam blueprint for the topic "${topic}", at the level of a strong undergraduate who has taken one course on it.
 
 Produce 8 to 15 concepts that together cover the topic well enough to run a full oral exam. For each concept:
 - Give a short, specific name (a few words).
@@ -32,4 +32,13 @@ Examples of BAD concepts to avoid, and why:
 - "Random fun facts about X" — not probeable, doesn't build toward understanding.
 
 Return ONLY the concepts. Do not include any node state, quotes, or metadata beyond what's requested — that is handled elsewhere.`;
+
+  if (!sourceNotes?.trim()) return base;
+
+  return `${base}
+
+Ground your concept graph in the professor's lecture notes below. Prefer concepts explicitly covered in the notes. The topic "${topic}" is what the professor chose to teach — focus the graph on that topic as it appears in the notes.
+
+--- LECTURE NOTES ---
+${sourceNotes.trim()}`;
 }

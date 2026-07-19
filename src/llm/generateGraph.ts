@@ -56,8 +56,14 @@ const rawGraphSchema = {
   required: ["topic", "nodes"],
 };
 
-export async function generateGraph(topic: string): Promise<ConceptGraph> {
-  const raw = await callStrong<RawGraph>(graphPrompt(topic), rawGraphSchema);
+export async function generateGraph(
+  topic: string,
+  sourceNotes?: string
+): Promise<ConceptGraph> {
+  const raw = await callStrong<RawGraph>(
+    graphPrompt(topic, sourceNotes),
+    rawGraphSchema
+  );
 
   return {
     topic: raw.topic,

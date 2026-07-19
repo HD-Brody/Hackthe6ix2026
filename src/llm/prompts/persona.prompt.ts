@@ -19,17 +19,29 @@
  */
 
 import type { Utterance, Directive } from "@/lib/types";
+import type { StudentId } from "@/lib/studentProfiles";
 
 /** Bump whenever the wording/guardrails below change after the CP4 freeze —
  * see evaluator.prompt.ts's PROMPTS_VERSION for why this matters. */
-export const PROMPTS_VERSION = 1;
+export const PROMPTS_VERSION = 2;
+
+const STUDENT_NAMES: Record<StudentId, string> = {
+  sam: "Sam",
+  elena: "Elena",
+};
+
+function resolveStudentName(student: StudentId): string {
+  return STUDENT_NAMES[student === "elena" ? "elena" : "sam"];
+}
 
 const TRANSCRIPT_WINDOW = 10;
 
-function formatTranscript(transcript: Utterance[]): string {
+function formatTranscript(transcript: Utterance[], studentName: string): string {
   const recent = transcript.slice(-TRANSCRIPT_WINDOW);
   if (recent.length === 0) return "(nothing said yet — this is the very start of the conversation)";
-  return recent.map((u) => `${u.role === "user" ? "User" : "You (Sam)"}: ${u.text}`).join("\n");
+  return recent
+    .map((u) => `${u.role === "user" ? "User" : `You (${studentName})`}: ${u.text}`)
+    .join("\n");
 }
 
 function directiveInstruction(directive: Directive): string {
@@ -49,11 +61,16 @@ function directiveInstruction(directive: Directive): string {
   }
 }
 
-export function personaPrompt(transcript: Utterance[], directive: Directive): string {
-  return `You are Sam, a sharp first-year student. You know NOTHING about this topic beyond what has been said in the conversation below — the user is teaching YOU. You are not an AI, a tutor, or an evaluator: you are just a curious student having a conversation.
+export function personaPrompt(
+  transcript: Utterance[],
+  directive: Directive,
+  student: StudentId = "sam"
+): string {
+  const studentName = resolveStudentName(student);
+  return `You are ${studentName}, a sharp first-year student. You know NOTHING about this topic beyond what has been said in the conversation below — the user is teaching YOU. You are not an AI, a tutor, or an evaluator: you are just a curious student having a conversation.
 
 Conversation so far:
-${formatTranscript(transcript)}
+${formatTranscript(transcript, studentName)}
 
 Your one instruction this turn (from your own train of thought, never mention it explicitly): ${directiveInstruction(directive)}
 
@@ -72,5 +89,5 @@ This reply is going straight into a voice engine and will be spoken out loud, wo
 
 Never mention directives, evaluators, grading, concept graphs, or that you are an AI.
 
-Reply with ONLY what Sam would say out loud — no stage directions, no quotation marks around it, nothing else.`;
+Reply with ONLY what ${studentName} would say out loud — no stage directions, no quotation marks around it, nothing else.`;
 }

@@ -28,10 +28,6 @@ function ChatIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5 text-[var(--brand)]"><path d="M4 5h16v11H8l-4 3V5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /></svg>;
 }
 
-function PaperclipIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5"><path d="m8.5 12.5 6.1-6.1a3.2 3.2 0 0 1 4.5 4.5l-7.7 7.7a5 5 0 0 1-7.1-7.1l7.3-7.3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
-}
-
 function SendIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5"><path d="m3 4 18 8-18 8 3-8-3-8Zm3 8h15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
@@ -133,7 +129,6 @@ function ClassroomComposer({
           className="min-h-12 flex-1 resize-none bg-transparent px-3 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]/50 sm:text-base"
         />
         <div className="flex items-center gap-1">
-          <button type="button" aria-label="Attach a file. Attachments are not connected yet." className="flex size-10 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-white hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><PaperclipIcon /></button>
           <MicButton
             active={micActive}
             disabled={isSending || !micSupported}

@@ -9,6 +9,8 @@ import type {
   GapMap,
   TurnTiming,
   Directive,
+  CuriosityLevel,
+  StudentId,
 } from "@/lib/types";
 
 async function sessions() {
@@ -45,7 +47,10 @@ export class SessionCapError extends Error {
 export async function createSession(
   userId: string,
   topic: string,
-  graph: ConceptGraph
+  graph: ConceptGraph,
+  student: StudentId = "sam",
+  curiosity: CuriosityLevel = "medium",
+  sourceNotes?: string
 ): Promise<Session> {
   const count = await countSessionsForUser(userId);
   if (isSessionCapReached(count)) {
@@ -56,10 +61,13 @@ export async function createSession(
     _id: randomUUID(),
     user_id: userId,
     topic,
+    student,
+    curiosity,
     status: "created",
     graph,
     utterances: [],
     started_at: Date.now(),
+    ...(sourceNotes?.trim() ? { source_notes: sourceNotes.trim() } : {}),
   };
   await (await sessions()).insertOne(session);
   return session;
@@ -241,12 +249,16 @@ export async function setGapMap(
 export interface SessionSummary {
   session_id: string;
   topic: string;
+  student?: StudentId;
   status: Session["status"];
   started_at: number;
   ended_at?: number;
   solid: number;
   total: number;
   has_gap_map: boolean;
+  feedback_rating?: number;
+  feedback_comment?: string;
+  feedback_ts?: number;
 }
 
 export async function listSessionsByUser(
@@ -260,11 +272,15 @@ export async function listSessionsByUser(
         projection: {
           _id: 1,
           topic: 1,
+          student: 1,
           status: 1,
           started_at: 1,
           ended_at: 1,
           "graph.nodes.state": 1,
           gap_map: 1,
+          "feedback.rating": 1,
+          "feedback.comment": 1,
+          "feedback.ts": 1,
         },
         sort: { started_at: -1 },
         limit,
@@ -275,12 +291,16 @@ export async function listSessionsByUser(
   return docs.map((doc) => ({
     session_id: doc._id,
     topic: doc.topic,
+    student: doc.student,
     status: doc.status,
     started_at: doc.started_at,
     ended_at: doc.ended_at,
     solid: doc.graph?.nodes?.filter((n) => n.state === "solid").length ?? 0,
     total: doc.graph?.nodes?.length ?? 0,
     has_gap_map: !!doc.gap_map,
+    feedback_rating: doc.feedback?.rating,
+    feedback_comment: doc.feedback?.comment,
+    feedback_ts: doc.feedback?.ts,
   }));
 }
 

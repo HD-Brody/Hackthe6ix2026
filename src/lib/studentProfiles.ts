@@ -29,3 +29,8 @@ export const studentProfiles: Record<StudentId, StudentProfile> = {
 export function getStudentProfile(value?: string): StudentProfile {
   return value === "elena" ? studentProfiles.elena : studentProfiles.sam;
 }
+
+/** Coerce API / query input to a known student id. Defaults to Sam. */
+export function parseStudentId(value: unknown): StudentId {
+  return value === "elena" ? "elena" : "sam";
+}

@@ -5,6 +5,10 @@
  * If you need a new field, add it as optional and announce it in the group chat.
  */
 
+import type { StudentId } from "@/lib/studentProfiles";
+
+export type { StudentId };
+
 // ── Concept graph (contracts/concept-graph.schema.json) ─────────
 
 export type NodeState =
@@ -77,6 +81,8 @@ export interface GapMap {
 
 // ── Session (data model, design doc §4) ─────────────────────────
 
+export type CuriosityLevel = "low" | "medium" | "high";
+
 export type SessionStatus = "created" | "teaching" | "wrapping" | "ended";
 
 export interface Utterance {
@@ -96,6 +102,12 @@ export interface Session {
   _id: string;
   user_id: string;
   topic: string;
+  /** Professor's uploaded lecture notes used to ground the concept graph. */
+  source_notes?: string;
+  /** AI student persona for this session (optional — added post-CP0). */
+  student?: StudentId;
+  /** How often the student probes vague explanations (optional — added post-CP0). */
+  curiosity?: CuriosityLevel;
   status: SessionStatus;
   graph: ConceptGraph;
   utterances: Utterance[];
