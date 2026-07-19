@@ -32,6 +32,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   // Run middleware on all paths except static files, public folder files, images, favicon
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|audio/|images/|api/session).*)",
+    "/((?!_next/static|_next/image|favicon.ico|audio/|images/|api/session|api/notes).*)",
   ],
 };

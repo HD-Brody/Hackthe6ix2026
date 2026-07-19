@@ -345,26 +345,46 @@ export function TopicPicker() {
         ) : null}
 
         {notesFileName ? (
-          <div className="mt-4 flex flex-col items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-white px-3 py-1.5 text-sm text-[var(--text-secondary)] shadow-sm">
-              <DocumentIcon />
-              <span>{notesFileName}</span>
+          <div className="mt-5 rounded-xl border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-4 shadow-[0_0_0_4px_rgba(16,185,129,0.08)]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">
+                    <path d="M8 3.5h5.2L18 8.3V20a1.5 1.5 0 0 1-1.5 1.5H7.5A1.5 1.5 0 0 1 6 20V5a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M13 3.5V9H18" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M9 13h6M9 16h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-emerald-800">
+                    📎 Notes uploaded
+                  </p>
+                  <p className="mt-0.5 max-w-xs truncate text-xs font-medium text-emerald-700">
+                    {notesFileName}
+                    {extractedTopics.length > 0 && (
+                      <span className="ml-1.5 text-emerald-600">
+                        — {extractedTopics.length} topic{extractedTopics.length === 1 ? "" : "s"} found
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={clearNotes}
                 aria-label="Remove uploaded notes"
-                className="rounded-full p-0.5 text-[var(--text-muted)] transition hover:bg-slate-100 hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               >
-                <CloseIcon />
+                Remove
               </button>
             </div>
 
             {extractedTopics.length > 0 ? (
-              <div className="w-full">
-                <p className="text-center text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-                  Topics from your notes
+              <div className="mt-3 border-t border-emerald-200 pt-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700">
+                  Suggested topics from your notes
                 </p>
-                <div className="mt-2 flex flex-wrap justify-center gap-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {extractedTopics.map((suggestion) => {
                     const selected = topic === suggestion;
                     return (
@@ -373,10 +393,10 @@ export function TopicPicker() {
                         type="button"
                         onClick={() => setTopic(suggestion)}
                         aria-pressed={selected}
-                        className={`rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${
+                        className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${
                           selected
                             ? "border-[var(--brand)] bg-indigo-50 text-[var(--brand)]"
-                            : "border-[var(--card-border)] bg-white text-[var(--text-primary)] hover:border-[var(--brand)]"
+                            : "border-emerald-300 bg-white text-emerald-800 hover:border-[var(--brand)] hover:text-[var(--brand)]"
                         }`}
                       >
                         {suggestion}
