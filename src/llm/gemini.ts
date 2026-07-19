@@ -9,13 +9,31 @@
  * Every other B module imports from here; nobody else calls `GoogleGenAI` directly.
  */
 
+import { writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { ApiError, GoogleGenAI } from "@google/genai";
 
 /**
- * Vertex AI mode (ADC-billed, no free-tier RPM ceiling) is opt-in via
- * GOOGLE_GENAI_USE_VERTEXAI so teammates who haven't set up `gcloud`/ADC yet
- * keep working unaffected on the API-key path.
+ * Vertex AI mode (ADC-billed) is opt-in via GOOGLE_GENAI_USE_VERTEXAI.
+ *
+ * Locally: `gcloud auth application-default login` provides ADC on disk.
+ * On Vercel: there is no gcloud login — set GOOGLE_APPLICATION_CREDENTIALS_JSON
+ * to the ADC/SA JSON (one line). We write it to /tmp and point
+ * GOOGLE_APPLICATION_CREDENTIALS at that file before constructing the client.
  */
+function installGcpCredentialsFromEnv(): void {
+  const json = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim();
+  if (!json) return;
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) return;
+  JSON.parse(json);
+  const path = join(tmpdir(), "professor-me-gcp-credentials.json");
+  writeFileSync(path, json, { encoding: "utf8", mode: 0o600 });
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = path;
+}
+
+installGcpCredentialsFromEnv();
+
 const ai =
   process.env.GOOGLE_GENAI_USE_VERTEXAI === "true"
     ? new GoogleGenAI({
@@ -27,7 +45,7 @@ const ai =
 
 function requireEnv(envVar: string): string {
   const value = process.env[envVar];
-  if (!value) throw new Error(`${envVar} is not set (check .env.local)`);
+  if (!value) throw new Error(`${envVar} is not set (check .env.local / Vercel env)`);
   return value;
 }
 
