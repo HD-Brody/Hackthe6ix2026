@@ -30,7 +30,7 @@ export default async function ProfilePage() {
       <SiteHeader />
       {!showDashboard ? (
         <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-20 text-center">
-          <h1 className="font-heading text-3xl font-extrabold tracking-tight">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
             Your teaching record lives here
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
@@ -55,7 +55,7 @@ export default async function ProfilePage() {
             <ProfileHero user={user} resumeSession={stats.resumeSession} />
           ) : (
             <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-7">
-              <h1 className="font-heading text-3xl font-extrabold tracking-tight">
+              <h1 className="font-display text-3xl font-semibold tracking-tight">
                 Your teaching history
               </h1>
               <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -74,7 +74,7 @@ export default async function ProfilePage() {
             className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--accent-soft)] p-5 transition hover:border-[var(--brand)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
           >
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
+              <p className="eyebrow">
                 Teaching insights
               </p>
               <p className="mt-1 font-heading text-lg font-bold">

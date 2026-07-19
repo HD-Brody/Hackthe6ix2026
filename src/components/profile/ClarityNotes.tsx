@@ -76,7 +76,7 @@ export function ClarityNotes({ entries }: { entries: SessionSummary[] }) {
     <section>
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
+          <p className="eyebrow">
             Student feedback
           </p>
           <h2 className="mt-1 font-heading text-2xl font-extrabold">

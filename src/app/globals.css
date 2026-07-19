@@ -69,10 +69,11 @@
   --card-line: rgba(96, 99, 238, 0.14);
   --card-margin: rgba(179, 64, 47, 0.35);
   --tape: rgba(255, 224, 138, 0.55);
-  --grid-line: rgba(96, 99, 238, 0.05);
+  --grid-line: rgba(96, 99, 238, 0.08);
   --squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C20 2.5 38 7 58 4.5 78 2 98 6.5 118 3.5' fill='none' stroke='%234648d4' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
   --chalk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C40 3.5 74 10 106 6.5 138 3 170 9 197 5' fill='none' stroke='%236063ee' stroke-width='5' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E");
   --spotlight: rgba(84, 87, 224, 0.09);
+  --paper-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
 }
 
 .dark {
@@ -129,6 +130,7 @@
   --squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C20 2.5 38 7 58 4.5 78 2 98 6.5 118 3.5' fill='none' stroke='%238b8dff' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
   --chalk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C40 3.5 74 10 106 6.5 138 3 170 9 197 5' fill='none' stroke='%238b8dff' stroke-width='5' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E");
   --spotlight: rgba(139, 141, 255, 0.1);
+  --paper-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
 
 * {
@@ -142,7 +144,10 @@ html {
 body {
   margin: 0;
   color: var(--text-primary);
-  background: var(--page-background);
+  background-color: var(--page-background);
+  /* Paper grain — a faint fractal-noise wash so flat fills read as stock. */
+  background-image: var(--paper-noise);
+  background-size: 280px 280px;
   font-family: var(--font-inter), sans-serif;
 }
 
@@ -184,7 +189,41 @@ input {
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--brand);
+  color: var(--eyebrow-color, var(--brand));
+}
+.eyebrow-inverse {
+  --eyebrow-color: rgba(255, 255, 255, 0.82);
+}
+
+/* A piece of tape without the ruled lines — for portraits and forms. */
+.tape-top {
+  position: relative;
+}
+.tape-top::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 84px;
+  height: 22px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: var(--tape);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
+
+/* Session-detail modal entrance. */
+@media (prefers-reduced-motion: no-preference) {
+  .modal-pop {
+    animation: modal-pop 240ms cubic-bezier(0.2, 0.9, 0.3, 1.08) backwards;
+  }
+}
+@keyframes modal-pop {
+  from {
+    transform: translateY(14px) rotate(-0.6deg) scale(0.98);
+    opacity: 0;
+  }
 }
 
 /* Hand-drawn chalk stroke under a hero word. */

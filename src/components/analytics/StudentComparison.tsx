@@ -90,8 +90,8 @@ export function StudentComparison({
 }) {
   return (
     <section>
-      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
-        Your students
+      <p className="eyebrow">
+        05 · Your students
       </p>
       <h2 className="mt-1 font-heading text-2xl font-extrabold">
         Who you&apos;ve been teaching

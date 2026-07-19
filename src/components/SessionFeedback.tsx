@@ -72,7 +72,7 @@ export function SessionFeedback({
           </div>
           <span className="absolute bottom-3 right-3 size-7 rounded-full border-4 border-[var(--surface)] bg-emerald-500" aria-label={`${profile.name} is online`} />
         </div>
-        <h1 className="font-heading mt-4 max-w-2xl text-xl font-extrabold tracking-tight sm:text-2xl sm:leading-8">
+        <h1 className="font-display mt-4 max-w-2xl text-2xl font-semibold tracking-tight sm:text-[1.7rem] sm:leading-9">
           Great Session! How was {profile.name}&apos;s learning today?
         </h1>
         {/* Never confirm correctness — only the gap map renders verdicts. */}
@@ -81,7 +81,7 @@ export function SessionFeedback({
         </p>
       </section>
 
-      <section className="mt-5 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_4px_10px_var(--shadow-color)] sm:p-6" aria-label="Session feedback form">
+      <section className="tape-top mt-8 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_4px_10px_var(--shadow-color)] sm:p-6" aria-label="Session feedback form">
         {submitState === "saved" ? (
           <div className="flex flex-col items-center text-center">
             <p className="text-sm font-semibold text-[var(--text-secondary)]">Your clarity rating</p>

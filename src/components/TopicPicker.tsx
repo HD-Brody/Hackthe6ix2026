@@ -112,14 +112,14 @@ function TopicCard({ topic, selected, onSelect }: { topic: Topic; selected: bool
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className="font-heading block text-sm font-semibold text-[var(--text-primary)]">
+          <span className="font-heading block text-base font-semibold text-[var(--text-primary)]">
             {topic.title}
           </span>
-          <span className="shrink-0 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <span className="shrink-0 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
             {topic.code}
           </span>
         </span>
-        <span className="mt-0.5 block truncate text-xs text-[var(--text-secondary)]">
+        <span className="mt-0.5 block truncate text-sm text-[var(--text-secondary)]">
           {topic.description}
         </span>
       </span>
@@ -328,7 +328,7 @@ export function TopicPicker() {
           onChange={handleFileChange}
         />
 
-        <p className="mt-3 text-center text-sm text-[var(--text-secondary)]">
+        <p className="mt-3 text-center text-base text-[var(--text-secondary)]">
           {isUploading ? (
             <span className="font-medium text-[var(--brand)]">Reading your notes…</span>
           ) : (
@@ -419,7 +419,7 @@ export function TopicPicker() {
       </div>
 
       <section className="mt-12 sm:mt-14" aria-labelledby="popular-topics-heading">
-        <p id="popular-topics-heading" className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+        <p id="popular-topics-heading" className="eyebrow mb-3 !text-[var(--text-muted)]">
           Or try one of these
         </p>
 

@@ -24,7 +24,7 @@ function TickerRow() {
     <>
       {TICKER_TOPICS.map((topic) => (
         <span key={topic} className="flex items-center gap-11">
-          <span className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
+          <span className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
             {topic}
           </span>
           <span aria-hidden className="text-[var(--brand)]">✳</span>
@@ -47,7 +47,7 @@ export default function TopicPickerPage() {
               <span className="chalk-underline">Teach it</span> to learn it.
             </h1>
 
-            <p className="mt-5 max-w-xl text-base leading-7 text-[var(--text-secondary)] sm:text-lg">
+            <p className="mt-5 max-w-xl text-lg leading-8 text-[var(--text-secondary)] sm:text-xl">
               Explain any topic to an AI student who probes exactly where you
               hand-wave — then shows you a map of what you actually know.
             </p>

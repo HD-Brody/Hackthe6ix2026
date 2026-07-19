@@ -22,8 +22,8 @@ const stateTone: Record<NodeState, string> = {
 export function WeakConcepts({ concepts }: { concepts: WeakConcept[] }) {
   return (
     <section>
-      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
-        Patterns
+      <p className="eyebrow">
+        03 · Patterns
       </p>
       <h2 className="mt-1 font-heading text-2xl font-extrabold">
         Concepts that keep tripping you up

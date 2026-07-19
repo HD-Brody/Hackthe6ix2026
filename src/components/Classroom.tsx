@@ -72,7 +72,7 @@ function ComprehensionCard({
   const pct = stats.score;
   return (
     <section className="rounded-lg bg-[var(--brand)] p-5 text-white shadow-lg">
-      <p className="text-sm font-semibold text-white/80">Understanding</p>
+      <p className="eyebrow eyebrow-inverse">Understanding</p>
       <p className="font-heading mt-1 text-3xl font-bold">
         {pct !== null ? `${pct}%` : "—"}
       </p>
@@ -728,7 +728,7 @@ export function Classroom({
     <div className="mx-auto w-full max-w-7xl px-5 py-6 sm:px-8 lg:px-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-[var(--text-primary)] sm:text-4xl">Teaching Session</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-[-0.02em] text-[var(--text-primary)] sm:text-4xl">Teaching Session</h1>
         </div>
         <div className="flex w-fit items-center gap-2 rounded-lg bg-[var(--surface-input)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)]">
           <span className={`size-3 rounded-full ${live ? "bg-emerald-500" : "bg-gray-400"}`} /> {live ? (sessionStatus === "wrapping" ? "Wrapping Up" : "Live Session") : "Session Ended"}
@@ -747,7 +747,7 @@ export function Classroom({
 
         <section className="flex min-h-[555px] flex-col overflow-hidden rounded-lg border border-[var(--card-border)] bg-[var(--surface)] shadow-[0_4px_20px_var(--shadow-color)] lg:h-[535px]" aria-label="Classroom conversation">
           <div className="flex items-center justify-between gap-3 border-b border-[var(--card-border)] bg-[var(--surface)]/80 px-4 py-3 backdrop-blur-sm sm:px-5">
-            <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] sm:text-base"><ChatIcon /> Conversation Flow</div>
+            <div className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-secondary)]"><ChatIcon /> Conversation Flow</div>
             <button
               type="button"
               onClick={endConversation}

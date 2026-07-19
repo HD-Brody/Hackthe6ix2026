@@ -57,7 +57,7 @@ function EmptyState({
 }) {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-20 text-center">
-      <h1 className="font-heading text-3xl font-extrabold tracking-tight">{title}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">{title}</h1>
       <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">{body}</p>
       <Link href={href} className="mt-6 inline-block rounded-lg bg-[var(--chat-user)] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)]">{cta}</Link>
     </main>
@@ -140,7 +140,7 @@ function ReportContent({
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
           <article className="rounded-2xl bg-gradient-to-br from-[#5755d8] to-[#7776df] p-6 text-white shadow-[0_12px_28px_rgba(87,85,216,0.24)]">
-            <p className="eyebrow text-white/80">02 · The verdict</p>
+            <p className="eyebrow eyebrow-inverse">02 · The verdict</p>
             <div className="mt-5 flex items-end gap-2">
               <strong className="font-heading text-5xl">
                 {understandingScore !== null ? `${understandingScore}%` : "—"}

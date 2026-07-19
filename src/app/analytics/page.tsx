@@ -34,16 +34,15 @@ export default async function AnalyticsPage() {
       <main className="mx-auto w-full max-w-7xl flex-1 space-y-8 px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
         <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Teaching Analytics
-            </h1>
+            <p className="eyebrow">Faculty records</p>
+            <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Teaching Analytics</h1>
             <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">
               Cross-session insights, trends, and your full session library.
             </p>
           </div>
           <Link
             href="/"
-            className="inline-flex w-fit items-center justify-center rounded-xl bg-[var(--chat-user)] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)]"
+            className="btn-ink inline-flex w-fit items-center justify-center rounded-xl bg-[var(--chat-user)] px-5 py-3 text-sm font-bold text-white hover:bg-[var(--brand-strong)]"
           >
             Teach a new topic
           </Link>
@@ -74,7 +73,7 @@ export default async function AnalyticsPage() {
           </>
         ) : (
           <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
-            <h2 className="font-heading text-2xl font-extrabold">
+            <h2 className="font-display text-2xl font-semibold">
               No teaching data yet
             </h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--text-secondary)]">
