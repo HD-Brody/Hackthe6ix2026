@@ -58,6 +58,7 @@ export async function createSession(
   graph: ConceptGraph,
   student: StudentId = "sam",
   curiosity: CuriosityLevel = "medium",
+  sourceNotes?: string,
   sessionId?: string,
   priorGapContext?: PriorGapContext
 ): Promise<Session> {
