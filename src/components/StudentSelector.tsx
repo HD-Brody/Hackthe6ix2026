@@ -7,20 +7,19 @@ import {
   studentProfiles,
   type StudentId,
 } from "@/lib/studentProfiles";
+import type { CuriosityLevel } from "@/lib/types";
 import { createMockSession, isForcedMockMode } from "@/lib/mockSession";
-
-type CuriosityLevel = "low" | "medium" | "high";
-
-const students = Object.values(studentProfiles);
-
-/** Pre-rendered ElevenLabs clip (the actual student voice) used as the preview. */
-const VOICE_PREVIEW_CLIP = "/audio/curious-oh.mp3";
 
 const curiosityLevels: Array<{ id: CuriosityLevel; label: string }> = [
   { id: "low", label: "Low" },
   { id: "medium", label: "Medium" },
   { id: "high", label: "High" },
 ];
+
+const students = Object.values(studentProfiles);
+
+/** Pre-rendered ElevenLabs clip (the actual student voice) used as the preview. */
+const VOICE_PREVIEW_CLIP = "/audio/curious-oh.mp3";
 
 function PlayIcon() {
   return <svg aria-hidden="true" viewBox="0 0 12 12" fill="none" className="size-3"><path d="m3.5 2.5 5 3.5-5 3.5v-7Z" fill="currentColor" /></svg>;
@@ -64,7 +63,7 @@ export function StudentSelector({ topic }: { topic: string }) {
     setError(null);
 
     if (isForcedMockMode) {
-      const mockSession = createMockSession(selectedTopic, student);
+      const mockSession = createMockSession(selectedTopic, student, curiosity);
       router.push(`/session/${mockSession.id}?student=${student}`);
       return;
     }
@@ -73,7 +72,7 @@ export function StudentSelector({ topic }: { topic: string }) {
       const response = await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: selectedTopic, student }),
+        body: JSON.stringify({ topic: selectedTopic, student, curiosity }),
       });
       const payload = (await response.json().catch(() => ({}))) as {
         session_id?: string;

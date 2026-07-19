@@ -1,6 +1,5 @@
 import { randomUUID } from "crypto";
 import { getDb } from "./mongo";
-import type { StudentId } from "@/lib/studentProfiles";
 import type {
   Session,
   Utterance,
@@ -10,6 +9,8 @@ import type {
   GapMap,
   TurnTiming,
   Directive,
+  CuriosityLevel,
+  StudentId,
 } from "@/lib/types";
 
 async function sessions() {
@@ -47,7 +48,8 @@ export async function createSession(
   userId: string,
   topic: string,
   graph: ConceptGraph,
-  student: StudentId = "sam"
+  student: StudentId = "sam",
+  curiosity: CuriosityLevel = "medium"
 ): Promise<Session> {
   const count = await countSessionsForUser(userId);
   if (isSessionCapReached(count)) {
@@ -59,6 +61,7 @@ export async function createSession(
     user_id: userId,
     topic,
     student,
+    curiosity,
     status: "created",
     graph,
     utterances: [],

@@ -15,10 +15,11 @@ import {
 import { resolveGraph } from "@/server/orchestrator/resolveGraph";
 import { transition } from "@/server/orchestrator/stateMachine";
 import { getUserId } from "@/lib/auth0";
+import { parseCuriosityLevel } from "@/lib/curiosity";
 import { parseStudentId } from "@/lib/studentProfiles";
 
 export async function POST(req: NextRequest) {
-  let body: { topic?: string; student?: string };
+  let body: { topic?: string; student?: string; curiosity?: string };
   try {
     body = await req.json();
   } catch {
@@ -32,12 +33,13 @@ export async function POST(req: NextRequest) {
 
   const graph = await resolveGraph(topic);
   const student = parseStudentId(body.student);
+  const curiosity = parseCuriosityLevel(body.curiosity);
   // Auth0 sub when logged in; anonymous "dev" pool otherwise (demo-safe).
   const userId = await getUserId();
 
   let session;
   try {
-    session = await createSession(userId, topic, graph, student);
+    session = await createSession(userId, topic, graph, student, curiosity);
   } catch (err) {
     if (err instanceof SessionCapError) {
       return NextResponse.json(

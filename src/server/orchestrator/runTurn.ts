@@ -18,6 +18,7 @@ import { evaluate, personaReply } from "@/server/orchestrator/llm";
 import { transition } from "@/server/orchestrator/stateMachine";
 import { nextAdvanceTarget, turnPolicy } from "@/server/orchestrator/turnPolicy";
 import { formatSSE } from "@/lib/sse";
+import { probeThresholdForCuriosity } from "@/lib/curiosity";
 import { parseStudentId } from "@/lib/studentProfiles";
 import type {
   ConceptGraph,
@@ -325,7 +326,9 @@ export function createSequentialTurnStream(
 
     let policy = session.policy ?? emptyPolicy();
     const afterVerdict = await applyVerdict(sessionId, verdict, policy);
-    const directive = turnPolicy(afterVerdict.graph, verdict, policy);
+    const directive = turnPolicy(afterVerdict.graph, verdict, policy, {
+      probeThreshold: probeThresholdForCuriosity(session.curiosity),
+    });
 
     policy = await consumeDirective(
       sessionId,
@@ -428,7 +431,9 @@ export function createParallelTurnStream(
         tEvalEnd = Date.now();
 
         const afterVerdict = await applyVerdict(sessionId, verdict, policy);
-        const nextPending = turnPolicy(afterVerdict.graph, verdict, policy);
+        const nextPending = turnPolicy(afterVerdict.graph, verdict, policy, {
+          probeThreshold: probeThresholdForCuriosity(session.curiosity),
+        });
         await setPendingDirective(sessionId, nextPending);
         tPolicyDone = Date.now();
       } catch (err) {

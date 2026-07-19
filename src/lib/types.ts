@@ -7,6 +7,8 @@
 
 import type { StudentId } from "@/lib/studentProfiles";
 
+export type { StudentId };
+
 // ── Concept graph (contracts/concept-graph.schema.json) ─────────
 
 export type NodeState =
@@ -79,6 +81,8 @@ export interface GapMap {
 
 // ── Session (data model, design doc §4) ─────────────────────────
 
+export type CuriosityLevel = "low" | "medium" | "high";
+
 export type SessionStatus = "created" | "teaching" | "wrapping" | "ended";
 
 export interface Utterance {
@@ -100,6 +104,8 @@ export interface Session {
   topic: string;
   /** AI student persona for this session (optional — added post-CP0). */
   student?: StudentId;
+  /** How often the student probes vague explanations (optional — added post-CP0). */
+  curiosity?: CuriosityLevel;
   status: SessionStatus;
   graph: ConceptGraph;
   utterances: Utterance[];
