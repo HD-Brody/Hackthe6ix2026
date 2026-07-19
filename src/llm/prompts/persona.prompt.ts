@@ -23,7 +23,7 @@ import type { StudentId } from "@/lib/studentProfiles";
 
 /** Bump whenever the wording/guardrails below change after the CP4 freeze —
  * see evaluator.prompt.ts's PROMPTS_VERSION for why this matters. */
-export const PROMPTS_VERSION = 7;
+export const PROMPTS_VERSION = 8;
 
 const STUDENT_NAMES: Record<StudentId, string> = {
   sam: "Sam",
@@ -56,9 +56,9 @@ export interface PersonaPromptOptions {
 function redirectInstruction(redirect: PersonaRedirect, topic?: string): string {
   const lesson = topic?.trim() ? topic.trim() : "what we were studying";
   if (redirect === "unsafe") {
-    return `The user's latest message is inappropriate or unsafe for this lesson. Do NOT engage with that content at all — do not quote it, restate it, joke about it, or play along. Do not sound confused about what they meant ("I'm not sure about that") — you understood it was bad; refuse it. In 1–2 spoken sentences: a short clear refusal, then one concrete follow-up about a specific detail already in the conversation above (leaves and light, window size, etc.) — never a generic "tell me about ${lesson}" / "let's focus on ${lesson}" line. Ban the templates "Whoa, let's stick to…", "Whoa, let's keep this focused on…", and "Can we please stick to ${lesson}?". Also don't open every refusal with "Uh," — mix "no.", "I'm not doing that.", a blunt skip straight into the lesson question, etc. Never sound like a moderator reading a policy.`;
+    return `The user's latest message is inappropriate or unsafe for this lesson. Do NOT engage with that content at all — do not quote it, restate it, joke about it, or play along. Do not sound confused about what they meant ("I'm not sure about that") — you understood it was bad; refuse it. In 1–2 spoken sentences: a short clear refusal, then ONE follow-up that only uses facts/words already present in the conversation above. Prefer continuing or re-asking the last open lesson question you (or they) already raised. Do NOT invent new details the user never said — no new attributes (shape, size, color, numbers), no new mechanisms, no new jargon. Never a generic "tell me about ${lesson}" / "let's focus on ${lesson}" line. Ban "Whoa, let's stick to…", "Whoa, let's keep this focused on…", and "Can we please stick to ${lesson}?". Don't open every refusal with "Uh," — mix "no.", "I'm not doing that.", or go straight into the follow-up. Never sound like a moderator reading a policy.`;
   }
-  return `The user's latest message wandered off the lesson — it did NOT teach you anything about ${lesson}. Do not pretend it covered a concept, and do not restate their off-topic content. In 1–2 spoken sentences: briefly notice they got sidetracked, then ask one concrete follow-up about a specific detail already in the conversation above — not a generic "tell me about ${lesson}" / "let's get back to ${lesson}" line. Vary the shape — don't reuse "wait can we get back to…" every time; sometimes just ask the lesson question with no meta lead-in.`;
+  return `The user's latest message wandered off the lesson — it did NOT teach you anything about ${lesson}. Do not pretend it covered a concept, and do not restate their off-topic content. In 1–2 spoken sentences: briefly notice they got sidetracked (or skip straight to the question), then ONE follow-up that only uses facts/words already present in the conversation above. Prefer continuing or re-asking the last open lesson question. Do NOT invent new details the user never said — no new attributes, mechanisms, or jargon. Not a generic "tell me about ${lesson}" / "let's get back to ${lesson}" line. Vary the shape — don't reuse "wait can we get back to…" every time.`;
 }
 
 function directiveInstruction(directive: Directive): string {
