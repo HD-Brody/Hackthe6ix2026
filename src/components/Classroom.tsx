@@ -218,7 +218,7 @@ export function Classroom({
 
   useEffect(() => {
     const stt = createSTTClient();
-    const tts = createTTSClient();
+    const tts = createTTSClient(profile.voiceId);
     tts.onPlaybackStart(() => {
       stopThinkingNoise();
       setStudentState("speaking");

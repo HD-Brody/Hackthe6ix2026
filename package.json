@@ -17,7 +17,8 @@
     "drill:wrapup": "tsx --env-file=.env.local scripts/wrapup-session.ts",
     "crash-drill": "tsx --env-file=.env.local scripts/crash-drill.ts",
     "prod-sse-drill": "tsx scripts/prod-sse-drill.ts",
-    "seed-demo": "tsx scripts/seed-demo.ts"
+    "seed-demo": "tsx scripts/seed-demo.ts",
+    "generate:previews": "tsx --env-file=.env.local scripts/generate-voice-previews.ts"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.0.0",
