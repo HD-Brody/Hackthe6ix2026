@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { StarRating } from "@/components/StarRating";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { studentProfiles } from "@/lib/studentProfiles";
@@ -42,9 +43,45 @@ function SessionRow({ session, index }: { session: SessionSummary; index: number
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-sm font-medium">{session.topic}</h3>
         <p className="text-[10px] text-[var(--text-secondary)]">{date} • {statusLabel(session)} • {session.solid}/{session.total} concepts solid</p>
+        {session.feedback_rating ? (
+          <div className="mt-1">
+            <StarRating rating={session.feedback_rating} size="sm" />
+          </div>
+        ) : null}
       </div>
       <div className="hidden h-1.5 w-20 overflow-hidden rounded-full bg-[#eceef0] sm:block"><div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} /></div>
     </Link>
+  );
+}
+
+function DiaryEntry({ session }: { session: SessionSummary }) {
+  const profile = studentProfiles[session.student ?? "sam"];
+  const date = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(session.feedback_ts ?? session.ended_at ?? session.started_at);
+
+  return (
+    <article className="rounded-xl border border-[#e8e6ef] bg-[#f9fafb] p-4">
+      <div className="flex items-start gap-3">
+        <Image src={profile.image} alt={profile.name} width={36} height={36} className="size-9 rounded-full object-cover" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold">{profile.name}</h3>
+            <span className="text-[10px] text-[var(--text-secondary)]">{date}</span>
+          </div>
+          <p className="mt-0.5 text-xs font-medium text-[#4648d4]">{session.topic}</p>
+          {session.feedback_rating ? <StarRating rating={session.feedback_rating} size="sm" className="mt-1.5" /> : null}
+          {session.feedback_comment ? (
+            <p className="mt-2 text-sm italic leading-5 text-[var(--text-secondary)]">“{session.feedback_comment}”</p>
+          ) : (
+            <p className="mt-2 text-xs text-[var(--text-secondary)]">No written note — just the star rating.</p>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -53,6 +90,15 @@ export default async function ProfilePage() {
   const sessions = user ? await listSessionsByUser(user.sub).catch(() => []) : [];
   const totalSolid = sessions.reduce((sum, s) => sum + s.solid, 0);
   const completed = sessions.filter((s) => s.status === "ended").length;
+  const diaryEntries = sessions
+    .filter((s) => s.feedback_rating)
+    .sort((a, b) => (b.feedback_ts ?? 0) - (a.feedback_ts ?? 0))
+    .slice(0, 5);
+  const ratedSessions = sessions.filter((s) => s.feedback_rating);
+  const avgRating =
+    ratedSessions.length > 0
+      ? (ratedSessions.reduce((sum, s) => sum + (s.feedback_rating ?? 0), 0) / ratedSessions.length).toFixed(1)
+      : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f7f9fb] text-[var(--text-primary)]">
@@ -92,7 +138,7 @@ export default async function ProfilePage() {
                   <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {user.name.split(" ")[0]}</h1>
                   <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">{user.email ?? "Professor in residence"}</p>
                   <div className="mt-4 grid grid-cols-2 gap-2 sm:max-w-sm sm:gap-3">
-                    {[{ value: String(sessions.length), label: "Sessions Taught", color: "text-[#4648d4]" }, { value: String(totalSolid), label: "Concepts Made Solid", color: "text-[#8127cf]" }].map((stat) => <div key={stat.label} className="rounded-lg bg-[#eceef0] px-2 py-2.5 sm:px-4"><strong className={`block text-lg sm:text-xl ${stat.color}`}>{stat.value}</strong><span className="text-[10px] text-[var(--text-secondary)] sm:text-xs">{stat.label}</span></div>)}
+                    {[{ value: String(sessions.length), label: "Sessions Taught", color: "text-[#4648d4]" }, { value: String(totalSolid), label: "Concepts Made Solid", color: "text-[#8127cf]" }, ...(avgRating ? [{ value: avgRating, label: "Avg Clarity Rating", color: "text-[#f1bd43]" }] : [])].map((stat) => <div key={stat.label} className="rounded-lg bg-[#eceef0] px-2 py-2.5 sm:px-4"><strong className={`block text-lg sm:text-xl ${stat.color}`}>{stat.value}</strong><span className="text-[10px] text-[var(--text-secondary)] sm:text-xs">{stat.label}</span></div>)}
                   </div>
                 </div>
               </div>
@@ -124,6 +170,32 @@ export default async function ProfilePage() {
                   <PersonaCard id="sam" />
                   <PersonaCard id="elena" />
                 </div>
+              </section>
+
+              <section className="rounded-xl border border-[#ebeaf0] bg-white p-5 shadow-sm xl:col-span-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-heading text-xl font-bold">Student Diary</h2>
+                  <span className="text-xs text-[var(--text-secondary)]">{diaryEntries.length} entries</span>
+                </div>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                  Notes from your post-session clarity ratings — what felt clear and what didn&apos;t.
+                </p>
+                {diaryEntries.length > 0 ? (
+                  <div className="mt-4 space-y-3">
+                    {diaryEntries.map((session) => (
+                      <DiaryEntry key={session.session_id} session={session} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-xl border border-dashed border-[#c7c4d7] p-6 text-center">
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      No diary entries yet. Finish a session and rate how clear it felt — Sam will leave a note here.
+                    </p>
+                    <Link href="/" className="mt-3 inline-block rounded-lg bg-[#4648d4] px-4 py-2 text-xs font-bold text-white transition hover:bg-[var(--brand-strong)]">
+                      Teach a topic
+                    </Link>
+                  </div>
+                )}
               </section>
             </div>
           </div>
