@@ -34,5 +34,6 @@ describe("personaPrompt", () => {
     expect(prompt).toContain("inappropriate or unsafe");
     expect(prompt).toContain("photosynthesis");
     expect(prompt).not.toContain("Push one level deeper");
+    expect(prompt).toContain('Whoa, let\'s stick to');
   });
 });
