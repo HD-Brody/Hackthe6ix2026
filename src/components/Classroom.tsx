@@ -23,6 +23,16 @@ import {
   readMockSession,
   saveMockTranscript,
 } from "@/lib/mockSession";
+import { readPendingNotes, clearPendingNotes } from "@/lib/sessionNotes";
+import Image from "next/image";
+
+const CREATION_MESSAGES = [
+  "Setting up the desk and board...",
+  "Reading your uploaded syllabus...",
+  "Mapping out the learning path...",
+  "Generating curiosity levels...",
+  "Waiting for student to take a seat...",
+];
 
 function ChatIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5 text-[var(--brand)]"><path d="M4 5h16v11H8l-4 3V5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /></svg>;
@@ -175,14 +185,22 @@ function createTokenTee() {
 export function Classroom({
   sessionId,
   student,
+  initialTopic,
+  initialCuriosity,
+  shouldCreate = false,
 }: {
   sessionId: string;
   student: StudentId;
+  initialTopic?: string;
+  initialCuriosity?: string;
+  shouldCreate?: boolean;
 }) {
   const profile = studentProfiles[student];
   const router = useRouter();
   const mockSession = isMockSessionId(sessionId);
 
+  const [isInitializing, setIsInitializing] = useState(shouldCreate);
+  const [creationMsgIndex, setCreationMsgIndex] = useState(0);
   const [utterances, setUtterances] = useState<Utterance[]>([]);
   const [message, setMessage] = useState("");
   const [studentState, setStudentState] = useState<"listening" | "thinking" | "speaking">("listening");
@@ -217,6 +235,14 @@ export function Classroom({
   }, []);
 
   useEffect(() => {
+    if (!isInitializing) return;
+    const id = setInterval(() => {
+      setCreationMsgIndex((i) => (i + 1) % CREATION_MESSAGES.length);
+    }, 2500);
+    return () => clearInterval(id);
+  }, [isInitializing]);
+
+  useEffect(() => {
     const stt = createSTTClient();
     const tts = createTTSClient(profile.voiceId);
     tts.onPlaybackStart(() => {
@@ -233,7 +259,7 @@ export function Classroom({
       tts.stop();
       stopThinkingNoise();
     };
-  }, [stopThinkingNoise]);
+  }, [stopThinkingNoise, profile.voiceId]);
 
   const applySession = useCallback((session: Session) => {
     setUtterances(session.utterances);
@@ -245,7 +271,7 @@ export function Classroom({
     });
   }, []);
 
-  // Refresh recovery: rebuild the classroom from the persisted session.
+  // Refresh recovery or background creation:
   useEffect(() => {
     if (mockSession) {
       const storedSession = readMockSession(sessionId);
@@ -256,18 +282,66 @@ export function Classroom({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/session/${sessionId}`);
-        if (!res.ok) throw new Error("not found");
-        const session = (await res.json()) as Session;
-        if (!cancelled) applySession(session);
-      } catch {
-        if (!cancelled) setError(ERROR_COPY.load(profile.name));
+        if (shouldCreate) {
+          const sourceNotes = readPendingNotes();
+          const response = await fetch("/api/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session_id: sessionId,
+              topic: initialTopic,
+              student,
+              curiosity: initialCuriosity,
+              ...(sourceNotes ? { source_notes: sourceNotes } : {}),
+            }),
+          });
+          const payload = (await response.json().catch(() => ({}))) as {
+            session_id?: string;
+            error?: string;
+          };
+
+          if (!response.ok || !payload.session_id) {
+            throw new Error(payload.error || "Unable to create a teaching session.");
+          }
+
+          clearPendingNotes();
+
+          // The API might return graph and other fields, but we should do a GET to make sure
+          // we have the complete session object. Actually, the POST returns { session_id, graph }.
+          // Let's do a fresh GET to get the full session.
+          const loadRes = await fetch(`/api/session/${sessionId}`);
+          if (!loadRes.ok) throw new Error("Could not load the newly created session.");
+          const session = (await loadRes.json()) as Session;
+          if (!cancelled) {
+            applySession(session);
+            setIsInitializing(false);
+          }
+        } else {
+          // Normal load
+          const loadRes = await fetch(`/api/session/${sessionId}`);
+          if (!loadRes.ok) throw new Error("Classroom session not found.");
+          const session = (await loadRes.json()) as Session;
+          if (!cancelled) {
+            applySession(session);
+            setIsInitializing(false);
+          }
+        }
+      } catch (caught) {
+        console.error("[classroom] session initialization failed:", caught);
+        if (!cancelled) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : `${profile.name} couldn't make it to class — check your connection and try again.`
+          );
+          setIsInitializing(false);
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [applySession, mockSession, profile.name, sessionId]);
+  }, [applySession, mockSession, profile.name, sessionId, shouldCreate, initialTopic, initialCuriosity, student]);
 
   useEffect(() => {
     if (mockSession && mockHydrated) {
@@ -476,6 +550,81 @@ export function Classroom({
     });
 
     router.push(feedbackUrl);
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-12 text-center">
+        <div className="relative mb-6">
+          <div className="rounded-full bg-[#e1e0ff] p-2 shadow-xl animate-pulse">
+            <Image
+              src={profile.image}
+              alt={profile.name}
+              width={112}
+              height={112}
+              priority
+              className="size-24 rounded-full border-4 border-white object-cover"
+            />
+          </div>
+          <span className="absolute bottom-1 right-1 flex size-5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--brand)] opacity-75"></span>
+            <span className="relative inline-flex rounded-full size-5 bg-[var(--brand)]"></span>
+          </span>
+        </div>
+        <h2 className="font-heading text-2xl font-extrabold tracking-tight text-[var(--text-primary)] sm:text-3xl">
+          Preparing the classroom
+        </h2>
+        <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">
+          {profile.name} is getting ready for your session...
+        </p>
+
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+            <svg aria-hidden="true" className="size-5 animate-spin text-[var(--brand)]" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            <span className="text-sm font-semibold text-[var(--brand)] tracking-wide uppercase">
+              {CREATION_MESSAGES[creationMsgIndex]}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && utterances.length === 0) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-12 text-center">
+        <div className="rounded-full bg-red-100 p-4 text-red-600 mb-4">
+          <svg className="size-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h2 className="font-heading text-xl font-bold text-[var(--text-primary)]">
+          Classroom setup failed
+        </h2>
+        <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">
+          {error}
+        </p>
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={() => router.push("/")}
+            className="rounded-lg border border-[var(--card-border)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--text-primary)] hover:bg-[#f7f9fb]"
+          >
+            Go back
+          </button>
+          {shouldCreate && (
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-lg bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-strong)]"
+            >
+              Retry Setup
+            </button>
+          )}
+        </div>
+      </div>
+    );
   }
 
   const live = sessionStatus !== "ended";

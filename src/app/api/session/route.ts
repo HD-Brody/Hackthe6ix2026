@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createSession,
+  getSession,
   MAX_SESSIONS_PER_USER,
   SessionCapError,
 } from "@/server/db/sessions";
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
     student?: string;
     curiosity?: string;
     source_notes?: string;
+    session_id?: string;
   };
   try {
     body = await req.json();
@@ -59,9 +61,10 @@ export async function POST(req: NextRequest) {
       graph,
       student,
       curiosity,
-      sourceNotes
+      sourceNotes,
+      body.session_id
     );
-  } catch (err) {
+  } catch (err: any) {
     if (err instanceof SessionCapError) {
       return NextResponse.json(
         {
@@ -72,6 +75,14 @@ export async function POST(req: NextRequest) {
         },
         { status: 429 }
       );
+    }
+    if (err.code === 11000 && body.session_id) {
+      // Handle React Strict Mode race conditions: if another identical request already
+      // created this session_id, just return the existing one.
+      const existingSession = await getSession(body.session_id);
+      if (existingSession) {
+        return NextResponse.json({ session_id: existingSession._id, graph: existingSession.graph });
+      }
     }
     throw err;
   }

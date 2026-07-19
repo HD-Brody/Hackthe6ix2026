@@ -83,44 +83,13 @@ export function StudentSelector({ topic }: { topic: string }) {
       return;
     }
 
-    try {
-      const sourceNotes = readPendingNotes();
-      // Prefetch the session page shell while the API call is in flight —
-      // by the time session_id comes back, Next.js already has the JS bundle
-      // cached and router.push navigates almost instantly.
-      router.prefetch(`/session/prefetch?student=${student}`);
-
-      const response = await fetch("/api/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: selectedTopic,
-          student,
-          curiosity,
-          ...(sourceNotes ? { source_notes: sourceNotes } : {}),
-        }),
-      });
-      const payload = (await response.json().catch(() => ({}))) as {
-        session_id?: string;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.session_id) {
-        throw new Error(payload.error || "Unable to create a teaching session.");
-      }
-
-      clearPendingNotes();
-      router.push(`/session/${payload.session_id}?student=${student}`);
-    } catch (caught) {
-      // No silent mock fallback: a failed session must LOOK failed, or a demo
-      // outage gets papered over with a fake student. (NEXT_PUBLIC_MOCK_MODE
-      // still forces mock sessions explicitly for frontend-only dev.)
-      console.warn("[student-selector] session create failed:", caught);
-      setError(
-        `${students.find((s) => s.id === student)?.name ?? "Your student"} couldn't make it to class — check your connection and try again.`
-      );
-      setIsCreating(false);
-    }
+    // Generate a client-side session ID (UUID) for instant routing
+    const newSessionId = crypto.randomUUID();
+    router.push(
+      `/session/${newSessionId}?student=${student}&topic=${encodeURIComponent(
+        selectedTopic
+      )}&curiosity=${curiosity}&create=true`
+    );
   }
 
   return (

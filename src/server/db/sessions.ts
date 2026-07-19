@@ -50,7 +50,8 @@ export async function createSession(
   graph: ConceptGraph,
   student: StudentId = "sam",
   curiosity: CuriosityLevel = "medium",
-  sourceNotes?: string
+  sourceNotes?: string,
+  sessionId?: string
 ): Promise<Session> {
   const count = await countSessionsForUser(userId);
   if (isSessionCapReached(count)) {
@@ -58,7 +59,7 @@ export async function createSession(
   }
 
   const session: Session = {
-    _id: randomUUID(),
+    _id: sessionId || randomUUID(),
     user_id: userId,
     topic,
     student,
