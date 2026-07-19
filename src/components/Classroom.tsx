@@ -460,6 +460,7 @@ export function Classroom({
     }
     setIsEnding(true);
     setError(null);
+<<<<<<< HEAD
     try {
       const res = await fetch(`/api/session/${sessionId}/end`, {
         method: "POST",
@@ -480,6 +481,26 @@ export function Classroom({
       }
       router.push(feedbackUrl);
     }
+=======
+
+    // Fire the end API in the background — the feedback page doesn't need
+    // the gap map (only the report page does). Navigate immediately so the
+    // user isn't waiting on Gemini's gap-map generation just to see the
+    // star-rating screen.
+    const feedbackUrl = `/session/${encodeURIComponent(sessionId)}/feedback?student=${student}`;
+    router.prefetch(feedbackUrl);
+
+    fetch(`/api/session/${sessionId}/end`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    }).catch((err) => {
+      // Non-fatal: gap map generation failed, but the session is still ending.
+      console.warn("[classroom] end API failed:", err);
+    });
+
+    router.push(feedbackUrl);
+>>>>>>> aa6b317 (Reduce load time for buttons)
   }
 
   const live = sessionStatus !== "ended";

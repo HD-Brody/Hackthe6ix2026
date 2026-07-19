@@ -84,7 +84,15 @@ export function StudentSelector({ topic }: { topic: string }) {
     }
 
     try {
+<<<<<<< HEAD
       const sourceNotes = readPendingNotes();
+=======
+      // Prefetch the session page shell while the API call is in flight —
+      // by the time session_id comes back, Next.js already has the JS bundle
+      // cached and router.push navigates almost instantly.
+      router.prefetch(`/session/prefetch?student=${student}`);
+
+>>>>>>> aa6b317 (Reduce load time for buttons)
       const response = await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

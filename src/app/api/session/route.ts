@@ -41,11 +41,15 @@ export async function POST(req: NextRequest) {
     ? truncateNotes(body.source_notes.trim())
     : undefined;
 
-  const graph = await resolveGraph(topic, sourceNotes);
   const student = parseStudentId(body.student);
   const curiosity = parseCuriosityLevel(body.curiosity);
-  // Auth0 sub when logged in; anonymous "dev" pool otherwise (demo-safe).
-  const userId = await getUserId();
+
+  // resolveGraph and getUserId are fully independent — run them in parallel
+  // to save one full round-trip (Auth0 session cookie read + Atlas lookup).
+  const [graph, userId] = await Promise.all([
+    resolveGraph(topic, sourceNotes),
+    getUserId(),
+  ]);
 
   let session;
   try {
@@ -72,7 +76,13 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  await transition(session._id, "created", "teaching");
+  // Fire the created→teaching transition in the background — the classroom
+  // functions correctly regardless of whether this has landed yet, and it
+  // saves one extra Atlas round-trip from the hot path before router.push.
+  transition(session._id, "created", "teaching").catch((err) => {
+    console.error("[session] created→teaching transition failed:", err);
+  });
 
   return NextResponse.json({ session_id: session._id, graph: session.graph });
 }
+
