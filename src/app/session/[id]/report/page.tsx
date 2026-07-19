@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ConceptCoverage } from "@/components/ConceptCoverage";
 import { ReteachButton } from "@/components/ReteachButton";
+import { GapMapExportButton } from "@/components/billing/GapMapExportButton";
 import { computeComprehensionStats, formatBreakdown } from "@/lib/comprehension";
 import { StarRating } from "@/components/StarRating";
 import { ReportLoader } from "@/components/ReportLoader";
@@ -116,6 +117,7 @@ function ReportContent({
               Completed {statusDate}
             </span>
           )}
+          {!isLive ? <GapMapExportButton report={report} /> : null}
         </div>
       </section>
 

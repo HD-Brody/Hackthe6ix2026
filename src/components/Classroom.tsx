@@ -309,10 +309,13 @@ export function Classroom({
           const payload = (await response.json().catch(() => ({}))) as {
             session_id?: string;
             error?: string;
+            message?: string;
           };
 
           if (!response.ok || !payload.session_id) {
-            throw new Error(payload.error || "Unable to create a teaching session.");
+            throw new Error(
+              payload.message || payload.error || "Unable to create a teaching session."
+            );
           }
 
           clearPendingNotes();

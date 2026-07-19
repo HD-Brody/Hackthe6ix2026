@@ -273,8 +273,11 @@ export function countUserTurns(utterances: Utterance[]): number {
   return utterances.filter((u) => u.role === "user").length;
 }
 
-export function isTurnCapReached(utterances: Utterance[]): boolean {
-  return countUserTurns(utterances) >= MAX_TURNS_PER_SESSION;
+export function isTurnCapReached(
+  utterances: Utterance[],
+  maxTurns: number = MAX_TURNS_PER_SESSION
+): boolean {
+  return countUserTurns(utterances) >= maxTurns;
 }
 
 export async function setGapMap(

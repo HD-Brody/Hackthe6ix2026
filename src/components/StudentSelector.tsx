@@ -10,10 +10,7 @@ import {
 } from "@/lib/studentProfiles";
 import type { CuriosityLevel } from "@/lib/types";
 import { createMockSession, isForcedMockMode } from "@/lib/mockSession";
-import {
-  clearPendingNotes,
-  readPendingNotes,
-} from "@/lib/sessionNotes";
+import { readPendingNotes } from "@/lib/sessionNotes";
 
 const curiosityLevels: Array<{ id: CuriosityLevel; label: string }> = [
   { id: "low", label: "Low" },
@@ -92,7 +89,6 @@ export function StudentSelector({
       return;
     }
 
-    // Generate a client-side session ID (UUID) for instant routing
     const newSessionId = crypto.randomUUID();
     router.push(
       `/session/${newSessionId}?student=${student}&topic=${encodeURIComponent(
@@ -130,7 +126,6 @@ export function StudentSelector({
                 <button
                   type="button"
                   onClick={() => {
-                    // Stop any in-progress preview before starting a new one.
                     if (activePreview) {
                       activePreview.pause();
                       activePreview.currentTime = 0;

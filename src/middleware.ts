@@ -26,10 +26,12 @@ function withAnonCookie(request: NextRequest, response: NextResponse): NextRespo
 function skipAuth0Middleware(pathname: string): boolean {
   // Session/notes APIs were historically excluded from Auth0 middleware so
   // SSE/turn traffic isn't wrapped — still stamp the anon cookie on them.
+  // Billing webhook must stay public (Unifold server-to-server).
   return (
     pathname.startsWith("/api/session") ||
     pathname.startsWith("/api/sessions") ||
-    pathname.startsWith("/api/notes")
+    pathname.startsWith("/api/notes") ||
+    pathname.startsWith("/api/billing/webhook")
   );
 }
 
