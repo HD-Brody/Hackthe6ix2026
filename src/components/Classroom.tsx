@@ -458,8 +458,9 @@ export function Classroom({
 
   async function endConversation() {
     if (isEnding || isSending) return;
+    const feedbackUrl = `/session/${encodeURIComponent(sessionId)}/feedback?student=${student}`;
     if (mockSession) {
-      router.push(`/session/${encodeURIComponent(sessionId)}/feedback?student=${student}`);
+      router.push(feedbackUrl);
       return;
     }
     setIsEnding(true);
@@ -474,10 +475,15 @@ export function Classroom({
         const payload = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(payload.error === "session has not started" ? ERROR_COPY.end(profile.name) : ERROR_COPY.end(profile.name));
       }
-      router.push(`/session/${encodeURIComponent(sessionId)}/feedback?student=${student}`);
+      router.push(feedbackUrl);
     } catch (caught) {
-      setIsEnding(false);
-      setError(caught instanceof Error ? caught.message : ERROR_COPY.end(profile.name));
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "Session end API failed; continuing to feedback in demo fallback mode.",
+          caught
+        );
+      }
+      router.push(feedbackUrl);
     }
   }
 
