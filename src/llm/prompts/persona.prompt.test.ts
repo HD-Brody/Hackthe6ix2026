@@ -37,20 +37,27 @@ describe("personaPrompt", () => {
     expect(prompt).toContain('Whoa, let\'s stick to');
   });
 
-  it("PROBE instruction bans empty echo questions and demands a missing piece", () => {
+  it("PROBE asks for a concrete missing piece, not a hollow what-happens loop", () => {
     const prompt = personaPrompt([], { type: "PROBE", node_id: "n1" });
     expect(prompt).toContain("so they do stuff?");
-    expect(prompt).toContain("so nodes do stuff?");
-    expect(prompt).toContain("ONE missing piece");
-    expect(prompt).toContain("Start with that ask");
-    expect(prompt).toContain("Substance floor");
-    expect(prompt).not.toContain("Express genuine confusion about");
+    expect(prompt).toContain("concrete missing piece");
+    expect(prompt).toContain("what happens to it then?");
+    expect(prompt).toContain("Hollow follow-ups");
   });
 
-  it("keeps DEEPEN/ADVANCE substance guidance in the prompt", () => {
+  it("DEEPEN/ADVANCE push fresh specific angles", () => {
     const deepen = personaPrompt([], { type: "DEEPEN", node_id: "n1" });
-    expect(deepen).toContain("not a restatement of what they just said");
+    expect(deepen).toContain("where does the energy go");
+    expect(deepen).toContain("fresh angle");
     const advance = personaPrompt([], { type: "ADVANCE", node_id: "n2" });
-    expect(advance).toContain("without opening by echoing");
+    expect(advance).toContain("HASN'T mentioned yet");
+  });
+
+  it("bans Wait-so loops and repeating prior student questions", () => {
+    const prompt = personaPrompt([], { type: "PROBE", node_id: "n1" });
+    expect(prompt).toContain("Wait, so…");
+    expect(prompt).toContain("got it");
+    expect(prompt).toContain("Never repeat yourself");
+    expect(prompt).toContain("Good question flavors");
   });
 });
