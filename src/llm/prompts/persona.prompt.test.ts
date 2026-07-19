@@ -36,4 +36,21 @@ describe("personaPrompt", () => {
     expect(prompt).not.toContain("Push one level deeper");
     expect(prompt).toContain('Whoa, let\'s stick to');
   });
+
+  it("PROBE instruction bans empty echo questions and demands a missing piece", () => {
+    const prompt = personaPrompt([], { type: "PROBE", node_id: "n1" });
+    expect(prompt).toContain("so they do stuff?");
+    expect(prompt).toContain("so nodes do stuff?");
+    expect(prompt).toContain("ONE missing piece");
+    expect(prompt).toContain("Start with that ask");
+    expect(prompt).toContain("Substance floor");
+    expect(prompt).not.toContain("Express genuine confusion about");
+  });
+
+  it("keeps DEEPEN/ADVANCE substance guidance in the prompt", () => {
+    const deepen = personaPrompt([], { type: "DEEPEN", node_id: "n1" });
+    expect(deepen).toContain("not a restatement of what they just said");
+    const advance = personaPrompt([], { type: "ADVANCE", node_id: "n2" });
+    expect(advance).toContain("without opening by echoing");
+  });
 });
