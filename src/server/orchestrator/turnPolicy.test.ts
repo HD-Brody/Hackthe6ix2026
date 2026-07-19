@@ -178,6 +178,28 @@ describe("turnPolicy", () => {
     ).toEqual({ type: "ADVANCE", node_id: "n1" });
   });
 
+  it("explicit WRAP_UP recommendation is honored even on an empty-verdict turn", () => {
+    const userIsDone: Verdict = {
+      nodes_touched: [],
+      verdicts: [],
+      recommended_directive: { type: "WRAP_UP" },
+    };
+    expect(turnPolicy(graph, userIsDone, emptyPolicy)).toEqual({
+      type: "WRAP_UP",
+    });
+  });
+
+  it("WRAP_UP recommendation is honored even alongside a dodge in the same turn", () => {
+    const doneWithDodge: Verdict = {
+      nodes_touched: ["n3"],
+      verdicts: [{ node_id: "n3", verdict: "dodged" }],
+      recommended_directive: { type: "WRAP_UP" },
+    };
+    expect(turnPolicy(graph, doneWithDodge, emptyPolicy)).toEqual({
+      type: "WRAP_UP",
+    });
+  });
+
   it("low curiosity (probeThreshold 1) advances after one probe", () => {
     const g = withNodeStates(graph, { n1: "vague" });
     expect(

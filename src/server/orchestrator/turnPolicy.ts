@@ -123,6 +123,17 @@ export function turnPolicy(
   opts: TurnPolicyOptions = {}
 ): Directive {
   const probeThreshold = opts.probeThreshold ?? DEFAULT_PROBE_THRESHOLD;
+
+  // WRAP_UP is categorical, unlike PROBE/DEEPEN/ADVANCE recommendations below:
+  // it only ever means "the user is done" — either the graph is fully
+  // covered, or (evaluator.prompt.ts) they explicitly said they're finished
+  // teaching. An "I'm done teaching" utterance never touches a concept node,
+  // so verdicts/nodes_touched will always be empty for exactly the case this
+  // needs to catch — always honor it, even on an otherwise-empty turn.
+  if (verdict.recommended_directive?.type === "WRAP_UP") {
+    return { type: "WRAP_UP" };
+  }
+
   const primary = pickPrimaryVerdict(graph, verdict.verdicts);
 
   if (!primary) {

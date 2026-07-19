@@ -234,6 +234,7 @@ export function Classroom({
   const lastDirectiveRef = useRef<Directive | null>(null);
   const graphNodesRef = useRef<Session["graph"]["nodes"]>([]);
   const openingFiredRef = useRef(false);
+  const autoEndFiredRef = useRef(false);
   const [needsOpening, setNeedsOpening] = useState(false);
 
   const stopThinkingNoise = useCallback(() => {
@@ -633,6 +634,24 @@ export function Classroom({
     router.push(feedbackUrl);
   }
 
+  // Sam wrapping up (either the graph is fully covered, or the user just
+  // said they're done teaching — see turnPolicy.ts) means the session should
+  // finish itself instead of waiting on a manual "End Conversation" click.
+  // Wait for studentState to settle back to "listening" so this only fires
+  // once Sam's closing line has actually finished playing/rendering — firing
+  // the moment sessionStatus flips would cut voice playback off mid-sentence.
+  useEffect(() => {
+    if (mockSession) return;
+    if (sessionStatus !== "wrapping") return;
+    if (studentState !== "listening") return;
+    if (autoEndFiredRef.current) return;
+    autoEndFiredRef.current = true;
+    const timer = setTimeout(() => {
+      void endConversation();
+    }, 1600);
+    return () => clearTimeout(timer);
+  }, [mockSession, sessionStatus, studentState]);
+
   if (isInitializing) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-12 text-center">
@@ -748,7 +767,7 @@ export function Classroom({
           </div>
           {sessionStatus === "wrapping" ? (
             <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 sm:px-5" role="status">
-              💡 {profile.name} feels like they&apos;ve got the full picture — hit <strong>End Conversation</strong> when you&apos;re ready to see your gap map.
+              💡 {profile.name} feels like they&apos;ve got the full picture — wrapping up the session now, or hit <strong>End Conversation</strong> to finish right away.
             </div>
           ) : null}
           <Transcript
