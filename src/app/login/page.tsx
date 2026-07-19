@@ -62,7 +62,7 @@ export default function LoginPage() {
             <a
               href="/auth/login?connection=google-oauth2"
               aria-label="Continue with Google"
-              className="flex h-12 w-full items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] transition hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
+              className="flex h-12 w-full items-center justify-center rounded-lg border border-[var(--border)] bg-transparent transition hover:bg-transparent dark:hover:bg-[var(--surface-elevated)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
             >
               <Image src="/google-signin.svg" alt="Continue with Google" width={180} height={40} className="h-10 w-auto dark:hidden" />
               <Image src="/googel-signin-dark.svg" alt="Continue with Google" width={180} height={40} className="hidden h-10 w-auto dark:block" />
