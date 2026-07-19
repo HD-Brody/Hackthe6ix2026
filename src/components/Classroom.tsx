@@ -135,11 +135,11 @@ function ClassroomComposer({
           aria-label={`Explain this concept to ${profile.name}`}
           placeholder={
             micActive
-              ? partialTranscript || "Listening — start explaining out loud..."
+              ? "Listening — start explaining out loud..."
               : `Explain this concept to ${profile.name}...`
           }
           rows={1}
-          value={value}
+          value={micActive ? partialTranscript : value}
           disabled={isSending || micActive}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={handleKeyDown}
@@ -154,11 +154,6 @@ function ClassroomComposer({
           <button type="submit" disabled={isSending || micActive || !value.trim()} aria-label="Send message" className="flex size-10 items-center justify-center rounded-lg bg-[var(--chat-user)] text-white shadow-md transition hover:bg-[var(--brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"><SendIcon /></button>
         </div>
       </div>
-      {micActive ? (
-        <p className="mt-2 px-1 text-sm text-[var(--text-secondary)]">
-          🎙 {partialTranscript || "Listening..."}
-        </p>
-      ) : null}
       {error ? <p role="alert" className="mt-2 px-1 text-sm font-medium text-red-600">{error}</p> : null}
     </form>
   );
