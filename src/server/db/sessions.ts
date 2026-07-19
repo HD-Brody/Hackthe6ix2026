@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { getDb } from "./mongo";
+import type { StudentId } from "@/lib/studentProfiles";
 import type {
   Session,
   Utterance,
@@ -45,7 +46,8 @@ export class SessionCapError extends Error {
 export async function createSession(
   userId: string,
   topic: string,
-  graph: ConceptGraph
+  graph: ConceptGraph,
+  student: StudentId = "sam"
 ): Promise<Session> {
   const count = await countSessionsForUser(userId);
   if (isSessionCapReached(count)) {
@@ -56,6 +58,7 @@ export async function createSession(
     _id: randomUUID(),
     user_id: userId,
     topic,
+    student,
     status: "created",
     graph,
     utterances: [],

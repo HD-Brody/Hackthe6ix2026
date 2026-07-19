@@ -18,6 +18,7 @@ import { evaluate, personaReply } from "@/server/orchestrator/llm";
 import { transition } from "@/server/orchestrator/stateMachine";
 import { nextAdvanceTarget, turnPolicy } from "@/server/orchestrator/turnPolicy";
 import { formatSSE } from "@/lib/sse";
+import { parseStudentId } from "@/lib/studentProfiles";
 import type {
   ConceptGraph,
   Directive,
@@ -209,6 +210,7 @@ async function consumeDirective(
 async function streamPersonaTokens(
   transcript: Utterance[],
   directive: Directive,
+  student: ReturnType<typeof parseStudentId>,
   send: (event: TurnSSEEvent) => void
 ): Promise<{ text: string; tFirst?: number; tLast?: number }> {
   let text = "";
@@ -216,7 +218,7 @@ async function streamPersonaTokens(
   let tLast: number | undefined;
 
   await retryOnce(async () => {
-    for await (const token of personaReply(transcript, directive)) {
+    for await (const token of personaReply(transcript, directive, student)) {
       if (tFirst === undefined) tFirst = Date.now();
       text += token;
       send({ event: "token", data: { text: token } });
@@ -302,6 +304,7 @@ export function createSequentialTurnStream(
     const transcript = session.utterances;
     const userText = lastUserText(transcript);
     const turn = userTurnNumber(transcript);
+    const student = parseStudentId(session.student);
 
     let verdict: Verdict;
     const tEvalStart = Date.now();
@@ -336,7 +339,7 @@ export function createSequentialTurnStream(
     let tPersonaFirst: number | undefined;
     let tPersonaLast: number | undefined;
     try {
-      const streamed = await streamPersonaTokens(transcript, directive, send);
+      const streamed = await streamPersonaTokens(transcript, directive, student, send);
       studentLine = streamed.text;
       tPersonaFirst = streamed.tFirst;
       tPersonaLast = streamed.tLast;
@@ -400,6 +403,7 @@ export function createParallelTurnStream(
     const transcript = session.utterances;
     const userText = lastUserText(transcript);
     const turn = userTurnNumber(transcript);
+    const student = parseStudentId(session.student);
     const spokenDirective =
       session.pending_directive ?? syntheticFirstDirective(session.graph);
 
@@ -447,6 +451,7 @@ export function createParallelTurnStream(
         const streamed = await streamPersonaTokens(
           transcript,
           spokenDirective,
+          student,
           send
         );
         studentLine = streamed.text;

@@ -5,6 +5,8 @@
  * If you need a new field, add it as optional and announce it in the group chat.
  */
 
+import type { StudentId } from "@/lib/studentProfiles";
+
 // ── Concept graph (contracts/concept-graph.schema.json) ─────────
 
 export type NodeState =
@@ -96,6 +98,8 @@ export interface Session {
   _id: string;
   user_id: string;
   topic: string;
+  /** AI student persona for this session (optional — added post-CP0). */
+  student?: StudentId;
   status: SessionStatus;
   graph: ConceptGraph;
   utterances: Utterance[];

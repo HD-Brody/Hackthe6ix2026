@@ -15,12 +15,14 @@
  */
 
 import type { Utterance, Directive } from "@/lib/types";
+import type { StudentId } from "@/lib/studentProfiles";
 import { streamPersona } from "./gemini";
 import { personaPrompt } from "./prompts/persona.prompt";
 
 export async function* personaReply(
   transcript: Utterance[],
-  directive: Directive
+  directive: Directive,
+  student: StudentId = "sam"
 ): AsyncIterable<string> {
-  yield* streamPersona(personaPrompt(transcript, directive));
+  yield* streamPersona(personaPrompt(transcript, directive, student));
 }

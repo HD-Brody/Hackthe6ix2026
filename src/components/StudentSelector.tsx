@@ -13,9 +13,6 @@ type CuriosityLevel = "low" | "medium" | "high";
 
 const students = Object.values(studentProfiles);
 
-/** Elena's persona/voice variant is a stretch goal — only Sam is teachable today. */
-const AVAILABLE_STUDENTS: ReadonlySet<StudentId> = new Set<StudentId>(["sam"]);
-
 /** Pre-rendered ElevenLabs clip (the actual student voice) used as the preview. */
 const VOICE_PREVIEW_CLIP = "/audio/curious-oh.mp3";
 
@@ -76,7 +73,7 @@ export function StudentSelector({ topic }: { topic: string }) {
       const response = await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: selectedTopic }),
+        body: JSON.stringify({ topic: selectedTopic, student }),
       });
       const payload = (await response.json().catch(() => ({}))) as {
         session_id?: string;
@@ -113,27 +110,22 @@ export function StudentSelector({ topic }: { topic: string }) {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {students.map((item) => {
             const selected = student === item.id;
-            const available = AVAILABLE_STUDENTS.has(item.id);
             return (
-              <div key={item.id} className={`relative flex min-h-[218px] flex-col items-center justify-center rounded-xl border-2 bg-white p-5 transition ${selected ? "border-[#4648d4] shadow-[0_0_0_4px_rgba(70,72,212,0.1)]" : "border-[var(--card-border)]"} ${available ? "" : "opacity-70"}`}>
-                {!available ? (
-                  <span className="absolute right-3 top-3 z-10 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">Coming soon</span>
-                ) : null}
-                <label className={`flex flex-col items-center focus-within:outline-none ${available ? "cursor-pointer" : "cursor-not-allowed"}`}>
-                  <input type="radio" name="student" value={item.id} checked={selected} disabled={!available} onChange={() => available && setStudent(item.id)} className="peer sr-only" />
+              <div key={item.id} className={`relative flex min-h-[218px] flex-col items-center justify-center rounded-xl border-2 bg-white p-5 transition ${selected ? "border-[#4648d4] shadow-[0_0_0_4px_rgba(70,72,212,0.1)]" : "border-[var(--card-border)]"}`}>
+                <label className="flex cursor-pointer flex-col items-center focus-within:outline-none">
+                  <input type="radio" name="student" value={item.id} checked={selected} onChange={() => setStudent(item.id)} className="peer sr-only" />
                   <StudentPortrait student={item.id} />
                   <span className={`font-heading relative z-10 mt-2 text-sm font-semibold sm:text-base ${selected ? "text-[#4648d4]" : "text-[var(--text-primary)]"}`}>{item.name}</span>
                   <span className="absolute inset-0 rounded-xl peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--brand)] peer-focus-visible:ring-offset-2" aria-hidden="true" />
                 </label>
                 <button
                   type="button"
-                  disabled={!available}
                   onClick={() => {
                     // Pre-rendered ElevenLabs clip — this IS the student's real voice.
                     new Audio(VOICE_PREVIEW_CLIP).play().catch(() => {});
                   }}
-                  aria-label={available ? `Preview ${item.name}'s voice` : `${item.name}'s voice is coming soon`}
-                  className="relative z-10 mt-1 flex items-center gap-1 rounded-full bg-[#9c48ea] px-3 py-1 text-[10px] font-medium text-white transition hover:bg-[#8127cf] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={`Preview ${item.name}'s voice`}
+                  className="relative z-10 mt-1 flex items-center gap-1 rounded-full bg-[#9c48ea] px-3 py-1 text-[10px] font-medium text-white transition hover:bg-[#8127cf] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2"
                 >
                   <PlayIcon /> Preview Voice
                 </button>
