@@ -14,7 +14,7 @@ import {
   setPendingDirective,
   updatePolicy,
 } from "@/server/db/sessions";
-import { evaluate, personaReply } from "@/server/orchestrator/llm";
+import { evaluate, personaReply, bridgingPersonaReply } from "@/server/orchestrator/llm";
 import { transition } from "@/server/orchestrator/stateMachine";
 import { nextAdvanceTarget, turnPolicy } from "@/server/orchestrator/turnPolicy";
 import { formatSSE } from "@/lib/sse";
@@ -208,6 +208,31 @@ async function consumeDirective(
   return newPolicy;
 }
 
+async function streamBridgingTokens(
+  priorGapContext: NonNullable<
+    Awaited<ReturnType<typeof getSession>>
+  >["prior_gap_context"],
+  student: ReturnType<typeof parseStudentId>,
+  send: (event: TurnSSEEvent) => void
+): Promise<{ text: string; tFirst?: number; tLast?: number }> {
+  if (!priorGapContext) throw new Error("no prior gap context");
+
+  let text = "";
+  let tFirst: number | undefined;
+  let tLast: number | undefined;
+
+  await retryOnce(async () => {
+    for await (const token of bridgingPersonaReply(priorGapContext, student)) {
+      if (tFirst === undefined) tFirst = Date.now();
+      text += token;
+      send({ event: "token", data: { text: token } });
+    }
+    tLast = Date.now();
+  });
+
+  return { text, tFirst, tLast };
+}
+
 async function streamPersonaTokens(
   transcript: Utterance[],
   directive: Directive,
@@ -311,7 +336,7 @@ export function createSequentialTurnStream(
     const tEvalStart = Date.now();
     try {
       verdict = await retryOnce(() =>
-        evaluate(session.graph, transcript, userText)
+        evaluate(session.graph, transcript, userText, session.prior_gap_context)
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "evaluate failed";
@@ -426,7 +451,7 @@ export function createParallelTurnStream(
     const evalWork = (async () => {
       try {
         verdict = await retryOnce(() =>
-          evaluate(session.graph, transcript, userText)
+          evaluate(session.graph, transcript, userText, session.prior_gap_context)
         );
         tEvalEnd = Date.now();
 
@@ -521,6 +546,98 @@ export function createTurnStream(
     return createParallelTurnStream(sessionId);
   }
   return createSequentialTurnStream(sessionId);
+}
+
+/** Bridging opening — student speaks first on re-teach sessions (no evaluate). */
+export function createOpeningStream(sessionId: string): ReadableStream<Uint8Array> {
+  if (process.env.ECHO_MODE === "true") {
+    return createEchoOpeningStream(sessionId);
+  }
+  return createBridgingOpeningStream(sessionId);
+}
+
+function createEchoOpeningStream(sessionId: string): ReadableStream<Uint8Array> {
+  return createSseStream(sessionId, async (send) => {
+    const session = await getSession(sessionId);
+    if (!session) throw new Error("session not found");
+    if (!session.prior_gap_context) {
+      throw new Error("no prior gap context");
+    }
+
+    const focus =
+      session.prior_gap_context.reteach_names[0] ?? "that part";
+    const studentLine = `Okay so last time I still didn't get ${focus} — can you walk me through that again?`;
+    const directive =
+      session.pending_directive ??
+      ({ type: "PROBE", node_id: session.prior_gap_context.reteach_order[0] } as Directive);
+
+    await streamTextAsTokens(studentLine, send, ECHO_TOKEN_DELAY_MS);
+
+    await appendUtterance(sessionId, {
+      role: "student",
+      text: studentLine,
+      ts: Date.now(),
+    });
+
+    const updated = await getSession(sessionId);
+    send({
+      event: "done",
+      data: {
+        verdict: emptyVerdict(directive),
+        session_status: updated?.status ?? "teaching",
+        directive,
+      },
+    });
+  });
+}
+
+function createBridgingOpeningStream(sessionId: string): ReadableStream<Uint8Array> {
+  return createSseStream(sessionId, async (send) => {
+    const session = await getSession(sessionId);
+    if (!session) throw new Error("session not found");
+    if (!session.prior_gap_context) {
+      throw new Error("no prior gap context");
+    }
+
+    const student = parseStudentId(session.student);
+    const directive =
+      session.pending_directive ??
+      ({ type: "PROBE", node_id: session.prior_gap_context.reteach_order[0] } as Directive);
+
+    let studentLine = "";
+    try {
+      const streamed = await streamBridgingTokens(
+        session.prior_gap_context,
+        student,
+        send
+      );
+      studentLine = streamed.text;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "bridging persona failed";
+      studentLine = FALLBACK_LINE;
+      await streamTextAsTokens(FALLBACK_LINE, send);
+      send({
+        event: "error",
+        data: { message, fallback_line: FALLBACK_LINE },
+      });
+    }
+
+    await appendUtterance(sessionId, {
+      role: "student",
+      text: studentLine,
+      ts: Date.now(),
+    });
+
+    const updated = await getSession(sessionId);
+    send({
+      event: "done",
+      data: {
+        verdict: emptyVerdict(directive),
+        session_status: updated?.status ?? "teaching",
+        directive,
+      },
+    });
+  });
 }
 
 /** @deprecated Use createSequentialTurnStream — kept for imports during A3 transition. */

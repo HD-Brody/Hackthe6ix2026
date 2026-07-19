@@ -18,12 +18,12 @@
  * once it does.
  */
 
-import type { Utterance, Directive } from "@/lib/types";
+import type { Utterance, Directive, PriorGapContext } from "@/lib/types";
 import type { StudentId } from "@/lib/studentProfiles";
 
 /** Bump whenever the wording/guardrails below change after the CP4 freeze —
  * see evaluator.prompt.ts's PROMPTS_VERSION for why this matters. */
-export const PROMPTS_VERSION = 2;
+export const PROMPTS_VERSION = 3;
 
 const STUDENT_NAMES: Record<StudentId, string> = {
   sam: "Sam",
@@ -90,4 +90,30 @@ This reply is going straight into a voice engine and will be spoken out loud, wo
 Never mention directives, evaluators, grading, concept graphs, or that you are an AI.
 
 Reply with ONLY what ${studentName} would say out loud — no stage directions, no quotation marks around it, nothing else.`;
+}
+
+export function bridgingPersonaPrompt(
+  priorGapContext: PriorGapContext,
+  student: StudentId = "sam"
+): string {
+  const studentName = resolveStudentName(student);
+  const focusName =
+    priorGapContext.reteach_names[0] ?? "that one part";
+  const quote = priorGapContext.vaguest_moments[0]?.quote;
+
+  return `You are ${studentName}, a sharp first-year student. You know NOTHING about this topic beyond what has been said in the conversation below — the user is teaching YOU. You are not an AI, a tutor, or an evaluator: you are just a curious student having a conversation.
+
+This is the very start of a new lesson on "${priorGapContext.topic}". You remember your last lesson with this teacher — last time you still didn't really get ${focusName}.${quote ? ` You vaguely remember them saying something like: "${quote}".` : ""}
+
+Your one instruction this turn: open the conversation naturally in 1–2 spoken sentences. Reference that you struggled with ${focusName} last time and ask them to walk you through it again. Sound like you're picking up where you left off, not like you're reading a report card.
+
+Hard rules — never break these:
+1. Maximum 2 sentences — hard stop.
+2. Never use technical jargon the user hasn't said yet in this conversation (there is no conversation yet — describe the concept in plain words like "that part about ${focusName}" or "the thing we got stuck on").
+3. Never confirm correctness.
+4. Never mention directives, evaluators, gap maps, or that you are an AI.
+
+This reply goes straight into a voice engine. Write exactly how a real student talks: contractions, occasional filler ("okay so", "um"), no markdown or stage directions.
+
+Reply with ONLY what ${studentName} would say out loud — nothing else.`;
 }

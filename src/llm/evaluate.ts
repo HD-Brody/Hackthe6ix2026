@@ -10,7 +10,7 @@
  */
 
 import { Type } from "@google/genai";
-import type { ConceptGraph, Utterance, Verdict } from "@/lib/types";
+import type { ConceptGraph, Utterance, Verdict, PriorGapContext } from "@/lib/types";
 import { callFast } from "./gemini";
 import { evaluatorPrompt } from "./prompts/evaluator.prompt";
 
@@ -72,8 +72,12 @@ export function dropDuplicateCurrentTurn(
 export async function evaluate(
   graph: ConceptGraph,
   transcript: Utterance[],
-  userText: string
+  userText: string,
+  priorGapContext?: PriorGapContext
 ): Promise<Verdict> {
   const priorTranscript = dropDuplicateCurrentTurn(transcript, userText);
-  return callFast<Verdict>(evaluatorPrompt(graph, priorTranscript, userText), verdictSchema);
+  return callFast<Verdict>(
+    evaluatorPrompt(graph, priorTranscript, userText, priorGapContext),
+    verdictSchema
+  );
 }

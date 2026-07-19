@@ -79,6 +79,17 @@ export interface GapMap {
   one_liner: string;
 }
 
+/** Snapshot of a prior session's gap map for re-teach memory (A5 stretch). */
+export interface PriorGapContext {
+  prior_session_id: string;
+  topic: string;
+  reteach_order: string[];
+  /** Resolved human names for prompts/UI */
+  reteach_names: string[];
+  vaguest_moments: VagueMoment[];
+  one_liner: string;
+}
+
 // ── Session (data model, design doc §4) ─────────────────────────
 
 export type CuriosityLevel = "low" | "medium" | "high";
@@ -112,6 +123,8 @@ export interface Session {
   graph: ConceptGraph;
   utterances: Utterance[];
   gap_map?: GapMap;
+  /** Prior session gap snapshot when this is a re-teach session (A5 stretch). */
+  prior_gap_context?: PriorGapContext;
   /** Turn-policy state (probe counts, deepened flags). Optional — added post-CP0. */
   policy?: PolicyState;
   /** End-of-session user rating (optional — added post-CP0 for the feedback page). */

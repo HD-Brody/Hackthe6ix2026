@@ -14,10 +14,10 @@
  * Block B3 step 13: spoken-register pass — tune against D's TTS *audio*.
  */
 
-import type { Utterance, Directive } from "@/lib/types";
+import type { Utterance, Directive, PriorGapContext } from "@/lib/types";
 import type { StudentId } from "@/lib/studentProfiles";
 import { streamPersona } from "./gemini";
-import { personaPrompt } from "./prompts/persona.prompt";
+import { personaPrompt, bridgingPersonaPrompt } from "./prompts/persona.prompt";
 
 export async function* personaReply(
   transcript: Utterance[],
@@ -25,4 +25,11 @@ export async function* personaReply(
   student: StudentId = "sam"
 ): AsyncIterable<string> {
   yield* streamPersona(personaPrompt(transcript, directive, student));
+}
+
+export async function* bridgingPersonaReply(
+  priorGapContext: PriorGapContext,
+  student: StudentId = "sam"
+): AsyncIterable<string> {
+  yield* streamPersona(bridgingPersonaPrompt(priorGapContext, student));
 }

@@ -206,6 +206,8 @@ export function Classroom({
   const thinkingNoiseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastDirectiveRef = useRef<Directive | null>(null);
   const graphNodesRef = useRef<Session["graph"]["nodes"]>([]);
+  const openingFiredRef = useRef(false);
+  const [needsOpening, setNeedsOpening] = useState(false);
 
   const stopThinkingNoise = useCallback(() => {
     thinkingNoiseRef.current?.pause();
@@ -243,6 +245,12 @@ export function Classroom({
       solid: session.graph.nodes.filter((n) => n.state === "solid").length,
       total: session.graph.nodes.length,
     });
+    setNeedsOpening(
+      !!session.prior_gap_context && session.utterances.length === 0
+    );
+    if (session.pending_directive) {
+      lastDirectiveRef.current = session.pending_directive;
+    }
   }, []);
 
   // Refresh recovery: rebuild the classroom from the persisted session.
@@ -307,6 +315,76 @@ export function Classroom({
       // Non-fatal: the stats card just stays a turn behind.
     }
   }
+
+  async function playBridgingOpening() {
+    setStudentState("thinking");
+
+    const res = await fetch(`/api/session/${sessionId}/opening`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+
+    if (!res.ok) {
+      const payload = (await res.json().catch(() => ({}))) as { error?: string };
+      if (payload.error === "opening already played") return;
+      if (payload.error === "turn already in progress") {
+        throw new Error(ERROR_COPY.busy(profile.name));
+      }
+      throw new Error(ERROR_COPY.send(profile.name));
+    }
+
+    const tee = createTokenTee();
+    const speaking =
+      voiceRepliesRef.current && ttsRef.current
+        ? ttsRef.current.speak(tee.stream()).catch(() => {
+            voiceRepliesRef.current = false;
+            setStudentState("listening");
+          })
+        : null;
+
+    let firstToken = true;
+    for await (const event of consumeTurnStream(res)) {
+      if (event.event === "token") {
+        if (firstToken) {
+          firstToken = false;
+          if (!voiceRepliesRef.current) setStudentState("speaking");
+        }
+        appendStudentToken(event.data.text);
+        tee.push(event.data.text);
+      } else if (event.event === "done") {
+        setSessionStatus(event.data.session_status);
+        if (event.data.directive) lastDirectiveRef.current = event.data.directive;
+        const focusId = event.data.directive?.node_id;
+        setFocusName(
+          focusId
+            ? graphNodesRef.current.find((n) => n.id === focusId)?.name ?? null
+            : null
+        );
+      } else if (event.event === "error") {
+        console.warn("[classroom] opening error:", event.data.message);
+      }
+    }
+    tee.push(null);
+
+    if (!speaking) setStudentState("listening");
+    void refreshFromServer();
+  }
+
+  useEffect(() => {
+    if (mockSession || !needsOpening || openingFiredRef.current || isSending) return;
+    openingFiredRef.current = true;
+    setIsSending(true);
+    setError(null);
+    void playBridgingOpening()
+      .catch((caught) => {
+        setStudentState("listening");
+        setError(
+          caught instanceof Error ? caught.message : ERROR_COPY.send(profile.name)
+        );
+      })
+      .finally(() => setIsSending(false));
+  }, [mockSession, needsOpening, isSending, profile.name, sessionId]);
 
   async function sendMockTurn(userText: string) {
     appendUtterance({ role: "user", text: userText, ts: Date.now() });

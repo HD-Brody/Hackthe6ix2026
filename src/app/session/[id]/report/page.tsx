@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GapMapGrid } from "@/components/GapMapGrid";
+import { ReteachButton } from "@/components/ReteachButton";
 import { StarRating } from "@/components/StarRating";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -205,7 +206,12 @@ export default async function ReportPage({
             ? `Re-teach these in order: ${reteachNames.join(" → ")}.`
             : "Nothing left to re-teach — pick a harder topic."}
         </p>
-        <Link href="/" className="mt-5 inline-block rounded-lg bg-[#5755d8] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#4846c5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2">Teach it again</Link>
+        <ReteachButton
+          sessionId={id}
+          student={selectedStudent}
+          hasGaps={reteachNames.length > 0}
+          isMock={isMock}
+        />
       </section>
     </main>
   );
