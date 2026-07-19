@@ -219,8 +219,9 @@ export function Classroom({
   const [micSupported, setMicSupported] = useState(true);
   const [partialTranscript, setPartialTranscript] = useState("");
 
-  // Voice plumbing — created once; TTS speaks only after the user has used the
-  // mic (which doubles as the browser autoplay-unlock gesture).
+  // Voice plumbing — created once. TTS unlocks on the first Send click or mic
+  // click (user gesture required by browser autoplay policy), then every reply
+  // streams to both the transcript and ElevenLabs.
   const sttRef = useRef<STTClient | null>(null);
   const ttsRef = useRef<TTSClient | null>(null);
   const voiceRepliesRef = useRef(false);
@@ -505,7 +506,7 @@ export function Classroom({
       throw new Error(ERROR_COPY.send(profile.name));
     }
 
-    // Tee tokens: transcript always, TTS when voice replies are unlocked.
+    // Tee tokens into the transcript and TTS (voice replies unlocked on send/mic).
     const tee = createTokenTee();
     const speaking =
       voiceRepliesRef.current && ttsRef.current
@@ -555,6 +556,11 @@ export function Classroom({
       return;
     }
 
+    // Sync with the click/Enter (or prior mic gesture) that triggered this send —
+    // unlock autoplay so speak() after the async turn fetch is allowed.
+    ttsRef.current?.unlock();
+    voiceRepliesRef.current = true;
+
     setIsSending(true);
     setError(null);
     setMessage("");
@@ -582,7 +588,8 @@ export function Classroom({
       setPartialTranscript("");
       return;
     }
-    // Mic click is the user gesture that unlocks audio playback — enable voice replies.
+    // Mic click unlocks autoplay and enables spoken replies for this session.
+    ttsRef.current?.unlock();
     voiceRepliesRef.current = true;
     setPartialTranscript("");
     stt.onPartial((text) => setPartialTranscript(text));

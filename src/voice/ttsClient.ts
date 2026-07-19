@@ -67,6 +67,10 @@ function makeWsEndpoint(voiceId: string) {
 // 'audio/mpeg' is supported in Chrome, Edge, and Safari 15+.
 const AUDIO_MIME = "audio/mpeg";
 
+/** Tiny silent WAV — played during unlock() to satisfy autoplay policy. */
+const SILENT_WAV =
+  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
 // ── Interface ─────────────────────────────────────────────────────────────────
 
 export interface TTSClient {
@@ -83,6 +87,13 @@ export interface TTSClient {
    * onPlaybackEnd will NOT fire after stop() — the caller should handle cleanup.
    */
   stop(): void;
+
+  /**
+   * Consume a user gesture (click/tap) so later async `speak()` calls are
+   * allowed under the browser autoplay policy. Must be called synchronously
+   * inside the gesture handler (Send click, mic click, etc.) — not after await.
+   */
+  unlock(): void;
 
   /** Fires when the first audio chunk starts playing in the browser. */
   onPlaybackStart(cb: () => void): void;
@@ -108,40 +119,55 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
   let playbackStartCb: (() => void) | null = null;
   let playbackEndCb: (() => void) | null = null;
 
-  // Track the active WebSocket and audio element so stop() can reach them.
+  // Track the active WebSocket so stop() can reach it.
   let activeWs: WebSocket | null = null;
-  let activeAudio: HTMLAudioElement | null = null;
+  // One audio element for the client lifetime — unlock() + speak() reuse it so
+  // the autoplay entitlement from the user gesture sticks across async turns.
+  const audioEl = new Audio();
+  let objectUrl: string | null = null;
   let stopped = false;
+
+  function clearObjectUrl() {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+      objectUrl = null;
+    }
+  }
 
   return {
     onPlaybackStart(cb) { playbackStartCb = cb; },
     onPlaybackEnd(cb)   { playbackEndCb = cb; },
 
+    unlock() {
+      // Must run synchronously in a click/keydown handler. play()+pause of a
+      // silent clip marks this element as user-activated for later speak().
+      audioEl.src = SILENT_WAV;
+      const playAttempt = audioEl.play();
+      if (playAttempt && typeof playAttempt.then === "function") {
+        playAttempt.then(() => audioEl.pause()).catch(() => {});
+      } else {
+        audioEl.pause();
+      }
+    },
+
     stop() {
       stopped = true;
 
-      // Close the WebSocket immediately — no more audio will be requested.
       if (activeWs && activeWs.readyState === WebSocket.OPEN) {
         activeWs.close();
       }
       activeWs = null;
 
-      // Pause and detach the audio element.
-      if (activeAudio) {
-        activeAudio.pause();
-        activeAudio.src = "";
-        activeAudio = null;
-      }
+      audioEl.pause();
+      clearObjectUrl();
+      audioEl.removeAttribute("src");
+      audioEl.load();
     },
 
     speak(tokens: string | AsyncIterable<string>): Promise<void> {
-      // Reset stop flag at the start of each new utterance.
       stopped = false;
 
       return new Promise((resolve, reject) => {
-        // ── Read the restricted API key ──────────────────────────────────────
-        // NEXT_PUBLIC_ prefix is what makes Next.js include this in the browser bundle.
-        // See the module-level comment for how to create a restricted ElevenLabs key.
         const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_TTS_KEY;
         if (!apiKey) {
           reject(new Error(
@@ -151,39 +177,31 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
           return;
         }
 
-        // ── Set up MediaSource for incremental MP3 playback ──────────────────
         if (!MediaSource.isTypeSupported(AUDIO_MIME)) {
           reject(new Error(`MediaSource does not support ${AUDIO_MIME} in this browser.`));
           return;
         }
 
+        clearObjectUrl();
         const mediaSource = new MediaSource();
-        const audio = new Audio();
-        audio.src = URL.createObjectURL(mediaSource);
-        activeAudio = audio;
+        objectUrl = URL.createObjectURL(mediaSource);
+        audioEl.src = objectUrl;
 
-        // sourceBuffer is created once MediaSource fires 'sourceopen'.
-        // We queue chunks here before then.
         let sourceBuffer: SourceBuffer | null = null;
         const pendingChunks: Uint8Array[] = [];
-        let isEos = false;      // true when ElevenLabs sends isFinal
-        let isAppending = false; // SourceBuffer can only handle one append at a time
+        let isEos = false;
+        let isAppending = false;
 
-        // Drain the pending chunk queue into the SourceBuffer, one at a time.
-        // SourceBuffer fires 'updateend' when each append finishes — we listen
-        // for that to chain the next append.
         function flushChunks() {
           if (isAppending || !sourceBuffer || sourceBuffer.updating) return;
           if (pendingChunks.length === 0) {
             if (isEos) {
-              // Signal to MediaSource that no more data is coming.
-              // The audio element will fire 'ended' when playback finishes.
               try { mediaSource.endOfStream(); } catch (_) {}
             }
             return;
           }
           isAppending = true;
-          sourceBuffer.appendBuffer(pendingChunks.shift()! as any);
+          sourceBuffer.appendBuffer(pendingChunks.shift()! as BufferSource);
         }
 
         mediaSource.addEventListener("sourceopen", () => {
@@ -194,11 +212,9 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
             flushChunks();
           });
 
-          // ── Open the ElevenLabs WebSocket ──────────────────────────────────
           const ws = new WebSocket(makeWsEndpoint(voiceId));
           activeWs = ws;
 
-          // Queue for messages sent before the socket is open.
           const queue: string[] = [];
           let wsOpen = false;
 
@@ -214,14 +230,11 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
 
           ws.onopen = () => {
             wsOpen = true;
-            // BOS: authenticate and set voice settings.
-            // Must be the very first message — ElevenLabs rejects text before this.
             ws.send(JSON.stringify({
               text: " ",
               voice_settings: { stability: 0.5, similarity_boost: 0.75 },
               xi_api_key: apiKey,
             }));
-            // Drain messages that were queued before the socket opened.
             while (queue.length > 0 && ws.readyState === WebSocket.OPEN) {
               ws.send(queue.shift()!);
             }
@@ -233,7 +246,6 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
               const msg = JSON.parse(event.data as string);
 
               if (msg.audio) {
-                // Decode the base64 MP3 fragment and queue it for the SourceBuffer.
                 const binary = atob(msg.audio);
                 const bytes = new Uint8Array(binary.length);
                 for (let i = 0; i < binary.length; i++) {
@@ -244,7 +256,6 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
               }
 
               if (msg.isFinal) {
-                // ElevenLabs is done generating. Signal EOS once all chunks drain.
                 isEos = true;
                 flushChunks();
                 ws.close();
@@ -261,8 +272,6 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
 
           ws.onclose = () => { activeWs = null; };
 
-          // ── Feed tokens to the WebSocket ────────────────────────────────────
-          // This runs concurrently with the WebSocket message handler above.
           (async () => {
             try {
               if (typeof tokens === "string") {
@@ -273,7 +282,6 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
                   wsSend({ text: token });
                 }
               }
-              // EOS: empty string tells ElevenLabs no more text is coming.
               if (!stopped) wsSend({ text: "" });
             } catch (e) {
               reject(e);
@@ -281,32 +289,25 @@ export function createTTSClient(voiceId: string = DEFAULT_VOICE_ID): TTSClient {
           })();
         });
 
-        // ── Audio element events ──────────────────────────────────────────────
-
-        audio.addEventListener("playing", () => {
-          // 'playing' fires when audio actually starts outputting sound (not on load).
-          // This is the right hook for "show the speaking indicator" UX.
+        audioEl.addEventListener("playing", () => {
           playbackStartCb?.();
         }, { once: true });
 
-        audio.addEventListener("ended", () => {
-          // All audio has played through to the end.
+        audioEl.addEventListener("ended", () => {
           if (!stopped) {
             playbackEndCb?.();
             resolve();
           }
-          activeAudio = null;
-          URL.revokeObjectURL(audio.src);
-        });
+          clearObjectUrl();
+        }, { once: true });
 
-        audio.addEventListener("error", () => {
+        audioEl.addEventListener("error", () => {
           if (!stopped) {
-            reject(new Error(`Audio playback error: ${audio.error?.message ?? "unknown"}`));
+            reject(new Error(`Audio playback error: ${audioEl.error?.message ?? "unknown"}`));
           }
-        });
+        }, { once: true });
 
-        // Start playback — audio will buffer until there's enough data.
-        audio.play().catch((err) => {
+        audioEl.play().catch((err) => {
           if (!stopped) reject(err);
         });
       });
