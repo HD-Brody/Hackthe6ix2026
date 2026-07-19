@@ -136,7 +136,6 @@ input {
 
 .home-background {
   background:
-    radial-gradient(circle at 100% 0%, var(--home-gradient-1), transparent 28rem),
-    radial-gradient(circle at 0% 100%, var(--home-gradient-2), transparent 30rem),
+    radial-gradient(ellipse 80% 40% at 50% -10%, var(--home-gradient-1), transparent),
     var(--page-background);
 }

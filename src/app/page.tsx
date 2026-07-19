@@ -8,17 +8,17 @@ export default function TopicPickerPage() {
       <SiteHeader />
       <main className="home-background flex-1">
         <section className="mx-auto flex w-full max-w-7xl flex-col items-center px-5 pb-28 pt-14 sm:px-8 sm:pb-36 sm:pt-20 lg:px-10">
-          <h1 className="font-heading max-w-4xl text-center text-[2.45rem] font-extrabold leading-[1.12] tracking-[-0.04em] text-[var(--text-primary)] sm:text-5xl lg:text-6xl">
-            You don&apos;t study with it.
-            <br />
-            <span className="text-[var(--brand)]">You teach it.</span>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-white px-3.5 py-1.5 text-xs font-semibold tracking-wide text-[var(--text-secondary)] shadow-sm">
+            <span className="size-2 rounded-full bg-emerald-400" />
+            Teaching mode — pick a topic and start explaining
+          </div>
+
+          <h1 className="font-heading max-w-3xl text-center text-[2.2rem] font-extrabold leading-[1.14] tracking-[-0.035em] text-[var(--text-primary)] sm:text-5xl lg:text-[3.4rem]">
+            Teach it to learn it.
           </h1>
 
-          <p className="mt-5 max-w-2xl text-center text-base leading-7 text-[var(--text-secondary)] sm:text-lg">
-            The best way to master a concept is to explain it to someone else.
-            <br />
-            Meet Sam and Elena,
-            <br className="hidden sm:block" /> AI students who learn from you.
+          <p className="mt-4 max-w-xl text-center text-base leading-7 text-[var(--text-secondary)] sm:text-lg">
+            Explain any topic to an AI student and instantly see where your understanding has gaps.
           </p>
 
           <TopicPicker />
