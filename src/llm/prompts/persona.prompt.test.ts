@@ -49,8 +49,15 @@ describe("personaPrompt", () => {
 
   it("keeps DEEPEN/ADVANCE substance guidance in the prompt", () => {
     const deepen = personaPrompt([], { type: "DEEPEN", node_id: "n1" });
-    expect(deepen).toContain("not a restatement of what they just said");
+    expect(deepen).toContain("Not a restatement of what they just said");
+    expect(deepen).toContain("what happens after / next");
     const advance = personaPrompt([], { type: "ADVANCE", node_id: "n2" });
     expect(advance).toContain("without opening by echoing");
+  });
+
+  it("bans repeating prior student questions", () => {
+    const prompt = personaPrompt([], { type: "PROBE", node_id: "n1" });
+    expect(prompt).toContain("Never repeat yourself");
+    expect(prompt).toContain("do not ask it again");
   });
 });
