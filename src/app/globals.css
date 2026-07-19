@@ -5,22 +5,24 @@
 /* Owner: C. Node-state colors are the gap map's visual language — define
    once here, use everywhere (classroom indicators + gap map grid). */
 :root {
-  --brand: #6063ee;
+  --brand: #5457e0;
   --brand-strong: #2f2ebe;
-  --brand-soft: #e1e0ff;
-  --page-background: #f7f9fb;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-  --surface-muted: #f2f4f6;
-  --surface-input: #eceef0;
-  --text-primary: #191c1e;
-  --text-secondary: #464554;
-  --text-muted: #6b7280;
-  --border: #e0dfeb;
-  --border-subtle: #f1f5f9;
-  --card-border: rgba(199, 196, 215, 0.3);
-  --shadow-color: rgba(99, 102, 241, 0.08);
-  --header-bg: #ffffff;
+  --brand-soft: #e4e3ff;
+  /* Warm paper, not SaaS gray — the whole app sits on a desk, not a dashboard. */
+  --page-background: #f7f4ec;
+  --surface: #fdfcf8;
+  --surface-elevated: #fffefb;
+  --surface-muted: #f0ece1;
+  --surface-input: #ede9dd;
+  --text-primary: #1c1a17;
+  --text-secondary: #4a463f;
+  --text-muted: #78736a;
+  --border: #e2dccc;
+  --border-subtle: #efeadd;
+  --card-border: rgba(160, 150, 125, 0.35);
+  --shadow-color: rgba(80, 65, 35, 0.1);
+  --header-bg: #fdfcf8;
+  --ink: #1c1a17;
   --accent-soft: #f7f6ff;
   --nav-active: #4648d4;
   --chat-user: #4648d4;
@@ -62,24 +64,36 @@
   --blur-accent-2: rgba(125, 39, 206, 0.06);
   --home-gradient-1: rgba(96, 99, 238, 0.09);
   --home-gradient-2: rgba(129, 39, 207, 0.055);
+  /* ── design-signature layer (classroom motif) ────────────────── */
+  --ink-stamp: #b3402f;
+  --card-line: rgba(96, 99, 238, 0.14);
+  --card-margin: rgba(179, 64, 47, 0.35);
+  --tape: rgba(255, 224, 138, 0.55);
+  --grid-line: rgba(96, 99, 238, 0.08);
+  --squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C20 2.5 38 7 58 4.5 78 2 98 6.5 118 3.5' fill='none' stroke='%234648d4' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --chalk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C40 3.5 74 10 106 6.5 138 3 170 9 197 5' fill='none' stroke='%236063ee' stroke-width='5' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E");
+  --spotlight: rgba(84, 87, 224, 0.09);
+  --paper-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
 }
 
 .dark {
   color-scheme: dark;
   --brand-soft: #2a2850;
-  --page-background: #0f1117;
-  --surface: #1a1d27;
-  --surface-elevated: #22263a;
-  --surface-muted: #141720;
-  --surface-input: #2a2e3d;
-  --text-primary: #f0f1f5;
-  --text-secondary: #b8bac8;
-  --text-muted: #8b8d9a;
-  --border: #2e3348;
-  --border-subtle: #252a3a;
-  --card-border: rgba(46, 51, 72, 0.6);
-  --shadow-color: rgba(0, 0, 0, 0.3);
-  --header-bg: #141720;
+  /* Warm ink-black — a desk lamp at night, not a server room. */
+  --page-background: #131110;
+  --surface: #1c1916;
+  --surface-elevated: #24201c;
+  --surface-muted: #171411;
+  --surface-input: #2a2521;
+  --text-primary: #f2efe8;
+  --text-secondary: #c2bcb0;
+  --text-muted: #8f887c;
+  --border: #322d26;
+  --border-subtle: #262119;
+  --card-border: rgba(90, 80, 65, 0.5);
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --header-bg: #171411;
+  --ink: #f2efe8;
   --accent-soft: #2a2850;
   --nav-active: #8b8dff;
   --chat-user: #6063ee;
@@ -108,6 +122,15 @@
   --blur-accent-2: rgba(125, 39, 206, 0.1);
   --home-gradient-1: rgba(96, 99, 238, 0.15);
   --home-gradient-2: rgba(129, 39, 207, 0.1);
+  --ink-stamp: #e8705c;
+  --card-line: rgba(139, 141, 255, 0.16);
+  --card-margin: rgba(232, 112, 92, 0.4);
+  --tape: rgba(255, 224, 138, 0.16);
+  --grid-line: rgba(139, 141, 255, 0.06);
+  --squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C20 2.5 38 7 58 4.5 78 2 98 6.5 118 3.5' fill='none' stroke='%238b8dff' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --chalk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8.5C40 3.5 74 10 106 6.5 138 3 170 9 197 5' fill='none' stroke='%238b8dff' stroke-width='5' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E");
+  --spotlight: rgba(139, 141, 255, 0.1);
+  --paper-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
 
 * {
@@ -121,7 +144,10 @@ html {
 body {
   margin: 0;
   color: var(--text-primary);
-  background: var(--page-background);
+  background-color: var(--page-background);
+  /* Paper grain — a faint fractal-noise wash so flat fills read as stock. */
+  background-image: var(--paper-noise);
+  background-size: 280px 280px;
   font-family: var(--font-inter), sans-serif;
 }
 
@@ -137,5 +163,223 @@ input {
 .home-background {
   background:
     radial-gradient(ellipse 80% 40% at 50% -10%, var(--home-gradient-1), transparent),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
     var(--page-background);
+  background-size: auto, 32px 32px, 32px 32px, auto;
+}
+
+/* ── design-signature layer ─────────────────────────────────────
+   The classroom motif: an editorial serif voice, chalk underlines,
+   index-card artifacts, and a graded-paper stamp. All theme-aware. */
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+::selection {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* Registrar section label — mono, numbered like a syllabus. */
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--eyebrow-color, var(--brand));
+}
+.eyebrow-inverse {
+  --eyebrow-color: rgba(255, 255, 255, 0.82);
+}
+
+/* A piece of tape without the ruled lines — for portraits and forms. */
+.tape-top {
+  position: relative;
+}
+.tape-top::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 84px;
+  height: 22px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: var(--tape);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
+
+/* Session-detail modal entrance. */
+@media (prefers-reduced-motion: no-preference) {
+  .modal-pop {
+    animation: modal-pop 240ms cubic-bezier(0.2, 0.9, 0.3, 1.08) backwards;
+  }
+}
+@keyframes modal-pop {
+  from {
+    transform: translateY(14px) rotate(-0.6deg) scale(0.98);
+    opacity: 0;
+  }
+}
+
+/* Hand-drawn chalk stroke under a hero word. */
+.chalk-underline {
+  background: var(--chalk) no-repeat bottom / 100% 0.14em;
+  padding-bottom: 0.16em;
+}
+
+/* Marker squiggle for active nav items. */
+.marker-active {
+  background: var(--squiggle) no-repeat bottom 4px center / 100% 5px;
+}
+
+/* Ruled index card with a red margin line and a piece of tape. */
+.index-card {
+  position: relative;
+  border-radius: 4px 10px 10px 4px;
+  background:
+    linear-gradient(to right, transparent 30px, var(--card-margin) 30px, var(--card-margin) 31.5px, transparent 31.5px),
+    repeating-linear-gradient(to bottom, transparent 0 27px, var(--card-line) 27px 28px),
+    var(--surface);
+}
+
+.index-card::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 92px;
+  height: 24px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: var(--tape);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.tilt-1 { transform: rotate(-1.1deg); }
+.tilt-2 { transform: rotate(0.9deg); }
+.tilt-3 { transform: rotate(-0.4deg); }
+.tilt-1, .tilt-2, .tilt-3 { transition: transform 220ms ease; }
+.tilt-1:hover, .tilt-2:hover, .tilt-3:hover { transform: rotate(0deg); }
+
+/* Circular red-ink grade stamp, slightly askew like a real marker. */
+.grade-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 3px solid var(--ink-stamp);
+  outline: 1.5px solid var(--ink-stamp);
+  outline-offset: 3px;
+  color: var(--ink-stamp);
+  transform: rotate(-8deg);
+  opacity: 0.92;
+  user-select: none;
+}
+
+/* Gentle lift for interactive cards — straightens tilt, adds air. */
+.card-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -8px var(--shadow-color);
+}
+
+/* ── interactive layer ──────────────────────────────────────────── */
+
+/* Letterpress button: solid ink offset that compresses when pressed. */
+.btn-ink {
+  border: 1.5px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 130ms ease, box-shadow 130ms ease;
+}
+.btn-ink:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.btn-ink:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0.5px 0.5px 0 var(--ink);
+}
+
+/* Cursor-tracking spotlight. Set --mx/--my from onMouseMove. */
+.spot-card {
+  position: relative;
+  overflow: hidden;
+}
+.spot-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 250ms ease;
+  background: radial-gradient(
+    170px circle at var(--mx, 50%) var(--my, 50%),
+    var(--spotlight),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+.spot-card:hover::after {
+  opacity: 1;
+}
+
+/* The grade lands on the page like a real stamp. */
+@media (prefers-reduced-motion: no-preference) {
+  .stamp-in {
+    animation: stamp-in 420ms cubic-bezier(0.2, 0.9, 0.3, 1.15) 350ms backwards;
+  }
+}
+@keyframes stamp-in {
+  0% {
+    transform: rotate(-16deg) scale(1.9);
+    opacity: 0;
+  }
+  65% {
+    transform: rotate(-8deg) scale(0.93);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(-8deg) scale(1);
+  }
+}
+
+/* Rotated spine label, like marginalia in a textbook. */
+.marginalia {
+  position: absolute;
+  left: -0.4rem;
+  top: 50%;
+  transform: rotate(180deg) translateY(50%);
+  writing-mode: vertical-rl;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Blinking caret for the hero's self-playing lesson. */
+.type-caret::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: caret-blink 0.9s steps(1) infinite;
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
 }

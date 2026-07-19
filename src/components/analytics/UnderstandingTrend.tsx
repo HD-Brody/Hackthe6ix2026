@@ -10,8 +10,8 @@ function scoreBarClass(score: number): string {
 export function UnderstandingTrend({ points }: { points: ScoreTrendPoint[] }) {
   return (
     <section>
-      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
-        Progress
+      <p className="eyebrow">
+        02 · Progress
       </p>
       <h2 className="mt-1 font-heading text-2xl font-extrabold">
         Understanding over time

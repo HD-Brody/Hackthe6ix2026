@@ -12,7 +12,19 @@ import type { GapMap, Session } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const momentAccents = ["border-l-[#e5bd45]", "border-l-[#7776df]", "border-l-[#b7b7c3]"];
+const momentTilts = ["tilt-1", "tilt-2", "tilt-3"];
+
+/** Red-ink letter grade for the stamp — the report card moment. */
+function letterGrade(score: number | null): string {
+  if (score === null) return "—";
+  if (score >= 93) return "A+";
+  if (score >= 85) return "A";
+  if (score >= 77) return "B+";
+  if (score >= 68) return "B";
+  if (score >= 58) return "C+";
+  if (score >= 45) return "C";
+  return "D";
+}
 
 const LIVE_ONE_LINER =
   "Session in progress — end the lesson for your full understanding map.";
@@ -45,7 +57,7 @@ function EmptyState({
 }) {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-5 py-20 text-center">
-      <h1 className="font-heading text-3xl font-extrabold tracking-tight">{title}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">{title}</h1>
       <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">{body}</p>
       <Link href={href} className="mt-6 inline-block rounded-lg bg-[var(--chat-user)] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[var(--brand-strong)]">{cta}</Link>
     </main>
@@ -81,9 +93,18 @@ function ReportContent({
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
       <section className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">Your Understanding Map</h1>
-          <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">Session Analysis: {report.topic}</p>
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <div>
+            <p className="eyebrow">Report card — final</p>
+            <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Your Understanding Map</h1>
+            <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">{report.topic}</p>
+          </div>
+          {!isLive ? (
+            <div className="grade-stamp stamp-in shrink-0" aria-label={`Grade: ${letterGrade(understandingScore)}`}>
+              <span className="font-display text-4xl font-bold leading-none">{letterGrade(understandingScore)}</span>
+              <span className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.22em]">Prof. Me</span>
+            </div>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {isLive ? (
@@ -99,10 +120,11 @@ function ReportContent({
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_10px_30px_var(--shadow-color)] sm:p-7">
+        <article className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_10px_30px_var(--shadow-color)] sm:p-7">
+          <span className="marginalia" aria-hidden>Concept audit</span>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Knowledge Visualization</p>
+              <p className="eyebrow">01 · Coverage</p>
               <h2 className="mt-1 font-heading text-xl font-bold">What You Taught</h2>
             </div>
             <div className="flex flex-wrap gap-4 text-xs font-semibold text-[var(--text-secondary)]">
@@ -118,7 +140,7 @@ function ReportContent({
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
           <article className="rounded-2xl bg-gradient-to-br from-[#5755d8] to-[#7776df] p-6 text-white shadow-[0_12px_28px_rgba(87,85,216,0.24)]">
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/75">Professor Me Insight</p>
+            <p className="eyebrow eyebrow-inverse">02 · The verdict</p>
             <div className="mt-5 flex items-end gap-2">
               <strong className="font-heading text-5xl">
                 {understandingScore !== null ? `${understandingScore}%` : "—"}
@@ -136,12 +158,12 @@ function ReportContent({
                 among {comprehension.discussed} concept{comprehension.discussed === 1 ? "" : "s"} you explored · {formatBreakdown(comprehension)}
               </p>
             ) : null}
-            <p className="mt-5 text-sm leading-6 text-white/90">&ldquo;{report.one_liner}&rdquo;</p>
+            <p className="font-display mt-5 text-base italic leading-7 text-white/95">&ldquo;{report.one_liner}&rdquo;</p>
           </article>
 
           {!isLive ? (
             <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_var(--shadow-color)]">
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Questions Avoided</p>
+              <p className="eyebrow">03 · Questions avoided</p>
               <h2 className="mt-1 font-heading text-xl font-bold">Worth revisiting</h2>
               {report.dodged_questions.length > 0 ? (
                 <ol className="mt-5 space-y-4">
@@ -160,7 +182,7 @@ function ReportContent({
 
           {session?.feedback ? (
             <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_var(--shadow-color)]">
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Your Reflection</p>
+              <p className="eyebrow">04 · Your reflection</p>
               <h2 className="mt-1 font-heading text-xl font-bold">Session clarity</h2>
               <StarRating rating={session.feedback.rating} className="mt-3" />
               {session.feedback.comment ? (
@@ -172,7 +194,7 @@ function ReportContent({
                 href={`/session/${encodeURIComponent(id)}/feedback?student=${selectedStudent}`}
                 className="mt-4 inline-block text-xs font-semibold text-[var(--nav-active)] hover:underline"
               >
-                View in student diary →
+                View your reflection →
               </Link>
             </article>
           ) : null}
@@ -181,15 +203,15 @@ function ReportContent({
 
       {!isLive ? (
         <section className="mt-10">
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">Conversation Review</p>
-          <h2 className="mt-1 font-heading text-2xl font-extrabold">Moments {studentName} got confused</h2>
+          <p className="eyebrow">05 · Conversation review</p>
+          <h2 className="font-display mt-1 text-2xl font-semibold">Moments {studentName} got confused</h2>
           {report.vaguest_moments.length > 0 ? (
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <div className="mt-7 grid gap-5 md:grid-cols-3">
               {report.vaguest_moments.map((moment, index) => (
-                <article key={`${moment.node_id}-${index}`} className={`flex min-h-52 flex-col rounded-xl border border-[var(--border)] border-l-4 bg-[var(--surface)] p-5 shadow-sm ${momentAccents[index % momentAccents.length]}`}>
+                <article key={`${moment.node_id}-${index}`} className={`index-card flex min-h-52 flex-col border border-[var(--border)] p-5 pl-10 shadow-sm ${momentTilts[index % momentTilts.length]}`}>
                   <span className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--brand)]">You said</span>
-                  <blockquote className="my-4 flex-1 text-sm italic leading-6 text-[var(--text-secondary)]">&ldquo;{moment.quote}&rdquo;</blockquote>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--label-muted)]">{nodeName(moment.node_id)}</p>
+                  <blockquote className="font-display my-4 flex-1 text-[15px] italic leading-[28px] text-[var(--text-secondary)]">&ldquo;{moment.quote}&rdquo;</blockquote>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--ink-stamp)]">↳ {nodeName(moment.node_id)}</p>
                 </article>
               ))}
             </div>
@@ -212,19 +234,41 @@ function ReportContent({
       )}
 
       {!isLive ? (
-        <section className="mt-10 rounded-2xl bg-[var(--accent-soft)] px-6 py-9 text-center sm:px-10">
-          <h2 className="font-heading text-2xl font-extrabold">Ready to close these gaps?</h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
-            {reteachNames.length > 0
-              ? `Re-teach these in order: ${reteachNames.join(" → ")}.`
-              : "Nothing left to re-teach — pick a harder topic."}
-          </p>
-          <ReteachButton
-            sessionId={id}
-            student={selectedStudent}
-            hasGaps={reteachNames.length > 0}
-            isMock={false}
-          />
+        <section className="mt-10 rounded-2xl bg-[var(--accent-soft)] px-6 py-9 sm:px-10">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="eyebrow">Next lesson plan</p>
+            <h2 className="font-display mt-1 text-2xl font-semibold">Ready to close these gaps?</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
+              {reteachNames.length > 0
+                ? `Start your next lesson with ${reteachNames.length === 1 ? "this concept" : `these ${Math.min(reteachNames.length, 3)}`} — the highest-leverage ${reteachNames.length === 1 ? "gap" : "gaps"} to re-teach first.`
+                : "Nothing left to re-teach — pick a harder topic."}
+            </p>
+          </div>
+
+          {reteachNames.length > 0 ? (
+            <ol className="mx-auto mt-6 flex max-w-xl flex-col gap-2.5">
+              {reteachNames.slice(0, 3).map((name, index) => (
+                <li
+                  key={name}
+                  className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-left shadow-sm"
+                >
+                  <span className="font-display flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-sm font-bold text-[var(--nav-active)]">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]">{name}</span>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+
+          <div className="mt-6 text-center">
+            <ReteachButton
+              sessionId={id}
+              student={selectedStudent}
+              hasGaps={reteachNames.length > 0}
+              isMock={false}
+            />
+          </div>
         </section>
       ) : null}
     </main>

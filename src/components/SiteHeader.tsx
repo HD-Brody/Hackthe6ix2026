@@ -36,7 +36,7 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
             />
           </Link>
 
-          <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-sm text-[var(--text-secondary)] md:flex lg:text-base">
+          <nav aria-label="Primary navigation" className="hidden items-center gap-6 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--text-secondary)] md:flex">
             {navigationItems.map((item) => {
               const active = activeItem === item.id;
               const studentQuery = `?student=${student}`;
@@ -64,7 +64,7 @@ export async function SiteHeader({ activeItem, sessionId, student = "sam" }: Sit
                   key={item.id}
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className={`rounded-sm border-b-2 px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${active ? "border-[var(--nav-active)] font-bold text-[var(--nav-active)]" : "border-transparent"}`}
+                  className={`rounded-sm px-1 py-2 transition hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${active ? "marker-active font-bold text-[var(--nav-active)]" : ""}`}
                 >
                   {item.label}
                 </Link>

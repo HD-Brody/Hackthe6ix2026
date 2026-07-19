@@ -35,8 +35,8 @@ export function AttentionStrip({ items }: { items: AttentionItem[] }) {
 
   return (
     <section>
-      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
-        Needs attention
+      <p className="eyebrow">
+        01 · Needs attention
       </p>
       <h2 className="mt-1 font-heading text-2xl font-extrabold">
         Keep your teaching loop moving

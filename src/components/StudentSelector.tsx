@@ -104,7 +104,7 @@ export function StudentSelector({
   return (
     <div className="flex w-full max-w-[762px] flex-col items-center">
       <div className="text-center">
-        <h1 className="font-heading text-3xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)] sm:text-4xl">Choose Your AI Student</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-[-0.02em] text-[var(--text-primary)] sm:text-4xl">Choose Your AI Student</h1>
         <p className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">Customize your learning companion to match your teaching style.</p>
         {topic ? <p className="sr-only">Selected topic: {topic}</p> : null}
         {hasNotes ? (

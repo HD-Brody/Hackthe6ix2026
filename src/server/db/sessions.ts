@@ -404,6 +404,11 @@ export async function listSessionsByUser(
   return docs.map((doc) => toSessionSummary(doc));
 }
 
+export async function deleteSession(sessionId: string): Promise<boolean> {
+  const res = await (await sessions()).deleteOne({ _id: sessionId });
+  return res.deletedCount > 0;
+}
+
 export async function setFeedback(
   sessionId: string,
   feedback: NonNullable<Session["feedback"]>

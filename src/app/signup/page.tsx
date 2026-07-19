@@ -27,7 +27,7 @@ export default function SignUpPage() {
               <div className="hidden overflow-hidden rounded-xl border-4 border-white/10 bg-[#e1e0ff] shadow-2xl sm:block lg:h-72">
                 <Image src="/students/sam.png" alt="Sam, an AI learning companion" width={600} height={320} className="h-full w-full object-cover object-[center_30%]" />
               </div>
-              <h1 className="font-heading mt-5 text-2xl font-bold tracking-tight">Teach It. Understand It Better.</h1>
+              <h1 className="font-display mt-5 text-[1.65rem] font-semibold tracking-tight">Teach it. Understand it better.</h1>
               <p className="mt-2 max-w-md text-sm leading-6 text-[#e1e0ff] sm:text-base">Join thousands of educators and mentors using AI to personalize learning for students worldwide.</p>
             </div>
 
@@ -39,7 +39,7 @@ export default function SignUpPage() {
 
           <section className="flex items-center justify-center p-6 sm:p-8 lg:px-10 lg:py-8" aria-labelledby="signup-title">
             <div className="w-full max-w-md">
-              <h2 id="signup-title" className="font-heading text-2xl font-bold">Create your account</h2>
+              <h2 id="signup-title" className="font-display text-2xl font-semibold">Create your account</h2>
               <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">Empower your students with AI-driven insights today.</p>
 
               <div className="mt-5 flex justify-center">

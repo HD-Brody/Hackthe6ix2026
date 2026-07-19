@@ -88,3 +88,15 @@ export function computeComprehensionStats(
     unexploredNodes,
   };
 }
+
+/** Red-ink letter grade for stamps and library chips. */
+export function letterGrade(score: number | null): string {
+  if (score === null) return "\u2014";
+  if (score >= 93) return "A+";
+  if (score >= 85) return "A";
+  if (score >= 77) return "B+";
+  if (score >= 68) return "B";
+  if (score >= 58) return "C+";
+  if (score >= 45) return "C";
+  return "D";
+}

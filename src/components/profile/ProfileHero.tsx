@@ -35,7 +35,7 @@ export function ProfileHero({
             )}
           </div>
           <div className="text-center sm:text-left">
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--brand)]">
+          <p className="eyebrow">
             Your profile
           </p>
             <h1 className="mt-1 font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
@@ -76,7 +76,7 @@ export function ProfileHero({
             className="size-12 rounded-full object-cover"
           />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--brand)]">
+            <p className="eyebrow">
               Resume classroom
             </p>
             <p className="mt-0.5 truncate font-heading text-lg font-bold">
