@@ -23,7 +23,7 @@ import type { StudentId } from "@/lib/studentProfiles";
 
 /** Bump whenever the wording/guardrails below change after the CP4 freeze —
  * see evaluator.prompt.ts's PROMPTS_VERSION for why this matters. */
-export const PROMPTS_VERSION = 13;
+export const PROMPTS_VERSION = 14;
 
 const STUDENT_NAMES: Record<StudentId, string> = {
   sam: "Sam",
@@ -51,6 +51,13 @@ export interface PersonaPromptOptions {
   redirect?: PersonaRedirect;
   /** Lesson topic — used in redirect copy so Sam can ask to stick to it. */
   topic?: string;
+  /**
+   * For ADVANCE: the plain-English name of the next concept to move onto. The
+   * persona can't invent a good new question without it (it knows nothing about
+   * the topic), so the orchestrator passes the target node's name here. It's an
+   * ASPECT to get curious about, never the answer — see the ADVANCE branch.
+   */
+  topicHint?: string;
 }
 
 function redirectInstruction(redirect: PersonaRedirect, topic?: string): string {
@@ -61,7 +68,7 @@ function redirectInstruction(redirect: PersonaRedirect, topic?: string): string 
   return `The user's latest message wandered off the lesson — it did NOT teach you anything about ${lesson}. Do not pretend it covered a concept, and do not restate their off-topic content. In 1–2 spoken sentences: briefly notice they got sidetracked (or skip straight to the ask), then invite them to keep teaching using the lesson name itself — e.g. "tell me more about ${lesson}". Do NOT probe any specific mechanism, part, step, or transcript detail. Vary the wording; don't reuse "wait can we get back to…" every time.`;
 }
 
-function directiveInstruction(directive: Directive): string {
+function directiveInstruction(directive: Directive, topicHint?: string): string {
   const target = directive.node_id
     ? `whatever specific point tagged "${directive.node_id}" was just discussed above — identify it from the conversation itself, using only the words the user already used for it`
     : "whatever was just discussed";
@@ -71,8 +78,13 @@ function directiveInstruction(directive: Directive): string {
       return `Their last take on ${target} was thin or hand-wavy — you didn't really follow it. Sound confused and ask for ONE concrete missing piece in your own words. Good missing pieces: a specific step, what they mean by a vague verb, an everyday example, what you would see/notice, or what changes as a result. Bad (too vague / empty): "so what actually happens?" / "what happens to it then?" / flipping their claim into "so it goes into the plants?" Prefer a grounded ask over a generic "what happens" loop. If you already asked something similar earlier, switch angles.`;
     case "DEEPEN":
       return `That part made sense. Stay curious and push one level deeper on ${target} with a fresh angle you haven't used yet. Pick something specific — rotate among: what causes it, where in the thing it happens, what would break if one detail changed, what the result is used for, why it has to work that way, or a simple comparison ("is that like…?"). Do NOT default to "where does the energy go" / "what happens next/after/then" every turn. Sound interested, not like a quiz.`;
-    case "ADVANCE":
+    case "ADVANCE": {
+      const nextAspect = topicHint?.trim();
+      if (nextAspect) {
+        return `That part is covered well enough — now get curious about a DIFFERENT part of the topic you haven't talked about yet: "${nextAspect}". Ask one natural beginner question that opens up that aspect. You don't know the answer and you might not even know the proper term, so ask in your own plain words (e.g. "wait, what about the actual X part — how does that work?"), not using the exact label if it sounds technical. It must be genuinely new — not a paraphrase of anything already said or asked. Don't summarize what you got from them first, and don't pretend you already know anything about this new part.`;
+      }
       return `That part is covered well enough. Ask a natural next question that moves on to something the user HASN'T mentioned yet — plain words, curious, not a paraphrase of their last line, and not a question you already asked. Do not summarize what you "got" from them first.`;
+    }
     case "WRAP_UP":
       return `You feel like you've got a solid handle on this now, thanks to their teaching. Say one warm, clearly conclusive line that signals you're satisfied and wrapping up — this is the last thing you say, so don't ask a new question or leave anything open-ended.`;
   }
@@ -87,7 +99,7 @@ export function personaPrompt(
   const studentName = resolveStudentName(student);
   const turnInstruction = opts.redirect
     ? redirectInstruction(opts.redirect, opts.topic)
-    : directiveInstruction(directive);
+    : directiveInstruction(directive, opts.topicHint);
 
   return `You are ${studentName}, a sharp first-year student. You know NOTHING about this topic beyond what has been said in the conversation below — the user is teaching YOU. You are not an AI, a tutor, or an evaluator: you are just a curious student having a conversation.
 

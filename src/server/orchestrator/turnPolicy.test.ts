@@ -200,6 +200,54 @@ describe("turnPolicy", () => {
     });
   });
 
+  it("first dead-end turn still advances (one 'yup' earns a new question)", () => {
+    const deadEnd: Verdict = {
+      nodes_touched: [],
+      verdicts: [],
+      recommended_directive: { type: "ADVANCE" },
+    };
+    // stalledTurns undefined → 0; 0+1=1 < STALL_LIMIT(2) → ADVANCE
+    expect(turnPolicy(graph, deadEnd, emptyPolicy)).toEqual({
+      type: "ADVANCE",
+      node_id: "n1",
+    });
+  });
+
+  it("second consecutive dead-end turn → WRAP_UP (user is done)", () => {
+    const deadEnd: Verdict = {
+      nodes_touched: [],
+      verdicts: [],
+      recommended_directive: { type: "ADVANCE" },
+    };
+    // one dead-end already banked; this one tips it to the limit
+    expect(
+      turnPolicy(graph, deadEnd, { probeCounts: {}, deepened: {}, stalledTurns: 1 })
+    ).toEqual({ type: "WRAP_UP" });
+  });
+
+  it("dodge-only also counts toward the stall limit", () => {
+    const dodge: Verdict = {
+      nodes_touched: ["n3"],
+      verdicts: [{ node_id: "n3", verdict: "dodged" }],
+      recommended_directive: { type: "PROBE", node_id: "n3" },
+    };
+    expect(
+      turnPolicy(graph, dodge, { probeCounts: {}, deepened: {}, stalledTurns: 1 })
+    ).toEqual({ type: "WRAP_UP" });
+  });
+
+  it("a real teaching turn does not wrap even if stall was high (caller resets)", () => {
+    // A solid answer is not a dead-end; caller resets stalledTurns to 0, and
+    // the policy takes the normal DEEPEN/ADVANCE path regardless of prior stall.
+    expect(
+      turnPolicy(graph, verdictSolid as Verdict, {
+        probeCounts: {},
+        deepened: {},
+        stalledTurns: 5,
+      })
+    ).toEqual({ type: "DEEPEN", node_id: "n1" });
+  });
+
   it("low curiosity (probeThreshold 1) advances after one probe", () => {
     const g = withNodeStates(graph, { n1: "vague" });
     expect(

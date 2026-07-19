@@ -89,6 +89,27 @@ function policyChanged(before: PolicyState, after: PolicyState): boolean {
   return JSON.stringify(before) !== JSON.stringify(after);
 }
 
+/** A turn where the user taught nothing new: empty verdict or dodge-only. */
+function isDeadEndVerdict(verdict: Verdict): boolean {
+  if (verdict.verdicts.length === 0) return true;
+  return verdict.verdicts.every((v) => v.verdict === "dodged");
+}
+
+/** Next stalled-turn count: +1 on a dead-end, reset to 0 when they teach. */
+function nextStall(policy: PolicyState, verdict: Verdict): number {
+  return isDeadEndVerdict(verdict) ? (policy.stalledTurns ?? 0) + 1 : 0;
+}
+
+/** ADVANCE needs the target concept's plain name so the persona can ask a real
+ * new question about an unexplored aspect (it knows nothing about the topic). */
+function topicHintFor(
+  graph: ConceptGraph,
+  directive: Directive
+): string | undefined {
+  if (directive.type !== "ADVANCE" || !directive.node_id) return undefined;
+  return graph.nodes.find((n) => n.id === directive.node_id)?.name;
+}
+
 function isParallelMode(override?: boolean): boolean {
   if (override !== undefined) return override;
   return process.env.PARALLEL_EVAL === "true";
@@ -192,14 +213,19 @@ function lastUserText(utterances: Utterance[]): string {
   throw new Error("no user utterance in transcript");
 }
 
-/** Apply policy counters and WRAP_UP transition when a directive is spoken. */
+/** Apply policy counters and WRAP_UP transition when a directive is spoken.
+ * Pass `verdict` to also fold in the stalled-turn count for this turn. */
 async function consumeDirective(
   sessionId: string,
   directive: Directive,
   policy: PolicyState,
-  status: SessionStatus
+  status: SessionStatus,
+  verdict?: Verdict
 ): Promise<PolicyState> {
-  const newPolicy = applyDirectiveToPolicy(policy, directive);
+  let newPolicy = applyDirectiveToPolicy(policy, directive);
+  if (verdict) {
+    newPolicy = { ...newPolicy, stalledTurns: nextStall(policy, verdict) };
+  }
   if (policyChanged(policy, newPolicy)) {
     await updatePolicy(sessionId, newPolicy);
   }
@@ -395,7 +421,8 @@ export function createSequentialTurnStream(
         sessionId,
         directive,
         policy,
-        session.status
+        session.status,
+        verdict
       );
       tPolicyDone = Date.now();
     }
@@ -409,7 +436,9 @@ export function createSequentialTurnStream(
         directive,
         student,
         send,
-        redirect ? { redirect, topic } : {}
+        redirect
+          ? { redirect, topic }
+          : { topicHint: topicHintFor(session.graph, directive) }
       );
       studentLine = streamed.text;
       tPersonaFirst = streamed.tFirst;
@@ -526,7 +555,12 @@ export function createParallelTurnStream(
             );
             tEvalEnd = Date.now();
 
-            const afterVerdict = await applyVerdict(sessionId, verdict, policy);
+            // Persist the updated stall count with the graph; turnPolicy still
+            // reads the PRIOR count (it adds this turn internally).
+            const afterVerdict = await applyVerdict(sessionId, verdict, {
+              ...policy,
+              stalledTurns: nextStall(policy, verdict),
+            });
             const nextPending = turnPolicy(afterVerdict.graph, verdict, policy, {
               probeThreshold: probeThresholdForCuriosity(session.curiosity),
             });
@@ -555,7 +589,9 @@ export function createParallelTurnStream(
           spokenDirective,
           student,
           send,
-          redirect ? { redirect, topic } : {}
+          redirect
+            ? { redirect, topic }
+            : { topicHint: topicHintFor(session.graph, spokenDirective) }
         );
         studentLine = streamed.text;
         tPersonaFirst = streamed.tFirst;
