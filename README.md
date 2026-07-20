@@ -107,8 +107,6 @@ flowchart LR
 - **Frozen contracts** — shared JSON schemas in `contracts/` keep four parallel workstreams from stepping on each other.
 - **Re-teach memory** — prior gap maps can seed a new session so the student opens with *"last time you couldn't explain X — try me again."*
 
-Full architecture: [docs/design-doc.md](docs/design-doc.md)
-
 ---
 
 ## Tech stack
