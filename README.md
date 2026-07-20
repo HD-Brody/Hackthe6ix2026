@@ -200,7 +200,7 @@ docs/              Design doc, build plan
 
 Built in 36 hours at **Hack the 6ix 2026** by:
 
-**Anushka Tankala** · **Ariel Vainer** · **Jueun Yoon** · **Brody Honigman Deltoff**
+[**Anushka Tankala**](https://www.linkedin.com/in/anushka-tankala-0725a52b4/) · [**Ariel Vainer**](https://www.linkedin.com/in/arielvainer/) · [**Jueun Yoon**](https://www.linkedin.com/in/joonyee/) · [**Brody Honigman Deltoff**](https://www.linkedin.com/in/brody-hd/)
 
 ---
 
